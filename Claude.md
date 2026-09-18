@@ -66,3 +66,4 @@ Run `pytest` after every change. Don't call a task done with failing tests.
 ## Project management
 
 Task board: GitHub Projects, one column per phase (Fase 1 → Fase 2 → Fase 3 → Fase 4). Each phase's deliverables: repo state, a live demo, and the updated board link — keep issues current as work progresses, don't just code silently against the backlog.
+The existing GitHub project is `IAS_P1_Taximetro_Manon` (org `IA-P1-BCN`, project #2: https://github.com/orgs/IA-P1-BCN/projects/2), tracking issues in `IA-P1-BCN/Proyecto1_Manon`.
