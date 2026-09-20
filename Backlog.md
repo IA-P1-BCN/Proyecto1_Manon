@@ -36,10 +36,10 @@ Cada tarea técnica es un issue individual, enlazado aquí por su número. Las h
 **Diseño sugerido**: clase `Carrera` (atributos: `id`, `hora_inicio`, `estado`, `distancia`, `importe`); clase `Taximetro` con método `iniciar_carrera()`.
 
 Tareas:
-- [ ] **T1.1** Diseñar e implementar clase `Carrera` (estado inicial, atributos base) — `tech-task`, `must` — [#16](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/16)
-- [ ] **T1.2** Implementar `Taximetro.iniciar_carrera()` con validación de "no hay carrera activa" — `tech-task`, `must` — [#17](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/17)
-- [ ] **T1.3** Comando CLI `iniciar` (entrypoint) — `feature`, `must` — [#18](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/18)
-- [ ] **T1.4** Tests unitarios: inicio correcto, inicio duplicado bloqueado — `test`, `must` — [#19](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/19)
+- [x] **T1.1** Diseñar e implementar clase `Carrera` (estado inicial, atributos base) — `tech-task`, `must` — [#16](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/16) ✅
+- [x] **T1.2** Implementar `Taximetro.iniciar_carrera()` con validación de "no hay carrera activa" — `tech-task`, `must` — [#17](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/17) ✅
+- [ ] **T1.3** Comando CLI `iniciar` (entrypoint) — `feature`, `must` — *depende de T4.1: el comando vive dentro del bucle con menús contextuales (TD.2), no tiene sentido aislado* — [#18](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/18)
+- [x] **T1.4** Tests unitarios: inicio correcto, inicio duplicado bloqueado — `test`, `must` — [#19](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/19) ✅
 
 ---
 
@@ -225,7 +225,7 @@ El andamiaje daba por decididas cosas que no lo estaban — de dónde sale la `T
 | Formato `12,34 €` | Se resuelve la contradicción entre el andamiaje y el flujo |
 
 Tareas:
-- [ ] **TP.1** Dos relojes inyectables: `monotonic` para acumular, calendario para las horas — `tech-task`, `must` — [#63](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/63)
+- [x] **TP.1** Dos relojes inyectables: `monotonic` para acumular, calendario para las horas — `tech-task`, `must` — [#63](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/63) ✅
 - [ ] **TP.2** Lectura congelada en una carrera finalizada — `tech-task`, `must` — [#64](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/64)
 - [ ] **TP.3** Inyección de `entrada`/`salida` en `TaximetroApp` — `tech-task`, `must` — [#65](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/65)
 - [ ] **TP.4** Gestión de EOF (Ctrl+D) en el bucle CLI — `feature`, `must` — [#66](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/66)
