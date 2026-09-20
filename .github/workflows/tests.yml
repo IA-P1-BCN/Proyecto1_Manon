@@ -1,0 +1,35 @@
+# Integración continua del taxímetro TTX-247.
+#
+# Ejecuta la batería de tests en cada push y en cada pull request contra
+# `main` y `dev`. La cobertura y el umbral del 90 % no se pasan aquí como
+# flags: viven en `addopts` de `pyproject.toml`, para que `pytest` a secas
+# aplique exactamente las mismas reglas en local y en CI.
+
+name: tests
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Instalar dependencias de desarrollo
+        run: pip install -r requirements-dev.txt
+
+      - name: Ejecutar tests con cobertura
+        run: pytest --cov-report=term-missing
