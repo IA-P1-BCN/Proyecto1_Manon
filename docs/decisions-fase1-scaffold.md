@@ -4,6 +4,8 @@ Record of the design questions resolved before writing the Fase 1 (US-01–US-04
 
 > **Update — flowchart design session.** Drawing the CLI flow in `docs/flujo-fase1.md` reopened three of the decisions below. Superseded entries are marked and keep their original reasoning, so the reversal is readable rather than silently overwritten. Affected: **CLI input style**, **Error handling for invalid operations**, **Fare accrual model** (amended, not reversed). `docs/flujo-fase1.md` is now the authority on CLI behaviour; this file remains the authority on structure.
 
+> **Update — pre-implementation grilling session.** A second design interview, held before writing any Fase 1 logic, reopened four decisions below and added five new ones. Superseded entries keep their original reasoning so the reversal stays readable. Affected: **Fare accrual model**, **Time source for testability**, **Euro-formatting location**, **Tarifa's public interface**. New: *Carrera's attribute set*, *Reads on a finalised carrera*, *CLI input/output injection*, *EOF handling*, *Test file layout*. Repo- and process-level decisions from the same session (language, branching, CI, coverage, board) live in `docs/decisions-proceso.md`.
+
 ## Step order
 
 **Decision:** scaffold the empty package/test structure first, get it reviewed, then implement US-01 (`Carrera`) as a separate step.
@@ -29,6 +31,8 @@ Record of the design questions resolved before writing the Fase 1 (US-01–US-04
 The accrue-and-reset behaviour stays exclusive to `cambiar_estado()` and `finalizar()`. This is the sharpest edge in the whole model: if a read mutates state, every `importe` call silently discards the current tramo and the passenger is under-charged, with no error anywhere. Regression test to write alongside it: *two consecutive `importe_actual()` calls followed by `finalizar()` must produce the same total as `finalizar()` alone.*
 
 The no-thread half of this decision was re-confirmed in the same session — see "No live ticker in Fase 1" in `docs/flujo-fase1.md` for why a continuously refreshing display was rejected again for Fase 1.
+
+**Amended again (grilling session).** The deltas are now measured with `time.monotonic()`, not `time.time()`. A wall clock is subject to NTP corrections and manual changes: if it steps backwards mid-tramo, `ahora - marca` goes negative and the tramo *subtracts* from the fare. Nothing in the code would raise, and the passenger would simply be undercharged. `time.monotonic()` is guaranteed never to go backwards, which is exactly the guarantee an accrual model needs. See "Time source for testability" below for the second clock this forced.
 
 ## Estado representation
 
@@ -70,6 +74,21 @@ In normal CLI use the domain exceptions should therefore **never surface** — t
 
 **Why:** tests can pass a fake, deterministic, fast-incrementing clock instead of sleeping for real seconds or monkeypatching the global `time` module.
 
+**Superseded (grilling session): one clock became two.** `time.monotonic()` is the right tool for measuring elapsed time (above) but it returns an arbitrary float with no calendar meaning — you cannot derive `hora_inicio` from it. `Carrera` therefore takes two injectables, each correct for its own job:
+
+```python
+def __init__(
+    self,
+    tarifa: Tarifa,
+    reloj: Callable[[], float] = time.monotonic,          # accrual only
+    calendario: Callable[[], datetime] = datetime.now,    # hora_inicio / hora_fin
+) -> None: ...
+```
+
+`reloj` is never used for display; `calendario` is never used for arithmetic. Both are injected by `Taximetro`, so a test can drive a whole fake-timed ride from the top without touching `Carrera` directly. Shared fakes live in `tests/conftest.py`.
+
+Bonus for Fase 2: `hora_inicio` is already a `datetime`, so `Historial` can write a real date without converting an epoch float.
+
 ## CLI input style
 
 **Decision:** typed-word commands (`iniciar`, `parado`, `movimiento`, `finalizar`, `salir`), documented in the startup banner.
@@ -97,6 +116,18 @@ Three changes from the original entry:
 
 **Why:** matches BACKLOG's T3.2 wording ("formateo de importe en euros (helper/util)") literally. Also flagged as a deviation from `CLAUDE.md`'s listed Fase 1 file tree, alongside `taximetro.py`.
 
+**Amended (grilling session): the output format was contradictory.** The scaffold docstring said `'12.34€'`; every message in `docs/flujo-fase1.md` said `X,XX €`. Resolved in favour of the Spanish convention — the client is in Madrid and the driver reads prices with a comma:
+
+```python
+def formato_euros(importe: float) -> str:
+    """Formatea un importe: 12.3456 -> '12,34 €'."""
+    return f"{importe:.2f} €".replace(".", ",")
+```
+
+Deliberately **not** the `locale` module: `locale.setlocale(..., 'es_ES.UTF-8')` raises if that locale isn't installed, so the output would differ between a Windows dev box, an Ubuntu CI runner and the demo laptop — a formatting helper should not be able to fail.
+
+Rounding direction is left as Python's default (`format` rounds the underlying binary float, half-to-even). With per-second accrual producing arbitrary floats, an exact half-cent is effectively unreachable, so a rounding policy would be a rule with no cases.
+
 ## Repeated cambiar_estado() to the same estado
 
 **Decision:** silent no-op — nothing changes, fare keeps accruing under the current rate, no exception raised.
@@ -114,3 +145,68 @@ Three changes from the original entry:
 **Decision:** a single `Tarifa.calcular_importe(estado: Estado, segundos: float) -> float`, dispatching internally on `estado` (e.g. a rate-per-estado lookup), instead of separate `calcular_parado()`/`calcular_movimiento()` methods.
 
 **Why:** keeps the state-to-rate dispatch logic in one place (`Tarifa`) rather than duplicating an if/else in `Carrera`'s accrual code every time it needs to pick which `Tarifa` method to call.
+
+**Extended (grilling session): who owns the instance.** The scaffold never said where the `Tarifa` comes from, though `Carrera` is what needs it. Decision: **`Taximetro` builds one `Tarifa` and injects it into every `Carrera` it creates.**
+
+```python
+class Taximetro:
+    def __init__(self, tarifa: Tarifa | None = None) -> None:
+        self._tarifa = tarifa or Tarifa()
+
+    def iniciar_carrera(self) -> Carrera:
+        return Carrera(tarifa=self._tarifa, reloj=self._reloj, calendario=self._calendario)
+```
+
+**Why:** it puts the seam where Fase 2 needs it. US-07 loads tarifas from a config file; with this shape only `Taximetro` changes (`Tarifa(ConfigTarifas.cargar())`) and `Carrera` is untouched. If `Carrera` built its own `Tarifa`, the config would have to reach it through a module-level singleton or a new parameter threaded through anyway. It also lets a test inject a `Tarifa` with round numbers, so assertions don't carry 0.02/0.05 arithmetic.
+
+---
+
+## Decisions added in the pre-implementation grilling session
+
+The four entries above were amendments. These five are new.
+
+### Carrera's attribute set
+
+**Decision:** `id`, `hora_inicio`, `hora_fin` (`None` until finalised), `estado`, `distancia` (`0.0`), `importe`.
+
+**Why `hora_fin`:** T3.1 asks `finalizar()` to record an end time, and `hora_fin is not None` doubles as the "this ride is closed" flag — no separate `finalizada: bool` that could contradict it.
+
+**Why `distancia` stays at 0.0:** the brief prices purely on time, so nothing in Fase 1 reads it, and `Claude.md`'s structure line omits it. Kept anyway because `Backlog.md`'s suggested design for US-01 lists it, and a later phase adding GPS or odometer input would want it. It is a deliberate placeholder, **not** a half-finished per-km feature and not dead code left by accident — recorded here so a reviewer doesn't have to guess which.
+
+### Reads on a finalised carrera
+
+**Decision:** on a closed `Carrera`, `importe_actual()` returns the stored `importe` unchanged — no tramo accrual. `cambiar_estado()` and a second `finalizar()` both raise `CarreraFinalizadaError`.
+
+**Why:** `docs/flujo-fase1.md` specified that writes raise, but said nothing about reads. Left unspecified, the natural implementation (`importe + tramo en curso`) keeps accruing against a timestamp that stopped being meaningful at `finalizar()` — so the "final" total of a closed ride would keep growing for as long as the process stayed open. Freezing reads makes `finalizar()`'s return value permanently reproducible, which is what `Historial` will store in Fase 2.
+
+The CLI never reaches this path (a closed ride returns the loop to the idle menu), so this is a domain-level guarantee, in the same category as the exceptions.
+
+### CLI input/output injection
+
+**Decision:** `TaximetroApp.__init__(self, taximetro=None, entrada=input, salida=print)`. `ejecutar()` calls `self._entrada(...)` and `self._salida(...)`, never the builtins directly.
+
+**Why:** TD.9 requires testing the menus, the two error messages and the Ctrl+C branch, and a loop that calls `input()`/`print()` directly offers no seam. With the injection a test is three lines and asserts on a list of strings, with no `monkeypatch` of builtins and no stdout parsing:
+
+```python
+salidas: list[str] = []
+app = TaximetroApp(entrada=iter(["iniciar", "movimiento", "finalizar", "salir"]).__next__,
+                   salida=salidas.append)
+app.ejecutar()
+assert "TOTAL A COBRAR" in salidas[-1]
+```
+
+Same reasoning as the injected clocks, applied to the I/O boundary instead of the time boundary.
+
+### EOF handling
+
+**Decision:** `EOFError` is caught. While idle it exits cleanly, like `salir`. Mid-ride it finalises the carrera, prints the total, and then exits.
+
+**Why:** the flowchart handled Ctrl+C but never EOF, and `input()` raises `EOFError` on Ctrl+D, on piped stdin running out, and on an injected `entrada` iterator reaching the end of its script — so unhandled it means a traceback at the end of every CLI test and during any piped demo.
+
+Mid-ride it deliberately does **not** copy the Ctrl+C behaviour of printing "finaliza la carrera" and looping: EOF is not retryable, so re-reading would spin forever. Finalising first keeps the promise that a fare is never silently lost, while still terminating. Recorded in the diagram in `docs/flujo-fase1.md`.
+
+### Test file layout
+
+**Decision:** one test file per module — `test_carrera.py`, `test_tarifa.py`, `test_taximetro.py`, `test_taximetro_app.py`, `test_utils.py` — plus `tests/conftest.py` for the shared fake-clock fixtures.
+
+**Why:** consistent with the one-class-per-file convention already in `Claude.md`, and a failing file name points straight at the module that broke. Traceability to the backlog is carried by test names and docstrings (`US-02`, `TD.5`) rather than by file names, so a module's behaviour stays in one place instead of being scattered across story-named files.
