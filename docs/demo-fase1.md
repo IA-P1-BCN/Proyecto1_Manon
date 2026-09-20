@@ -2,7 +2,7 @@
 
 Secuencia exacta para la demo en directo del MVP ante TaxiTech Solutions. Cada paso indica qué se teclea, qué debe aparecer y qué requisito demuestra.
 
-> **Estado:** escrito antes de implementar, a partir de `docs/flujo-fase1.md`. Los textos de salida son los acordados en ese documento; al cerrar la Fase 1 hay que contrastarlos con la salida real y corregir este guion si difieren.
+> **Estado:** contrastado con la salida real del CLI tras implementar US-04. Los textos de este guion son los que imprime la aplicación; si alguno cambia, hay que corregirlo aquí también.
 
 ## Antes de empezar
 

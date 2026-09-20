@@ -21,7 +21,7 @@ Cada tarea técnica es un issue individual, enlazado aquí por su número. Las h
   - `.venv/` (Python 3.14.7) + `requirements-dev.txt` (pytest, pytest-cov) + `pyproject.toml` + `.gitignore`
 - [x] **T0.3** Configurar framework de tests (`pytest`) ✅ — [#14](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/14)
   - Labels: `tech-task`, `must`
-- [ ] **T0.4** README inicial con instrucciones de instalación y uso — [#15](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/15)
+- [x] **T0.4** README inicial con instrucciones de instalación y uso — [#15](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/15) ✅
   - Labels: `docs`, `should`
 
 ---
@@ -38,7 +38,7 @@ Cada tarea técnica es un issue individual, enlazado aquí por su número. Las h
 Tareas:
 - [x] **T1.1** Diseñar e implementar clase `Carrera` (estado inicial, atributos base) — `tech-task`, `must` — [#16](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/16) ✅
 - [x] **T1.2** Implementar `Taximetro.iniciar_carrera()` con validación de "no hay carrera activa" — `tech-task`, `must` — [#17](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/17) ✅
-- [ ] **T1.3** Comando CLI `iniciar` (entrypoint) — `feature`, `must` — *depende de T4.1: el comando vive dentro del bucle con menús contextuales (TD.2), no tiene sentido aislado* — [#18](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/18)
+- [x] **T1.3** Comando CLI `iniciar` (entrypoint) — `feature`, `must` — [#18](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/18) ✅
 - [x] **T1.4** Tests unitarios: inicio correcto, inicio duplicado bloqueado — `test`, `must` — [#19](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/19) ✅
 
 ---
@@ -59,7 +59,7 @@ Tareas:
 - [x] **T2.1** Implementar `Carrera.cambiar_estado()` con máquina de estados simple (parado/movimiento) — `tech-task`, `must` — [#20](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/20) ✅
 - [x] **T2.2** Implementar clase `Tarifa` con lógica diferenciada de cálculo — `tech-task`, `must` — [#21](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/21) ✅
 - [x] **T2.3** Integrar acumulación de importe en tiempo real al cambiar de estado — `tech-task`, `must` — [#22](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/22) ✅
-- [ ] **T2.4** Comando CLI para alternar estado *(depende de T4.1: vive en el bucle con menus contextuales)* — `feature`, `must` — [#23](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/23)
+- [x] **T2.4** Comando CLI para alternar estado — `feature`, `must` — [#23](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/23) ✅
 - [x] **T2.5** Tests: cálculo correcto en cada estado y en transiciones — `test`, `must` — [#24](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/24) ✅
 
 ---
@@ -74,7 +74,7 @@ Tareas:
 Tareas:
 - [x] **T3.1** Implementar `Carrera.finalizar()` (cierre, cálculo final, hora de fin) — `tech-task`, `must` — [#25](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/25) ✅
 - [x] **T3.2** Formateo de importe en euros (helper/util) — `tech-task`, `must` — [#26](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/26) ✅
-- [ ] **T3.3** Comando CLI `finalizar` que muestra el total *(depende de T4.1: vive en el bucle con menus contextuales)* — `feature`, `must` — [#27](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/27)
+- [x] **T3.3** Comando CLI `finalizar` que muestra el total — `feature`, `must` — [#27](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/27) ✅
 - [x] **T3.4** Tests: importe final correcto, bloqueo de cambios tras finalizar — `test`, `must` — [#28](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/28) ✅
 
 ---
@@ -88,9 +88,9 @@ Tareas:
 **Diseño sugerido**: clase `TaximetroApp` (orquestador con bucle principal / menú de comandos) que gestiona el ciclo de vida de `Carrera`.
 
 Tareas:
-- [ ] **T4.1** Implementar bucle principal / menú de comandos en `TaximetroApp` — `tech-task`, `must` — [#29](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/29)
-- [ ] **T4.2** Reset de estado tras finalizar carrera (permitir nueva instancia) — `tech-task`, `must` — [#30](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/30)
-- [ ] **T4.3** Tests de integración: ciclo completo iniciar→finalizar→iniciar — `test`, `must` — [#31](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/31)
+- [x] **T4.1** Implementar bucle principal / menú de comandos en `TaximetroApp` — `tech-task`, `must` — [#29](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/29) ✅
+- [x] **T4.2** Reset de estado tras finalizar carrera (permitir nueva instancia) — `tech-task`, `must` — [#30](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/30) ✅
+- [x] **T4.3** Tests de integración: ciclo completo iniciar→finalizar→iniciar — `test`, `must` — [#31](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/31) ✅
 
 ---
 
@@ -193,14 +193,14 @@ Estas tareas no añaden funcionalidad nueva al producto, pero definen el comport
 
 Tareas:
 - [x] **TD.1** Diagrama de flujo del CLI de Fase 1 — `docs`, `must` — [#53](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/53) ✅
-- [ ] **TD.2** Menús contextuales según estado de la carrera — `feature`, `must` — [#54](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/54)
-- [ ] **TD.3** Comando CLI `importe` (total acumulado bajo demanda) — `feature`, `must` — [#55](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/55)
+- [x] **TD.2** Menús contextuales según estado de la carrera — `feature`, `must` — [#54](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/54) ✅
+- [x] **TD.3** Comando CLI `importe` (total acumulado bajo demanda) — `feature`, `must` — [#55](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/55) ✅
 - [x] **TD.4** Implementar `Carrera.importe_actual()` sin mutación — `tech-task`, `must` — [#56](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/56) ✅
 - [x] **TD.5** Test: `importe_actual()` no altera el importe acumulado — `test`, `must` — [#57](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/57) ✅
-- [ ] **TD.6** Comando CLI `ayuda` (reimprimir banner) — `feature`, `must` — [#58](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/58)
-- [ ] **TD.7** Gestión de Ctrl+C según el estado del bucle — `tech-task`, `must` — [#59](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/59)
-- [ ] **TD.8** Mensajes de error diferenciados en el CLI — `feature`, `must` — [#60](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/60)
-- [ ] **TD.9** Tests del bucle CLI: menús, errores y Ctrl+C — `test`, `must` — [#61](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/61)
+- [x] **TD.6** Comando CLI `ayuda` (reimprimir banner) — `feature`, `must` — [#58](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/58) ✅
+- [x] **TD.7** Gestión de Ctrl+C según el estado del bucle — `tech-task`, `must` — [#59](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/59) ✅
+- [x] **TD.8** Mensajes de error diferenciados en el CLI — `feature`, `must` — [#60](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/60) ✅
+- [x] **TD.9** Tests del bucle CLI: menús, errores y Ctrl+C — `test`, `must` — [#61](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/61) ✅
 
 **Orden sugerido:** TD.4 → TD.5 → TD.3 (el accesor de solo lectura y su test de regresión antes del comando que lo usa), luego TD.2 → TD.8 → TD.7 (los menús contextuales primero, porque los otros dos dependen de que el bucle sepa en qué modo está), TD.6 en cualquier momento, y TD.9 al final.
 
@@ -227,8 +227,8 @@ El andamiaje daba por decididas cosas que no lo estaban — de dónde sale la `T
 Tareas:
 - [x] **TP.1** Dos relojes inyectables: `monotonic` para acumular, calendario para las horas — `tech-task`, `must` — [#63](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/63) ✅
 - [x] **TP.2** Lectura congelada en una carrera finalizada — `tech-task`, `must` — [#64](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/64) ✅
-- [ ] **TP.3** Inyección de `entrada`/`salida` en `TaximetroApp` — `tech-task`, `must` — [#65](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/65)
-- [ ] **TP.4** Gestión de EOF (Ctrl+D) en el bucle CLI — `feature`, `must` — [#66](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/66)
+- [x] **TP.3** Inyección de `entrada`/`salida` en `TaximetroApp` — `tech-task`, `must` — [#65](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/65) ✅
+- [x] **TP.4** Gestión de EOF (Ctrl+D) en el bucle CLI — `feature`, `must` — [#66](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/66) ✅
 - [x] **TP.5** `formato_euros` en formato español (`12,34 €`) — `tech-task`, `must` — [#67](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/67) ✅
 - [ ] **TP.6** Campo `Progreso` y segunda vista en el tablero — `tech-task`, `must` — [#68](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/68)
 - [x] **TP.7** Unificar el brief del cliente en `docs/project-brief.md` — `docs`, `must` — [#69](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/69) ✅
