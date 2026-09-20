@@ -24,6 +24,8 @@ Companion docs: `docs/decisions-fase1-scaffold.md` (code structure), `docs/flujo
 
 **Why:** a PR per story gives a reviewable trail against the backlog without the churn of ~20 PRs (one per task) for a single phase. Merging to `main` only at phase boundaries means `main` always holds the last state demoed to the client, which is what the phase deliverable asks for.
 
+**Gotcha — `Closes #NN` does not fire on merges into `dev`.** GitHub only auto-closes linked issues when a PR merges into the repository'''s *default* branch, which here is `main`. Since every story PR targets `dev`, the keywords are inert: issues have to be closed by hand after the merge, ideally with a comment naming the PR and the merge commit. Keep writing the `Closes #NN` lines anyway — they create the visible link between issue and PR, and they will close correctly on the `dev` → `main` merge at the end of the phase.
+
 ## Continuous integration
 
 **Decision:** `.github/workflows/tests.yml` runs `pytest` on every push and PR to `main`/`dev`.
