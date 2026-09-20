@@ -40,11 +40,29 @@ class Carrera:
 
     def __init__(
         self,
+        id: int,
         tarifa: Tarifa,
         reloj: Callable[[], float] = time.monotonic,
         calendario: Callable[[], datetime] = datetime.now,
     ) -> None:
-        """Crea una carrera nueva en estado PARADO, con el importe a cero."""
+        """Crea una carrera nueva en estado PARADO, con el importe a cero.
+
+        El número de carrera (`id`) lo asigna quien la crea — en la práctica,
+        `Taximetro` —, no un contador global de la clase.
+        """
+        self.id = id
+        self.estado = Estado.PARADO
+        self.importe = 0.0
+        self.distancia = 0.0
+        self.hora_inicio = calendario()
+        self.hora_fin: datetime | None = None
+
+        self._tarifa = tarifa
+        self._reloj = reloj
+        self._calendario = calendario
+        # Instante en que empezó el tramo actual. Se reinicia en cada cambio de
+        # estado, y es lo que se resta para saber cuántos segundos cobrar.
+        self._inicio_tramo = reloj()
 
     def cambiar_estado(self, nuevo_estado: Estado) -> None:
         """Acumula el importe del tramo en curso y cambia de estado."""
