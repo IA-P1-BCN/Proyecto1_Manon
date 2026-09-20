@@ -14,8 +14,9 @@ Cada tarjeta de "Tarea técnica" está pensada para ser un issue individual en G
 
 - [ ] **T0.1** Crear estructura de paquete Python (`taximetro/`, `tests/`, `config/`)
   - Labels: `tech-task`, `must`
-- [ ] **T0.2** Configurar entorno virtual, `requirements.txt` / `pyproject.toml`
+- [x] **T0.2** Configurar entorno virtual, `requirements.txt` / `pyproject.toml` ✅
   - Labels: `tech-task`, `must`
+  - `.venv/` (Python 3.14.7) + `requirements-dev.txt` (pytest, pytest-cov) + `pyproject.toml` + `.gitignore`
 - [ ] **T0.3** Configurar framework de tests (`pytest`)
   - Labels: `tech-task`, `must`
 - [ ] **T0.4** README inicial con instrucciones de instalación y uso
@@ -169,12 +170,45 @@ Tareas:
 
 ---
 
+## EPIC D — Decisiones de diseño del flujo CLI (Fase 1)
+*Prioridad: Must — no deriva de una US, sino de decisiones tomadas al dibujar el flujo antes de implementar*
+
+Referencia: **`docs/flujo-fase1.md`** (diagrama Mermaid + registro de decisiones). Issue épica: [#52](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/52).
+
+Estas tareas no añaden funcionalidad nueva al producto, pero definen el comportamiento del bucle CLI. Sin ellas, dos requisitos funcionales de Fase 1 quedan a medias: *"el sistema explica al conductor cómo usarlo sin documentación externa"* y *"calcule lo que le cuesta al pasajero en tiempo real"*.
+
+| Decisión | Efecto |
+|---|---|
+| Menús contextuales | El conductor solo ve los comandos válidos en cada momento |
+| `salir` fuera del menú de carrera activa | `finalizar` termina la carrera, `salir` termina el programa |
+| Comando `importe` | Total acumulado bajo demanda, solo lectura |
+| Comando `ayuda` | Reimprime el banner cuando se ha ido de pantalla |
+| Ctrl+C gestionado | Una carrera solo termina de forma deliberada |
+| Errores diferenciados | Estado incorrecto vs. comando desconocido |
+
+Tareas:
+- [x] **TD.1** Diagrama de flujo del CLI de Fase 1 — `docs`, `must` — [#53](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/53) ✅
+- [ ] **TD.2** Menús contextuales según estado de la carrera — `feature`, `must` — [#54](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/54)
+- [ ] **TD.3** Comando CLI `importe` (total acumulado bajo demanda) — `feature`, `must` — [#55](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/55)
+- [ ] **TD.4** Implementar `Carrera.importe_actual()` sin mutación — `tech-task`, `must` — [#56](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/56)
+- [ ] **TD.5** Test: `importe_actual()` no altera el importe acumulado — `test`, `must` — [#57](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/57)
+- [ ] **TD.6** Comando CLI `ayuda` (reimprimir banner) — `feature`, `must` — [#58](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/58)
+- [ ] **TD.7** Gestión de Ctrl+C según el estado del bucle — `tech-task`, `must` — [#59](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/59)
+- [ ] **TD.8** Mensajes de error diferenciados en el CLI — `feature`, `must` — [#60](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/60)
+- [ ] **TD.9** Tests del bucle CLI: menús, errores y Ctrl+C — `test`, `must` — [#61](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/61)
+
+**Orden sugerido:** TD.4 → TD.5 → TD.3 (el accesor de solo lectura y su test de regresión antes del comando que lo usa), luego TD.2 → TD.8 → TD.7 (los menús contextuales primero, porque los otros dos dependen de que el bucle sepa en qué modo está), TD.6 en cualquier momento, y TD.9 al final.
+
+**Relación con tareas existentes:** TD.2 concreta cómo debe comportarse el menú de **T4.1**; TD.9 complementa **T4.3** cubriendo las ramas de error y Ctrl+C que el ciclo funcional no toca.
+
+---
+
 ## Resumen de prioridades (para ordenar el Sprint 1)
 
 | Prioridad | Historias |
 |---|---|
-| Must | US-01, US-02, US-03, US-04 |
+| Must | US-01, US-02, US-03, US-04, EPIC D |
 | Should | US-05, US-06, US-07 |
 | Could | US-08, US-09 |
 
-Sugerencia: Sprint 1 = Epic 0 + US-01 a US-04 (núcleo funcional del taxímetro). Sprint 2 = US-05 a US-07 (operación/producción). Sprint 3 = US-08, US-09 (extras).
+Sugerencia: Sprint 1 = Epic 0 + US-01 a US-04 + EPIC D (núcleo funcional del taxímetro). Sprint 2 = US-05 a US-07 (operación/producción). Sprint 3 = US-08, US-09 (extras).
