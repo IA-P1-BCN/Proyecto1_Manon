@@ -129,13 +129,15 @@ Three changes from the original entry:
 
 ```python
 def formato_euros(importe: float) -> str:
-    """Formatea un importe: 12.3456 -> '12,34 €'."""
+    """Formatea un importe: 12.3456 -> '12,35 €'."""
     return f"{importe:.2f} €".replace(".", ",")
 ```
 
 Deliberately **not** the `locale` module: `locale.setlocale(..., 'es_ES.UTF-8')` raises if that locale isn't installed, so the output would differ between a Windows dev box, an Ubuntu CI runner and the demo laptop — a formatting helper should not be able to fail.
 
 Rounding direction is left as Python's default (`format` rounds the underlying binary float, half-to-even). With per-second accrual producing arbitrary floats, an exact half-cent is effectively unreachable, so a rounding policy would be a rule with no cases.
+
+**Corrected during US-03.** The example in this entry originally read `12.3456 -> '12,34 €'`, which is simply wrong arithmetic: `f"{12.3456:.2f}"` is `12.35`, because formatting *rounds*, it does not truncate. Fixed here and in the `formato_euros` docstring, and pinned by `test_redondea_la_precision_sobrante`. Worth noting because the mistake was copied from the docstring into this document, so neither copy was an independent check on the other.
 
 ## Repeated cambiar_estado() to the same estado
 
