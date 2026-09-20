@@ -72,10 +72,10 @@ Tareas:
 - La carrera finalizada queda marcada como cerrada y no admite más cambios de estado.
 
 Tareas:
-- [ ] **T3.1** Implementar `Carrera.finalizar()` (cierre, cálculo final, hora de fin) — `tech-task`, `must` — [#25](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/25)
-- [ ] **T3.2** Formateo de importe en euros (helper/util) — `tech-task`, `must` — [#26](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/26)
-- [ ] **T3.3** Comando CLI `finalizar` que muestra el total — `feature`, `must` — [#27](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/27)
-- [ ] **T3.4** Tests: importe final correcto, bloqueo de cambios tras finalizar — `test`, `must` — [#28](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/28)
+- [x] **T3.1** Implementar `Carrera.finalizar()` (cierre, cálculo final, hora de fin) — `tech-task`, `must` — [#25](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/25) ✅
+- [x] **T3.2** Formateo de importe en euros (helper/util) — `tech-task`, `must` — [#26](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/26) ✅
+- [ ] **T3.3** Comando CLI `finalizar` que muestra el total *(depende de T4.1: vive en el bucle con menus contextuales)* — `feature`, `must` — [#27](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/27)
+- [x] **T3.4** Tests: importe final correcto, bloqueo de cambios tras finalizar — `test`, `must` — [#28](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/28) ✅
 
 ---
 
@@ -229,7 +229,7 @@ Tareas:
 - [x] **TP.2** Lectura congelada en una carrera finalizada — `tech-task`, `must` — [#64](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/64) ✅
 - [ ] **TP.3** Inyección de `entrada`/`salida` en `TaximetroApp` — `tech-task`, `must` — [#65](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/65)
 - [ ] **TP.4** Gestión de EOF (Ctrl+D) en el bucle CLI — `feature`, `must` — [#66](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/66)
-- [ ] **TP.5** `formato_euros` en formato español (`12,34 €`) — `tech-task`, `must` — [#67](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/67)
+- [x] **TP.5** `formato_euros` en formato español (`12,34 €`) — `tech-task`, `must` — [#67](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/67) ✅
 - [ ] **TP.6** Campo `Progreso` y segunda vista en el tablero — `tech-task`, `must` — [#68](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/68)
 - [x] **TP.7** Unificar el brief del cliente en `docs/project-brief.md` — `docs`, `must` — [#69](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/69) ✅
 - [x] **TP.8** Workflow de CI: `pytest` en cada push y PR — `tech-task`, `must` — [#70](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/70) ✅

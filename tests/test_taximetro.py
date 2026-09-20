@@ -59,13 +59,9 @@ class TestNumeracionDeCarreras:
     def test_la_primera_carrera_es_la_numero_uno(self, taximetro: Taximetro) -> None:
         assert taximetro.iniciar_carrera().id == 1
 
-    def test_las_carreras_se_numeran_en_orden(
-        self, taximetro: Taximetro, calendario
-    ) -> None:
+    def test_las_carreras_se_numeran_en_orden(self, taximetro: Taximetro) -> None:
         primera = taximetro.iniciar_carrera()
-        # Se simula el cierre marcando `hora_fin`, que es lo que hace que una
-        # carrera deje de estar activa. `finalizar()` llega en US-03.
-        primera.hora_fin = calendario()
+        primera.finalizar()
 
         segunda = taximetro.iniciar_carrera()
         assert (primera.id, segunda.id) == (1, 2)
@@ -104,10 +100,18 @@ class TestCarreraDuplicada:
         assert en_curso.id == 1
 
     def test_se_puede_iniciar_otra_cuando_la_anterior_se_cierra(
-        self, taximetro: Taximetro, calendario
+        self, taximetro: Taximetro
     ) -> None:
+        # Base de US-04: encadenar servicios sin cerrar el programa.
         primera = taximetro.iniciar_carrera()
-        primera.hora_fin = calendario()  # cierre simulado; finalizar() es US-03
+        primera.finalizar()
 
         segunda = taximetro.iniciar_carrera()
         assert taximetro.carrera_activa is segunda
+
+    def test_la_carrera_finalizada_deja_de_estar_activa(
+        self, taximetro: Taximetro
+    ) -> None:
+        carrera = taximetro.iniciar_carrera()
+        carrera.finalizar()
+        assert taximetro.carrera_activa is None

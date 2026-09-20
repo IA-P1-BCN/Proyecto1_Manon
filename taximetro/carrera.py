@@ -111,4 +111,16 @@ class Carrera:
         )
 
     def finalizar(self) -> float:
-        """Cierra la carrera, acumula el último tramo y devuelve el importe total."""
+        """Cierra la carrera, acumula el último tramo y devuelve el importe total.
+
+        Sobre una carrera ya finalizada lanza `CarreraFinalizadaError`: el
+        total ya se cobró y no puede recalcularse.
+        """
+        if self.finalizada:
+            raise CarreraFinalizadaError(
+                f"La carrera nº {self.id} ya está finalizada."
+            )
+
+        self._cerrar_tramo()
+        self.hora_fin = self._calendario()
+        return self.importe

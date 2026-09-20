@@ -97,10 +97,8 @@ class TestCambiarEstado:
         # tramo ni cobrarlo dos veces.
         assert carrera.importe == pytest.approx(2.00)
 
-    def test_una_carrera_finalizada_no_admite_cambios(
-        self, carrera: Carrera, calendario
-    ) -> None:
-        carrera.hora_fin = calendario()  # cierre simulado; finalizar() es US-03
+    def test_una_carrera_finalizada_no_admite_cambios(self, carrera: Carrera) -> None:
+        carrera.finalizar()
         with pytest.raises(CarreraFinalizadaError):
             carrera.cambiar_estado(Estado.EN_MOVIMIENTO)
 
@@ -175,14 +173,12 @@ class TestImporteActual:
         assert leida.importe == pytest.approx(1.60)  # 80 s a 0,02 €/s
 
     def test_sobre_una_carrera_cerrada_devuelve_el_total_congelado(
-        self, carrera: Carrera, reloj, calendario
+        self, carrera: Carrera, reloj
     ) -> None:
         # TP.2: sin esto, el total "final" de una carrera cerrada seguiría
         # creciendo mientras el programa siga abierto.
         reloj.avanzar(100)
-        carrera.importe = carrera.importe_actual()
-        carrera.hora_fin = calendario()  # cierre simulado; finalizar() es US-03
-        total = carrera.importe_actual()
+        total = carrera.finalizar()
 
         reloj.avanzar(500)
         assert carrera.importe_actual() == pytest.approx(total)
@@ -194,8 +190,62 @@ class TestCarreraFinalizadaFlag:
     def test_una_carrera_nueva_no_esta_finalizada(self, carrera: Carrera) -> None:
         assert carrera.finalizada is False
 
-    def test_al_sellar_hora_fin_queda_finalizada(
-        self, carrera: Carrera, calendario
-    ) -> None:
-        carrera.hora_fin = calendario()
+    def test_tras_finalizar_queda_cerrada(self, carrera: Carrera) -> None:
+        carrera.finalizar()
         assert carrera.finalizada is True
+
+
+class TestFinalizar:
+    """US-03 / T3.1: cerrar la carrera y devolver el total a cobrar."""
+
+    def test_devuelve_el_total_con_el_ultimo_tramo_incluido(
+        self, carrera: Carrera, reloj
+    ) -> None:
+        reloj.avanzar(100)  # 100 s parado       -> 2,00 €
+        carrera.cambiar_estado(Estado.EN_MOVIMIENTO)
+        reloj.avanzar(60)  # 60 s en movimiento  -> 3,00 €
+
+        # El último tramo no se ha cerrado con ningún cambio de estado: si
+        # finalizar() no lo cobrase, el trayecto final del taxi saldría gratis.
+        assert carrera.finalizar() == pytest.approx(5.00)
+
+    def test_sella_la_hora_de_fin(self, carrera: Carrera, calendario) -> None:
+        carrera.finalizar()
+        assert carrera.hora_fin == calendario()
+
+    def test_la_carrera_queda_cerrada(self, carrera: Carrera) -> None:
+        carrera.finalizar()
+        assert carrera.finalizada is True
+
+    def test_no_admite_cambios_de_estado_despues(self, carrera: Carrera) -> None:
+        carrera.finalizar()
+        with pytest.raises(CarreraFinalizadaError):
+            carrera.cambiar_estado(Estado.EN_MOVIMIENTO)
+
+    def test_no_se_puede_finalizar_dos_veces(self, carrera: Carrera) -> None:
+        carrera.finalizar()
+        with pytest.raises(CarreraFinalizadaError):
+            carrera.finalizar()
+
+    def test_el_total_deja_de_crecer(self, carrera: Carrera, reloj) -> None:
+        reloj.avanzar(100)
+        total = carrera.finalizar()
+
+        reloj.avanzar(3600)  # el taxi pasa una hora parado con el programa abierto
+        assert carrera.importe_actual() == pytest.approx(total)
+        assert carrera.importe == pytest.approx(total)
+
+    def test_consultar_el_importe_no_altera_el_total_final(
+        self, reloj, calendario
+    ) -> None:
+        # TD.5 en su forma completa, ahora que finalizar() existe: dos lecturas
+        # seguidas y luego finalizar deben dar lo mismo que finalizar a secas.
+        consultada = Carrera(id=1, tarifa=Tarifa(), reloj=reloj, calendario=calendario)
+        intacta = Carrera(id=2, tarifa=Tarifa(), reloj=reloj, calendario=calendario)
+
+        reloj.avanzar(45)
+        consultada.importe_actual()
+        consultada.importe_actual()
+        reloj.avanzar(45)
+
+        assert consultada.finalizar() == pytest.approx(intacta.finalizar())
