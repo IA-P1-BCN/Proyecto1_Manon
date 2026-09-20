@@ -46,6 +46,15 @@ The no-thread half of this decision was re-confirmed in the same session — see
 
 **Why:** human-readable, deterministic, easy to assert in tests. No persistence across process restarts is needed yet in Fase 1.
 
+**Superseded (US-01 implementation).** The counter moved to `Taximetro`, which passes `id` to each `Carrera` it creates. `Carrera` holds no counter at all.
+
+**Why the reversal:** the original entry was written before `Taximetro` existed as the factory. A class-level counter is global mutable state, and it fails on exactly the ground the entry claimed as its advantage — being *easy to assert in tests*:
+
+- It never resets between tests, so `assert carrera.id == 1` passes or fails depending on which tests ran before it. The usual patch is an autouse fixture reaching into `Carrera._siguiente_id`, i.e. tests manipulating private class state to stay isolated.
+- Two `Taximetro` instances would share one sequence, so the second taxi's first ride of the day would be "Carrera nº 2".
+
+With the counter in `Taximetro` both problems disappear without a fixture, and "Carrera nº 1" means the first ride of *this* taxi's shift — which is what it means to the driver reading it. Covered by `test_cada_taximetro_numera_sus_propias_carreras`.
+
 ## Error handling for invalid operations
 
 **Decision:** invalid operations raise custom domain exceptions — `CarreraActivaError` (double `iniciar_carrera`), `CarreraFinalizadaError` (changes after `finalizar()`). `TaximetroApp`'s CLI layer catches them and prints a message to the driver.
