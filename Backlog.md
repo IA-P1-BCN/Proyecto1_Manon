@@ -1,30 +1,32 @@
 # Backlog — Taxímetro (Backend Python, POO)
 
-Convención de etiquetas sugeridas para el tablero Kanban:
+Tablero: [IAS_P1_Taximetro_Manon](https://github.com/orgs/IA-P1-BCN/projects/2) · issues en [`IA-P1-BCN/Proyecto1_Manon`](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues).
+
+- **Columnas** (campo `Status`): `User Stories` · `Fase 1` · `Fase 2` · `Fase 3` · `Fase 4` — una por fase, como pide el cliente.
+- **Progreso** (campo `Progreso`): `To Do` · `En curso` · `En review` · `Done` — el avance del día a día no se marca moviendo tarjetas entre fases.
 - **Prioridad**: `must`, `should`, `could`
 - **Tipo**: `epic`, `feature`, `tech-task`, `test`, `docs`
-- **Columnas del tablero**: `Backlog` → `To Do` → `In Progress` → `In Review` → `Done`
 
-Cada tarjeta de "Tarea técnica" está pensada para ser un issue individual en GitHub, enlazado a la historia de usuario (Epic) mediante una checklist o `Related to #US-XX`.
+Cada tarea técnica es un issue individual, enlazado aquí por su número. Las historias de usuario son issues épicas.
 
 ---
 
-## EPIC 0 — Setup del proyecto (infraestructura)
+## EPIC 0 — Setup del proyecto (infraestructura) — [#11](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/11)
 *Prioridad: Must — no viene de una US pero es prerequisito*
 
-- [ ] **T0.1** Crear estructura de paquete Python (`taximetro/`, `tests/`, `config/`)
+- [x] **T0.1** Crear estructura de paquete Python (`taximetro/`, `tests/`) ✅ — [#12](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/12)
   - Labels: `tech-task`, `must`
-- [x] **T0.2** Configurar entorno virtual, `requirements.txt` / `pyproject.toml` ✅
+- [x] **T0.2** Configurar entorno virtual, `requirements.txt` / `pyproject.toml` ✅ — [#13](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/13)
   - Labels: `tech-task`, `must`
   - `.venv/` (Python 3.14.7) + `requirements-dev.txt` (pytest, pytest-cov) + `pyproject.toml` + `.gitignore`
-- [ ] **T0.3** Configurar framework de tests (`pytest`)
+- [x] **T0.3** Configurar framework de tests (`pytest`) ✅ — [#14](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/14)
   - Labels: `tech-task`, `must`
-- [ ] **T0.4** README inicial con instrucciones de instalación y uso
+- [ ] **T0.4** README inicial con instrucciones de instalación y uso — [#15](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/15)
   - Labels: `docs`, `should`
 
 ---
 
-## US-01 — Iniciar carrera con un solo comando (Must)
+## US-01 — Iniciar carrera con un solo comando (Must) — [#2](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/2)
 **Como** taxista, **quiero** iniciar una carrera con un solo comando **para** empezar a cobrar desde el arranque.
 
 **Criterios de aceptación**
@@ -34,32 +36,35 @@ Cada tarjeta de "Tarea técnica" está pensada para ser un issue individual en G
 **Diseño sugerido**: clase `Carrera` (atributos: `id`, `hora_inicio`, `estado`, `distancia`, `importe`); clase `Taximetro` con método `iniciar_carrera()`.
 
 Tareas:
-- [ ] **T1.1** Diseñar e implementar clase `Carrera` (estado inicial, atributos base) — `tech-task`, `must`
-- [ ] **T1.2** Implementar `Taximetro.iniciar_carrera()` con validación de "no hay carrera activa" — `tech-task`, `must`
-- [ ] **T1.3** Comando CLI `iniciar` (entrypoint) — `feature`, `must`
-- [ ] **T1.4** Tests unitarios: inicio correcto, inicio duplicado bloqueado — `test`, `must`
+- [ ] **T1.1** Diseñar e implementar clase `Carrera` (estado inicial, atributos base) — `tech-task`, `must` — [#16](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/16)
+- [ ] **T1.2** Implementar `Taximetro.iniciar_carrera()` con validación de "no hay carrera activa" — `tech-task`, `must` — [#17](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/17)
+- [ ] **T1.3** Comando CLI `iniciar` (entrypoint) — `feature`, `must` — [#18](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/18)
+- [ ] **T1.4** Tests unitarios: inicio correcto, inicio duplicado bloqueado — `test`, `must` — [#19](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/19)
 
 ---
 
-## US-02 — Cambiar estado parado / en movimiento (Must)
+## US-02 — Cambiar estado parado / en movimiento (Must) — [#3](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/3)
 **Como** taxista, **quiero** cambiar el estado entre "parado" y "en movimiento" **para** que la tarifa se ajuste.
 
 **Criterios de aceptación**
-- El sistema aplica una tarifa distinta (€/min parado vs €/km en movimiento) según el estado actual.
+- El sistema aplica una tarifa distinta (`0,02 €/s` parado vs `0,05 €/s` en movimiento) según el estado actual.
+  - *Corregido: el texto original decía «€/min parado vs €/km en movimiento», que contradice las tarifas del briefing. El taxímetro cobra por segundo en ambos estados y nunca por distancia — ver `docs/project-brief.md`.*
 - Cambiar de estado no interrumpe el cálculo acumulado del importe.
 
 **Diseño sugerido**: `Carrera.cambiar_estado(nuevo_estado)`; clase `Tarifa` con métodos `calcular_parado()` / `calcular_movimiento()`.
 
+> **Decisión tomada**: un único `Tarifa.calcular_importe(estado, segundos)` en lugar de un método por estado, para no duplicar el if/else de estado→tarifa en cada punto de llamada. La `Tarifa` la crea `Taximetro` y se la inyecta a cada `Carrera`. Ver `docs/decisions-fase1-scaffold.md`.
+
 Tareas:
-- [ ] **T2.1** Implementar `Carrera.cambiar_estado()` con máquina de estados simple (parado/movimiento) — `tech-task`, `must`
-- [ ] **T2.2** Implementar clase `Tarifa` con lógica diferenciada de cálculo — `tech-task`, `must`
-- [ ] **T2.3** Integrar acumulación de importe en tiempo real al cambiar de estado — `tech-task`, `must`
-- [ ] **T2.4** Comando CLI para alternar estado — `feature`, `must`
-- [ ] **T2.5** Tests: cálculo correcto en cada estado y en transiciones — `test`, `must`
+- [ ] **T2.1** Implementar `Carrera.cambiar_estado()` con máquina de estados simple (parado/movimiento) — `tech-task`, `must` — [#20](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/20)
+- [ ] **T2.2** Implementar clase `Tarifa` con lógica diferenciada de cálculo — `tech-task`, `must` — [#21](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/21)
+- [ ] **T2.3** Integrar acumulación de importe en tiempo real al cambiar de estado — `tech-task`, `must` — [#22](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/22)
+- [ ] **T2.4** Comando CLI para alternar estado — `feature`, `must` — [#23](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/23)
+- [ ] **T2.5** Tests: cálculo correcto en cada estado y en transiciones — `test`, `must` — [#24](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/24)
 
 ---
 
-## US-03 — Finalizar carrera y ver total en euros (Must)
+## US-03 — Finalizar carrera y ver total en euros (Must) — [#4](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/4)
 **Como** taxista, **quiero** finalizar la carrera y ver el total en euros **para** cobrar al pasajero.
 
 **Criterios de aceptación**
@@ -67,14 +72,14 @@ Tareas:
 - La carrera finalizada queda marcada como cerrada y no admite más cambios de estado.
 
 Tareas:
-- [ ] **T3.1** Implementar `Carrera.finalizar()` (cierre, cálculo final, hora de fin) — `tech-task`, `must`
-- [ ] **T3.2** Formateo de importe en euros (helper/util) — `tech-task`, `must`
-- [ ] **T3.3** Comando CLI `finalizar` que muestra el total — `feature`, `must`
-- [ ] **T3.4** Tests: importe final correcto, bloqueo de cambios tras finalizar — `test`, `must`
+- [ ] **T3.1** Implementar `Carrera.finalizar()` (cierre, cálculo final, hora de fin) — `tech-task`, `must` — [#25](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/25)
+- [ ] **T3.2** Formateo de importe en euros (helper/util) — `tech-task`, `must` — [#26](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/26)
+- [ ] **T3.3** Comando CLI `finalizar` que muestra el total — `feature`, `must` — [#27](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/27)
+- [ ] **T3.4** Tests: importe final correcto, bloqueo de cambios tras finalizar — `test`, `must` — [#28](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/28)
 
 ---
 
-## US-04 — Iniciar otra carrera sin cerrar el programa (Must)
+## US-04 — Iniciar otra carrera sin cerrar el programa (Must) — [#5](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/5)
 **Como** taxista, **quiero** poder iniciar otra carrera sin cerrar el programa **para** no perder tiempo entre servicios.
 
 **Criterios de aceptación**
@@ -83,13 +88,13 @@ Tareas:
 **Diseño sugerido**: clase `TaximetroApp` (orquestador con bucle principal / menú de comandos) que gestiona el ciclo de vida de `Carrera`.
 
 Tareas:
-- [ ] **T4.1** Implementar bucle principal / menú de comandos en `TaximetroApp` — `tech-task`, `must`
-- [ ] **T4.2** Reset de estado tras finalizar carrera (permitir nueva instancia) — `tech-task`, `must`
-- [ ] **T4.3** Tests de integración: ciclo completo iniciar→finalizar→iniciar — `test`, `must`
+- [ ] **T4.1** Implementar bucle principal / menú de comandos en `TaximetroApp` — `tech-task`, `must` — [#29](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/29)
+- [ ] **T4.2** Reset de estado tras finalizar carrera (permitir nueva instancia) — `tech-task`, `must` — [#30](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/30)
+- [ ] **T4.3** Tests de integración: ciclo completo iniciar→finalizar→iniciar — `test`, `must` — [#31](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/31)
 
 ---
 
-## US-05 — Histórico de carreras del día (Should)
+## US-05 — Histórico de carreras del día (Should) — [#6](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/6)
 **Como** responsable de flota, **quiero** ver el histórico de carreras del día **para** cuadrar caja.
 
 **Criterios de aceptación**
@@ -99,14 +104,14 @@ Tareas:
 **Diseño sugerido**: clase `Historial` con persistencia en CSV/JSON; método `resumen_del_dia()`.
 
 Tareas:
-- [ ] **T5.1** Implementar clase `Historial` (registro de carreras) — `tech-task`, `should`
-- [ ] **T5.2** Persistencia en fichero (CSV o JSON) — `tech-task`, `should`
-- [ ] **T5.3** Comando `historial` con resumen y total de caja del día — `feature`, `should`
-- [ ] **T5.4** Tests de persistencia y cálculo de totales — `test`, `should`
+- [ ] **T5.1** Implementar clase `Historial` (registro de carreras) — `tech-task`, `should` — [#32](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/32)
+- [ ] **T5.2** Persistencia en fichero (CSV o JSON) — `tech-task`, `should` — [#33](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/33)
+- [ ] **T5.3** Comando `historial` con resumen y total de caja del día — `feature`, `should` — [#34](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/34)
+- [ ] **T5.4** Tests de persistencia y cálculo de totales — `test`, `should` — [#35](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/35)
 
 ---
 
-## US-06 — Logs de operación (Should)
+## US-06 — Logs de operación (Should) — [#7](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/7)
 **Como** técnico, **quiero** que el sistema genere logs de operación **para** diagnosticar errores en producción.
 
 **Criterios de aceptación**
@@ -114,31 +119,31 @@ Tareas:
 - Los logs incluyen timestamp y nivel (INFO/WARNING/ERROR).
 
 Tareas:
-- [ ] **T6.1** Configurar módulo `logging` (formato, niveles, salida a fichero) — `tech-task`, `should`
-- [ ] **T6.2** Instrumentar eventos clave en `Carrera` / `Taximetro` — `tech-task`, `should`
-- [ ] **T6.3** Rotación de logs (`RotatingFileHandler`) — `tech-task`, `should`
-- [ ] **T6.4** Tests de logging (verificar que se generan entradas) — `test`, `should`
+- [ ] **T6.1** Configurar módulo `logging` (formato, niveles, salida a fichero) — `tech-task`, `should` — [#36](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/36)
+- [ ] **T6.2** Instrumentar eventos clave en `Carrera` / `Taximetro` — `tech-task`, `should` — [#37](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/37)
+- [ ] **T6.3** Rotación de logs (`RotatingFileHandler`) — `tech-task`, `should` — [#38](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/38)
+- [ ] **T6.4** Tests de logging (verificar que se generan entradas) — `test`, `should` — [#39](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/39)
 
 ---
 
-## US-07 — Tarifas configurables sin redeploy (Should)
+## US-07 — Tarifas configurables sin redeploy (Should) — [#8](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/8)
 **Como** técnico, **quiero** poder cambiar las tarifas en un fichero de configuración **para** no redeployar.
 
 **Criterios de aceptación**
-- Las tarifas (€/km, €/min parado, bajada de bandera) se leen de un fichero externo (JSON/YAML) al arrancar.
+- Las tarifas (€/s parado, €/s en movimiento) se leen de un fichero externo (JSON/YAML) al arrancar.
 - Si el fichero es inválido o falta, se usan valores por defecto sin que el programa falle.
 
 **Diseño sugerido**: clase `ConfigTarifas` que carga y valida el fichero; inyectada en `Tarifa`.
 
 Tareas:
-- [ ] **T7.1** Definir esquema del fichero de configuración (`config/tarifas.json`) — `tech-task`, `should`
-- [ ] **T7.2** Implementar `ConfigTarifas` (carga, validación, defaults) — `tech-task`, `should`
-- [ ] **T7.3** Integrar `ConfigTarifas` en `Tarifa` — `tech-task`, `should`
-- [ ] **T7.4** Tests: fichero válido, fichero corrupto/ausente → defaults — `test`, `should`
+- [ ] **T7.1** Definir esquema del fichero de configuración (`config/tarifas.json`) — `tech-task`, `should` — [#40](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/40)
+- [ ] **T7.2** Implementar `ConfigTarifas` (carga, validación, defaults) — `tech-task`, `should` — [#41](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/41)
+- [ ] **T7.3** Integrar `ConfigTarifas` en `Tarifa` — `tech-task`, `should` — [#42](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/42)
+- [ ] **T7.4** Tests: fichero válido, fichero corrupto/ausente → defaults — `test`, `should` — [#43](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/43)
 
 ---
 
-## US-08 — Protección por contraseña (Could)
+## US-08 — Protección por contraseña (Could) — [#9](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/9)
 **Como** responsable de flota, **quiero** que el sistema requiera contraseña **para** protegerlo de manipulaciones.
 
 **Criterios de aceptación**
@@ -146,14 +151,14 @@ Tareas:
 - La contraseña no se almacena en texto plano.
 
 Tareas:
-- [ ] **T8.1** Implementar clase `Auth` con verificación de contraseña — `tech-task`, `could`
-- [ ] **T8.2** Almacenamiento con hash (p.ej. `hashlib`/`bcrypt`) — `tech-task`, `could`
-- [ ] **T8.3** Integrar `Auth` en el arranque de `TaximetroApp` — `tech-task`, `could`
-- [ ] **T8.4** Tests de autenticación (correcta/incorrecta) — `test`, `could`
+- [ ] **T8.1** Implementar clase `Auth` con verificación de contraseña — `tech-task`, `could` — [#44](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/44)
+- [ ] **T8.2** Almacenamiento con hash (p.ej. `hashlib`/`bcrypt`) — `tech-task`, `could` — [#45](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/45)
+- [ ] **T8.3** Integrar `Auth` en el arranque de `TaximetroApp` — `tech-task`, `could` — [#46](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/46)
+- [ ] **T8.4** Tests de autenticación (correcta/incorrecta) — `test`, `could` — [#47](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/47)
 
 ---
 
-## US-09 — Interfaz visual con botones grandes (Could)
+## US-09 — Interfaz visual con botones grandes (Could) — [#10](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/10)
 **Como** taxista, **quiero** una interfaz visual con botones grandes **para** usarlo fácilmente en móvil o tablet.
 
 **Criterios de aceptación**
@@ -163,10 +168,10 @@ Tareas:
 *Nota: esta historia es "Could" y depende de que el backend (US-01 a US-04) esté estable primero.*
 
 Tareas:
-- [ ] **T9.1** Spike técnico: elegir framework de UI (Kivy / PyQt / Flask+webview) — `tech-task`, `could`
-- [ ] **T9.2** Diseñar pantalla principal (botones grandes, tipografía táctil) — `tech-task`, `could`
-- [ ] **T9.3** Conectar UI a la capa de backend (`Taximetro`/`TaximetroApp`) — `tech-task`, `could`
-- [ ] **T9.4** Tests manuales/UX en dispositivo táctil — `test`, `could`
+- [ ] **T9.1** Spike técnico: elegir framework de UI (Kivy / PyQt / Flask+webview) — `tech-task`, `could` — [#48](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/48)
+- [ ] **T9.2** Diseñar pantalla principal (botones grandes, tipografía táctil) — `tech-task`, `could` — [#49](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/49)
+- [ ] **T9.3** Conectar UI a la capa de backend (`Taximetro`/`TaximetroApp`) — `tech-task`, `could` — [#50](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/50)
+- [ ] **T9.4** Tests manuales/UX en dispositivo táctil — `test`, `could` — [#51](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/51)
 
 ---
 
@@ -203,12 +208,48 @@ Tareas:
 
 ---
 
+## EPIC P — Decisiones de la sesión previa a la implementación — [#62](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/62)
+*Prioridad: Must — no deriva de una US, sino de la sesión de diseño anterior a escribir la lógica de Fase 1*
+
+Referencia: **`docs/decisions-fase1-scaffold.md`** (decisiones de código) y **`docs/decisions-proceso.md`** (decisiones de proceso).
+
+El andamiaje daba por decididas cosas que no lo estaban — de dónde sale la `Tarifa`, qué pasa al leer una carrera cerrada, cómo se testea el bucle CLI — y arrastraba una contradicción de formato entre documentos. Estas tareas lo corrigen antes de que el código las fije.
+
+| Decisión | Efecto |
+|---|---|
+| Dos relojes inyectables | Un salto del reloj de pared ya no puede restar importe |
+| Lectura congelada tras `finalizar()` | El total de una carrera cerrada deja de crecer |
+| `Tarifa` inyectada desde `Taximetro` | La Fase 2 (US-07) no tendrá que tocar `Carrera` |
+| `entrada` / `salida` inyectables | El bucle CLI se puede testear (TD.9) |
+| EOF gestionado | Ni traceback ni importe perdido con Ctrl+D o entrada canalizada |
+| Formato `12,34 €` | Se resuelve la contradicción entre el andamiaje y el flujo |
+
+Tareas:
+- [ ] **TP.1** Dos relojes inyectables: `monotonic` para acumular, calendario para las horas — `tech-task`, `must` — [#63](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/63)
+- [ ] **TP.2** Lectura congelada en una carrera finalizada — `tech-task`, `must` — [#64](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/64)
+- [ ] **TP.3** Inyección de `entrada`/`salida` en `TaximetroApp` — `tech-task`, `must` — [#65](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/65)
+- [ ] **TP.4** Gestión de EOF (Ctrl+D) en el bucle CLI — `feature`, `must` — [#66](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/66)
+- [ ] **TP.5** `formato_euros` en formato español (`12,34 €`) — `tech-task`, `must` — [#67](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/67)
+- [ ] **TP.6** Campo `Progreso` y segunda vista en el tablero — `tech-task`, `must` — [#68](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/68)
+- [x] **TP.7** Unificar el brief del cliente en `docs/project-brief.md` — `docs`, `must` — [#69](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/69) ✅
+- [x] **TP.8** Workflow de CI: `pytest` en cada push y PR — `tech-task`, `must` — [#70](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/70) ✅
+- [x] **TP.9** Umbral de cobertura del 90 % en `pyproject.toml` — `test`, `must` — [#71](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/71) ✅
+- [x] **TP.10** README mínimo en español — `docs`, `should` — [#72](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/72) ✅
+- [x] **TP.11** Guion de la demo de Fase 1 — `docs`, `must` — [#73](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/73) ✅
+- [x] **TP.12** `conftest` con relojes falsos y test de estructura — `test`, `must` — [#74](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/74) ✅
+
+**Relación con tareas existentes:** TP.1 se implementa junto a **T1.1** (clase `Carrera`); TP.3 junto a **T4.1** (bucle principal); TP.4 junto a **TD.7** (gestión de Ctrl+C), que es la otra mitad de la misma rama del bucle; TP.5 concreta el formato que produce **T3.2**.
+
+**Pendiente manual:** la segunda vista del tablero (TP.6) hay que crearla en el navegador — la API de GitHub Projects permite crear campos, pero no vistas.
+
+---
+
 ## Resumen de prioridades (para ordenar el Sprint 1)
 
 | Prioridad | Historias |
 |---|---|
-| Must | US-01, US-02, US-03, US-04, EPIC D |
+| Must | US-01, US-02, US-03, US-04, EPIC D, EPIC P |
 | Should | US-05, US-06, US-07 |
 | Could | US-08, US-09 |
 
-Sugerencia: Sprint 1 = Epic 0 + US-01 a US-04 + EPIC D (núcleo funcional del taxímetro). Sprint 2 = US-05 a US-07 (operación/producción). Sprint 3 = US-08, US-09 (extras).
+Sugerencia: Sprint 1 = Epic 0 + US-01 a US-04 + EPIC D + EPIC P (núcleo funcional del taxímetro). Sprint 2 = US-05 a US-07 (operación/producción). Sprint 3 = US-08, US-09 (extras).
