@@ -18,6 +18,13 @@ pythonpath = ["."]
 # Dónde buscar tests si se ejecuta `pytest` sin argumentos.
 testpaths = ["tests"]
 
-# Falla si un test usa un marcador no declarado, en vez de ignorarlo en
-# silencio (un `@pytest.mark.slwo` mal escrito debe dar error, no pasar).
-addopts = "--strict-markers"
+# Opciones que se aplican siempre, también en CI:
+#
+# --strict-markers   falla si un test usa un marcador no declarado, en vez de
+#                    ignorarlo en silencio (un `@pytest.mark.slwo` mal escrito
+#                    debe dar error, no pasar).
+# --cov=taximetro    mide la cobertura del paquete de dominio (no de tests/).
+# --cov-fail-under   umbral de calidad: por debajo del 90 %, `pytest` falla.
+#                    Va aquí y no solo en el workflow de CI para que el umbral
+#                    salte primero en la máquina de quien programa.
+addopts = "--strict-markers --cov=taximetro --cov-fail-under=90"

@@ -41,6 +41,8 @@ Tu equipo ha sido asignado para desarrollar el prototipo.
 
 ## 📋 Historias de Usuario
 
+El equipo de producto ha desglosado el briefing en las siguientes historias. Están priorizadas por el cliente usando **MoSCoW**.
+
 | ID | Historia | Prioridad |
 |---|---|---|
 | **US-01** | Como taxista, quiero iniciar una carrera con un solo comando para empezar a cobrar desde el momento de arranque | **Must** |
@@ -57,72 +59,152 @@ Tu equipo ha sido asignado para desarrollar el prototipo.
 
 ## 📊 Fases de Entrega
 
-### 🟢 Fase 1 — MVP Funcional (US-01 a US-04)
+El proyecto se divide en **4 fases incrementales**. Cada fase es un entregable autónomo y funcional.
 
-CLI operativo que cubra el flujo completo de una carrera. Arranca desde terminal, presenta instrucciones de uso, permite gestionar el estado del vehículo por teclado. La tarifa se acumula de forma continua según el estado activo y el tiempo transcurrido. Al finalizar, importe total en euros con dos decimales. El proceso no se cierra entre carreras.
+### 🟢 Fase 1 — MVP Funcional
 
-**Requisitos funcionales:**
-- [ ] Al arrancar, el sistema explica al conductor cómo usarlo sin documentación externa.
-- [ ] El conductor puede indicar en cada momento si el vehículo está parado o en movimiento.
-- [ ] El importe se acumula de forma continua según estado activo y tiempo transcurrido, aplicando la tarifa correspondiente en cada tramo.
-- [ ] Al cerrar la carrera, se muestra el importe total a cobrar.
-- [ ] Se pueden encadenar carreras de forma inmediata, sin interrupciones.
+**US-01 a US-04**
 
-### 🟡 Fase 2 — Observabilidad y Persistencia (US-05, US-06, US-07)
+El primer entregable es un CLI operativo que cubra el flujo completo de una carrera. El cliente necesita validar la lógica de tarifas antes de avanzar con cualquier otra funcionalidad.
 
-**Requisitos funcionales:**
-- [ ] Registro de todo lo relevante: arranque, cambios de estado, cierre de carrera, errores.
-- [ ] Registro accesible para el equipo técnico sin intervenir en el proceso en ejecución.
-- [ ] Al finalizar cada carrera, los datos (fecha, duración, importe) quedan guardados de forma permanente.
-- [ ] Datos disponibles en sesiones posteriores sin acción manual.
-- [ ] Tarifas actualizables sin modificar código ni redeployar.
-- [ ] Lógica de cálculo de tarifas cubierta por tests automatizados.
+El sistema debe arrancar desde terminal, presentar las instrucciones de uso, y permitir al conductor gestionar el estado del vehículo mediante comandos de teclado.
 
-### 🟠 Fase 3 — Arquitectura y Experiencia de Usuario (US-08, US-09)
+La tarifa se acumula de forma continua en función del estado activo y el tiempo transcurrido.
 
-Refactorización estructural bajo un modelo OOP con responsabilidades claramente delimitadas, más interfaz gráfica táctil para tablet.
+Al finalizar la carrera, el importe total se muestra en euros con dos decimales.
 
-**Requisitos funcionales:**
-- [ ] Cada componente tiene una responsabilidad clara y puede modificarse/sustituirse sin afectar al resto.
-- [ ] Acceso protegido por contraseña.
-- [ ] Credenciales almacenadas de forma segura; ningún valor sensible en texto plano.
-- [ ] Interfaz gráfica funcional en tablet montada en el vehículo.
-- [ ] Estado del taxi visible de un vistazo; importe actualizado en tiempo real.
-- [ ] Interacción táctil cómoda; la interfaz no se bloquea durante el uso.
+El proceso no debe cerrarse entre carreras: el conductor necesita encadenar servicios sin interrupciones.
+
+#### Requisitos funcionales
+
+- [ ] Al arrancar, el sistema debe explicar al conductor cómo usarlo sin necesidad de documentación externa.
+- [ ] El conductor debe poder indicar en cada momento si el vehículo está parado o en movimiento.
+- [ ] El importe se acumula de forma continua según el estado activo y el tiempo transcurrido, aplicando la tarifa correspondiente en cada tramo.
+- [ ] Al cerrar la carrera, el sistema muestra el importe total a cobrar.
+- [ ] El sistema debe permitir encadenar carreras de forma inmediata, sin interrupciones entre servicios.
+
+---
+
+### 🟡 Fase 2 — Observabilidad y Persistencia
+
+**US-05, US-06 y US-07**
+
+El cliente ha solicitado que el sistema sea auditable y que los datos sobrevivan al cierre de la aplicación. Esta fase añade trazabilidad operativa y persistencia de negocio.
+
+El sistema debe registrar todos los eventos relevantes —arranque, cambios de estado, cierre de carrera, errores— en un log estructurado accesible para el equipo técnico.
+
+El historial de carreras debe escribirse en disco de forma incremental y estar disponible en la siguiente sesión sin intervención manual.
+
+Las tarifas deben poder modificarse mediante un fichero de configuración externo, sin necesidad de tocar el código ni redeployar.
+
+#### Requisitos funcionales
+
+- [ ] El sistema debe registrar en todo momento qué está ocurriendo: arranque, cambios de estado del vehículo, cierre de carrera y cualquier error.
+- [ ] El registro debe ser accesible para el equipo técnico sin necesidad de intervenir en el proceso en ejecución.
+- [ ] Al finalizar cada carrera, los datos relevantes —fecha, duración e importe— deben quedar guardados de forma permanente.
+- [ ] Los datos deben estar disponibles en sesiones posteriores sin ninguna acción manual.
+- [ ] Las tarifas deben poder actualizarse sin modificar el código ni redeployar la aplicación.
+- [ ] La lógica de cálculo de tarifas debe estar cubierta por tests automatizados.
+
+---
+
+### 🟠 Fase 3 — Arquitectura y Experiencia de Usuario
+
+**US-08 y US-09**
+
+Con el MVP validado, el cliente quiere una versión del sistema que pueda mantenerse a largo plazo y que resulte usable para conductores con poca experiencia técnica.
+
+Esta fase implica una **refactorización estructural** y la incorporación de una interfaz gráfica.
+
+El código debe reorganizarse bajo un modelo orientado a objetos con responsabilidades claramente delimitadas entre componentes.
+
+El acceso al sistema debe protegerse mediante autenticación por contraseña, almacenada de forma segura.
+
+La interfaz gráfica debe ser funcional en una tablet montada en el vehículo:
+
+- Botones grandes.
+- Estado visible de un vistazo.
+- Contador actualizado en tiempo real.
+- Interacción táctil cómoda.
+- La interfaz no debe bloquearse durante el uso.
+
+#### Requisitos funcionales
+
+- [ ] Cada componente debe tener una responsabilidad clara y poder modificarse o sustituirse sin afectar al resto del sistema.
+- [ ] El acceso a la aplicación debe estar protegido por contraseña.
+- [ ] Las credenciales deben almacenarse de forma segura.
+- [ ] Ningún valor sensible puede guardarse en texto plano.
+- [ ] La interfaz gráfica debe ser funcional en una tablet montada en el vehículo.
+- [ ] El estado del taxi debe ser visible de un vistazo.
+- [ ] El importe debe actualizarse en tiempo real.
+- [ ] La interacción táctil debe ser cómoda.
+- [ ] La interfaz no debe bloquearse en ningún momento durante el uso.
+
+---
 
 ### 🔴 Fase 4 — Versión de Producción
 
-Historial migra a base de datos relacional; lógica de negocio expuesta vía API REST; despliegue con un único comando.
+Esta fase convierte el prototipo en un sistema desplegable.
 
-**Requisitos funcionales:**
-- [ ] Historial en base de datos con integridad y consultas estructuradas.
-- [ ] API que permite iniciar carreras, cambiar estado, finalizarlas, consultar historial.
-- [ ] API consumible por cualquier cliente web o móvil futuro.
-- [ ] Panel web accesible desde navegador; responsable de flota consulta historial sin instalar nada.
-- [ ] Despliegue con un único comando; sin configuración manual del entorno.
-- [ ] Datos sobreviven a reinicios del sistema.
+El cliente quiere poder instalar la aplicación en los vehículos de la flota sin dependencias manuales, y acceder al historial de operaciones desde cualquier dispositivo conectado a la red del taxi.
+
+El historial migra de fichero plano a **base de datos relacional**.
+
+La lógica de negocio se expone mediante una **API REST** que puede ser consumida tanto por la interfaz web incluida como por integraciones futuras.
+
+El sistema completo debe poder desplegarse con **un único comando**.
+
+#### Requisitos funcionales
+
+- [ ] El historial de carreras debe almacenarse en una base de datos que garantice integridad y permita consultas estructuradas.
+- [ ] La lógica de negocio debe exponerse a través de una API que permita:
+  - Iniciar carreras.
+  - Cambiar su estado.
+  - Finalizarlas.
+  - Consultar el historial.
+- [ ] La API debe poder ser consumida por cualquier cliente web o móvil en el futuro.
+- [ ] El sistema debe incluir un panel web accesible desde el navegador.
+- [ ] El responsable de flota debe poder consultar el historial sin instalar nada.
+- [ ] El despliegue debe poder realizarse con un único comando.
+- [ ] No debe ser necesaria configuración manual del entorno.
+- [ ] Los datos deben sobrevivir a reinicios del sistema.
 
 ---
 
 ## 🛠️ Restricciones Técnicas
 
-- Lenguaje: **Python**. Librerías/frameworks a elección del equipo, justificando decisiones en la documentación.
-- Control de versiones: **Git y GitHub** desde el inicio.
-- Gestión de tareas visible en tablero **GitHub Projects**, una columna por fase.
+El lenguaje de desarrollo es **Python**.
+
+Más allá de eso, la elección de librerías, frameworks y herramientas queda en manos del equipo, que deberá justificar sus decisiones técnicas en la documentación del proyecto.
+
+Se requiere control de versiones con **Git y GitHub** desde el inicio.
+
+La gestión de tareas debe ser visible en un tablero **GitHub Projects** con una columna por fase.
+
+---
 
 ## 📦 Entregables por Fase
 
-1. Repositorio de GitHub con el código fuente.
+Cada fase debe entregarse con:
+
+1. Repositorio de GitHub con el código fuente del proyecto.
 2. Demo en directo.
 3. Enlace al tablero Kanban actualizado.
 
+---
+
 ## 📚 Recursos
+
+### Documentación oficial de Python
 
 - [`time`](https://docs.python.org/3/library/time.html) — Python stdlib
 - [`logging`](https://docs.python.org/3/library/logging.html) — Python stdlib
 - [`unittest`](https://docs.python.org/3/library/unittest.html) — Python stdlib
 - [`tkinter`](https://docs.python.org/3/library/tkinter.html) — GUI básica
+
+### Guías de referencia
+
 - [Real Python — OOP en Python](https://realpython.com/python3-object-oriented-programming/)
 - [Real Python — Testing](https://realpython.com/pytest-python-testing/)
 - [Real Python — Logging](https://realpython.com/python-logging/)
-- [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/)
+- [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/) — formato de mensajes de commit
