@@ -4,7 +4,7 @@ Context and instructions for Claude Code working in this repository. Read at the
 
 ## Project
 
-`TTX-247` — a software taxímetro (taxi meter) for TaxiTech Solutions, replacing failing physical hardware. Python, OOP. Full client brief, all 9 user stories, and phase requirements: see **`docs/project-brief.md`**. Read it before starting any new phase or story.
+`TTX-247` — a software taxímetro (taxi meter) for TaxiTech Solutions, replacing failing physical hardware. Python, OOP. Full client brief, all 9 user stories, and phase requirements: see **`docs/project-brief.md`** (the client's own wording, unedited — don't rewrite or summarise it in place). Read it before starting any new phase or story.
 
 ## Current phase
 
@@ -17,32 +17,59 @@ Context and instructions for Claude Code working in this repository. Read at the
 | Parado / < 20 km/h | €0.02 per **second** |
 | En movimiento | €0.05 per **second** |
 
-Fare accrues continuously based on elapsed time in each state — not per km, not per fixed step. Final total shown in euros, 2 decimals.
+Fare accrues continuously based on elapsed time in each state — not per km, not per fixed step. Final total shown in euros, 2 decimals, Spanish format: `12,34 €` (comma, space before the symbol), produced only by `utils.formato_euros()`.
+
+## Design decisions
+
+Before changing behaviour, check whether it was already decided:
+
+- **`docs/decisions-fase1-scaffold.md`** — structural decisions (what lives where, and why).
+- **`docs/flujo-fase1.md`** — authority on CLI behaviour: the command loop, menus per mode, error messages, Ctrl+C / EOF.
+- **`docs/decisions-proceso.md`** — how the project is run: language, git workflow, CI, coverage gate, board.
+- **`docs/future-implementation-ideas.md`** — ideas deliberately postponed; check before "improving" something that was dropped on purpose.
+- **`docs/demo-fase1.md`** — the script for the client demo; keep it true to the real CLI output.
 
 ## Structure (Fase 1)
 
 ```
 taximetro/
     __init__.py
-    carrera.py         # Carrera: id, hora_inicio, estado, importe
+    carrera.py          # Carrera: id, hora_inicio, hora_fin, estado, distancia, importe
     tarifa.py           # Tarifa: rate lookup + accrual calculation
+    taximetro.py        # Taximetro: owns the Tarifa and the active Carrera
     taximetro_app.py    # TaximetroApp: CLI loop, prints usage on startup, no docs required to use it
+    utils.py            # formato_euros()
 tests/
+    conftest.py         # shared fixtures: fake reloj / calendario
+    test_estructura.py  # design contract: the agreed public API still exists
     test_carrera.py
     test_tarifa.py
-docs/
-    project-brief.md
-BACKLOG.md
-CLAUDE.md
+    test_taximetro.py
+    test_taximetro_app.py
+    test_utils.py
+docs/                   # see "Design decisions" above
+.github/workflows/
+    tests.yml           # pytest + coverage on push and PR
+Backlog.md
+Claude.md
 README.md
 ```
 
-Later phases add `historial.py`, `config_tarifas.py`, `auth.py`, a GUI module, then `api/` and a DB layer — don't create these ahead of their phase.
+One test file per module. Later phases add `historial.py`, `config_tarifas.py`, `auth.py`, a GUI module, then `api/` and a DB layer — don't create these ahead of their phase.
+
+## Object responsibilities
+
+- `Carrera` — one ride. Accrues its own importe via timestamp deltas; raises `CarreraFinalizadaError` on any change after `finalizar()`. Reads on a closed ride return the frozen total, they never raise and never accrue.
+- `Tarifa` — state → rate lookup and `calcular_importe(estado, segundos)`. Owned by `Taximetro`, injected into each `Carrera`, so Fase 2's `ConfigTarifas` only touches `Taximetro`.
+- `Taximetro` — owns the active `Carrera`, the `Tarifa` and the injected clocks. Raises `CarreraActivaError` on a double `iniciar_carrera()`.
+- `TaximetroApp` — CLI only. Knows which mode it is in and produces the driver-facing messages itself; no fare logic.
+
+**Two clocks, injected, never called globally:** `reloj: Callable[[], float] = time.monotonic` measures elapsed time for fare accrual (a wall clock can jump backwards and undercharge); `calendario: Callable[[], datetime] = datetime.now` stamps `hora_inicio` / `hora_fin`. `TaximetroApp` takes `entrada=input` and `salida=print` for the same reason — tests script commands in and read printed lines out.
 
 ## Commands
 
-- Tests: `pytest`
-- Tests with coverage: `pytest --cov=taximetro`
+- Tests: `pytest` (coverage and the 90% gate are in `pyproject.toml`'s `addopts`, so a bare `pytest` enforces them)
+- Coverage detail: `pytest --cov-report=term-missing`
 - Run: `python -m taximetro.taximetro_app`
 
 Run `pytest` after every change. Don't call a task done with failing tests.
@@ -51,19 +78,26 @@ Run `pytest` after every change. Don't call a task done with failing tests.
 
 - PEP 8, type hints on public methods, short docstrings on every class/public method.
 - One class per file, snake_case filename matching the class.
-- Domain vocabulary in Spanish for consistency with the user stories (`Carrera`, `iniciar_carrera`, `cambiar_estado`, `finalizar`); generic utility code can be English.
-- Keep the CLI layer thin — it parses input and calls methods on `TaximetroApp`/`Carrera`; no fare logic there.
-- Fase 1 requires no external libraries beyond the standard library (`time`) unless a specific later-phase story calls for one (justify any new dependency in the PR description, per the client's technical constraints).
+- Domain vocabulary in Spanish for consistency with the user stories (`Carrera`, `iniciar_carrera`, `cambiar_estado`, `finalizar`); generic utility code can be English (`formato_euros`).
+- **Language:** anything the client or an evaluator reads is Spanish — `README.md`, `docs/project-brief.md`, `docs/flujo-fase1.md`, `docs/demo-fase1.md`, docstrings, CLI output, commit subjects. Internal working notes (`docs/decisions-*.md`, `docs/future-implementation-ideas.md`) may stay in English.
+- Keep the CLI layer thin — it parses input and calls methods on `Taximetro`/`Carrera`; no fare logic there.
+- Fase 1 requires no external libraries beyond the standard library (`time`, `datetime`) unless a specific later-phase story calls for one (justify any new dependency in the PR description, per the client's technical constraints).
 - Commits: [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/) format, referencing the story/task id, e.g. `feat(carrera): implement cambiar_estado (US-02)`.
+
+## Git workflow
+
+- Branch per user story off `dev`: `feature/US-01-iniciar-carrera`. Docs-only work: `docs/<tema>`.
+- PR into `dev`, CI green before merge. `dev` → `main` once per phase, so `main` always holds a demoable release.
+- Never commit straight to `main`.
 
 ## Working style
 
-- One user story (or one task from `BACKLOG.md`) at a time, in priority order within the current phase.
+- One user story (or one task from `Backlog.md`) at a time, in priority order within the current phase.
 - Write or update tests alongside any new logic, not after.
 - I'm a junior developer using this project to learn agentic workflows — **explain your plan before making changes**, and briefly say why when you make a non-obvious decision (e.g. why a method lives on `Carrera` vs `Tarifa`). Don't just silently execute.
-- When a requirement is ambiguous, state the assumption you're making rather than picking silently, and prefer the simplest implementation that satisfies the acceptance criteria in `docs/project-brief.md` / `BACKLOG.md`.
+- When a requirement is ambiguous, state the assumption you're making rather than picking silently, and prefer the simplest implementation that satisfies the acceptance criteria in `docs/project-brief.md` / `Backlog.md`.
 
 ## Project management
 
-Task board: GitHub Projects, one column per phase (Fase 1 → Fase 2 → Fase 3 → Fase 4). Each phase's deliverables: repo state, a live demo, and the updated board link — keep issues current as work progresses, don't just code silently against the backlog.
-The existing GitHub project is `IAS_P1_Taximetro_Manon` (org `IA-P1-BCN`, project #2: https://github.com/orgs/IA-P1-BCN/projects/2), tracking issues in `IA-P1-BCN/Proyecto1_Manon`.
+Task board: GitHub Projects, `Status` = one column per phase (User Stories · Fase 1 → Fase 4), as the client requires. Day-to-day progress is tracked by the `Progreso` field (To Do / En curso / En review / Done) and by closing issues as PRs merge — not by moving cards between phases. Each phase's deliverables: repo state, a live demo, and the updated board link — keep issues current as work progresses, don't just code silently against the backlog.
+The existing GitHub project is `IAS_P1_Taximetro_Manon` (org `IA-P1-BCN`, project #2: https://github.com/orgs/IA-P1-BCN/projects/2), tracking issues in `IA-P1-BCN/Proyecto1_Manon`. Every task in `Backlog.md` carries its issue number — keep those links accurate.
