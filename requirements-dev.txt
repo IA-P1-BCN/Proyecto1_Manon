@@ -1,0 +1,13 @@
+# Dependencias de DESARROLLO del taxímetro (TTX-247).
+#
+# El taxímetro en sí NO tiene dependencias de ejecución: la Fase 1 funciona
+# solo con la librería estándar de Python (`time`), tal y como exige CLAUDE.md.
+# Por eso no existe un requirements.txt de runtime — estaría vacío.
+#
+# Lo de aquí abajo es únicamente lo que hace falta para ejecutar los tests.
+#
+# Instalación (con el entorno virtual activado):
+#     pip install -r requirements-dev.txt
+
+pytest==9.1.1
+pytest-cov==7.1.0
