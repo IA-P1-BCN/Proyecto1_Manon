@@ -8,11 +8,16 @@ from typing import Callable
 
 from taximetro.carrera import Carrera
 from taximetro.config_tarifas import ConfigTarifas
+from taximetro.historial import Historial, ResumenDia
 from taximetro.tarifa import Tarifa
 
 
 class CarreraActivaError(Exception):
     """Se lanza al intentar iniciar una carrera mientras otra sigue activa."""
+
+
+class SinCarreraError(Exception):
+    """Se lanza al intentar finalizar cuando no hay ninguna carrera activa."""
 
 
 class Taximetro:
@@ -24,13 +29,19 @@ class Taximetro:
     Cada carrera se queda con la tarifa que había al iniciarse.
 
     También numera las carreras: el contador vive en el taxímetro, no en la
-    clase `Carrera`, para no compartir estado global entre instancias.
+    clase `Carrera`, para no compartir estado global entre instancias. Con
+    histórico, la numeración sigue desde la última carrera guardada, así un
+    reinicio del programa no repite números en el histórico del día.
+
+    Toda carrera se cierra con `finalizar_carrera()`, que la guarda en el
+    histórico (US-05) venga de donde venga el cierre: el menú, EOF o Ctrl+C.
     """
 
     def __init__(
         self,
         tarifa: Tarifa | None = None,
         config: ConfigTarifas | None = None,
+        historial: Historial | None = None,
         reloj: Callable[[], float] = time.monotonic,
         calendario: Callable[[], datetime] = datetime.now,
     ) -> None:
@@ -38,6 +49,7 @@ class Taximetro:
 
         Sin `tarifa` ni `config`, usa las tarifas por defecto y no toca el
         disco; con `config`, las carga del fichero y guarda en él cada cambio.
+        Sin `historial`, las carreras no se guardan.
         """
         self._config = config
         if tarifa is None:
@@ -46,7 +58,8 @@ class Taximetro:
         self._reloj = reloj
         self._calendario = calendario
         self._carrera: Carrera | None = None
-        self._siguiente_id = 1
+        self._historial = historial
+        self._siguiente_id = 1 + (historial.ultimo_numero() if historial else 0)
 
     @property
     def tarifa(self) -> Tarifa:
@@ -91,3 +104,29 @@ class Taximetro:
         )
         self._siguiente_id += 1
         return self._carrera
+
+    def finalizar_carrera(self) -> float:
+        """Cierra la carrera activa, la guarda en el histórico y devuelve el total.
+
+        La carrera se cierra antes de guardarla: si el fichero no se puede
+        escribir, sale el `OSError` pero la carrera ya está cerrada y su total
+        congelado en `carrera.importe`, así que el cobro no se pierde.
+        Sin carrera activa lanza `SinCarreraError`.
+        """
+        carrera = self.carrera_activa
+        if carrera is None:
+            raise SinCarreraError("No hay ninguna carrera activa.")
+        total = carrera.finalizar()
+        if self._historial is not None:
+            self._historial.registrar(carrera)
+        return total
+
+    def resumen_del_dia(self) -> ResumenDia:
+        """Las carreras que han terminado hoy y su total (US-05).
+
+        "Hoy" lo dice el calendario inyectado. Sin histórico, un resumen vacío.
+        """
+        hoy = self._calendario().date()
+        if self._historial is None:
+            return ResumenDia(fecha=hoy, carreras=())
+        return self._historial.resumen_del_dia(hoy)
