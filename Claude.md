@@ -8,7 +8,7 @@ Context and instructions for Claude Code working in this repository. Read at the
 
 ## Current phase
 
-**Fase 1 — MVP** (US-01 to US-04, all Must-have). Build the CLI ride loop: start → toggle parado/en movimiento → finish with total → start another ride, same process. Don't start Fase 2+ work (logging, persistence, config file, auth, GUI, API, DB) unless explicitly asked — the client validates each phase before the next is greenlit.
+**Fase 2 — Observabilidad y Persistencia** (US-07 → US-05 → US-06, in that order), on the `fase-2` integration branch while Fase 1 awaits client approval. The app opens on a role menu (`Conductor` · `Administrador` · `Salir`); fare change and history are Admin-only. All decisions: **`docs/decisions-fase2.md`**. Don't start Fase 3+ work (auth/password, GUI, API, DB) unless explicitly asked — Admin stays unprotected until US-08.
 
 ## Fare logic (do not guess — these are the real numbers)
 
@@ -25,6 +25,7 @@ Before changing behaviour, check whether it was already decided:
 
 - **`docs/decisions-fase1-scaffold.md`** — structural decisions (what lives where, and why).
 - **`docs/flujo-fase1.md`** — authority on CLI behaviour: the command loop, menus per mode, error messages, Ctrl+C / EOF.
+- **`docs/decisions-fase2.md`** — Fase 2 decisions: roles, fare config, history, logs, the `fase-2` branch.
 - **`docs/decisions-proceso.md`** — how the project is run: language, git workflow, CI, coverage gate, board.
 - **`docs/future-implementation-ideas.md`** — ideas deliberately postponed; check before "improving" something that was dropped on purpose.
 - **`docs/demo-fase1.md`** — the script for the client demo; keep it true to the real CLI output.
@@ -89,6 +90,7 @@ Run `pytest` after every change. Don't call a task done with failing tests.
 - Branch per user story off `dev`: `feature/US-01-iniciar-carrera`. Docs-only work: `docs/<tema>`.
 - PR into `dev`, CI green before merge. `dev` → `main` once per phase, so `main` always holds a demoable release.
 - Never commit straight to `main`.
+- **During Fase 2:** story branches come off `fase-2` and PR into `fase-2`. Fixes to the Fase 1 MVP still go to `dev` and are then merged into `fase-2`. `fase-2` → `dev` only after Fase 1 reaches `main`.
 
 ## Working style
 
