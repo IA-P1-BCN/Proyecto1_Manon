@@ -2,7 +2,7 @@
 
 Taxímetro software para **TaxiTech Solutions**, en sustitución de los equipos físicos Hale T200 sin soporte desde 2023. Prototipo en Python con programación orientada a objetos.
 
-**Estado:** Fase 1 (MVP en CLI) completa — US-01 a US-04 — y en validación por el cliente. Fase 2 en curso en la rama `fase-2`: tarifas configurables (US-07) hechas; histórico (US-05) y logs (US-06) pendientes. Contexto completo del encargo en [`docs/project-brief.md`](docs/project-brief.md); tareas en [`Backlog.md`](Backlog.md) y en el [tablero del proyecto](https://github.com/orgs/IA-P1-BCN/projects/2).
+**Estado:** Fase 1 (MVP en CLI) completa — US-01 a US-04 — y en validación por el cliente. Fase 2 en curso en la rama `fase-2`: tarifas configurables (US-07) e histórico de carreras (US-05) hechos; logs (US-06) pendientes. Contexto completo del encargo en [`docs/project-brief.md`](docs/project-brief.md); tareas en [`Backlog.md`](Backlog.md) y en el [tablero del proyecto](https://github.com/orgs/IA-P1-BCN/projects/2).
 
 ## Tarifas vigentes
 
@@ -37,7 +37,7 @@ python -m taximetro.taximetro_app
 
 La aplicación muestra al arrancar las instrucciones y las tarifas: no hace falta consultar esta página para usarla.
 
-No se escriben comandos: cada opción lleva un número y se teclea el número. Al arrancar se elige perfil: **Conductor** para cobrar carreras, **Administrador** para gestionar las tarifas.
+No se escriben comandos: cada opción lleva un número y se teclea el número. Al arrancar se elige perfil: **Conductor** para cobrar carreras, **Administrador** para gestionar las tarifas y ver el histórico del día.
 
 ```
 ======================================================
@@ -62,6 +62,7 @@ Conductor:
 
 Administrador:
   Cambiar tarifas    fija los €/s de cada estado, desde la próxima carrera
+  Ver histórico      carreras terminadas hoy y total de caja
   Volver             vuelve al menú de inicio
 
 ======================================================
@@ -114,7 +115,7 @@ En cada momento solo se ofrecen las opciones válidas, y **los números son prop
 | Situación | Nº | Opción | Qué hace |
 |---|---:|---|---|
 | Menú de inicio | 1 | Conductor | Entra en el taxímetro |
-| | 2 | Administrador | Entra en la gestión de tarifas |
+| | 2 | Administrador | Entra en la gestión: tarifas e histórico |
 | | 3 | Salir | Cierra el programa |
 | Sin carrera | 1 | Iniciar carrera | Empieza una carrera nueva y cobra desde ese segundo |
 | | 2 | Ayuda | Reimprime las instrucciones |
@@ -124,7 +125,8 @@ En cada momento solo se ofrecen las opciones válidas, y **los números son prop
 | | 3 | Finalizar carrera | Cierra la carrera y muestra el total a cobrar |
 | | 4 | Ayuda | Reimprime las instrucciones |
 | Administrador | 1 | Cambiar tarifas | Pide las tarifas nuevas y las guarda |
-| | 2 | Volver | Vuelve al menú de inicio |
+| | 2 | Ver histórico | Carreras terminadas hoy y total de caja |
+| | 3 | Volver | Vuelve al menú de inicio |
 
 Con una carrera en curso no hay `Volver`: primero se finaliza. Así las tarifas nunca cambian a mitad de carrera.
 
@@ -140,9 +142,9 @@ Vas a salir del programa con la carrera nº 1 en curso.
   2) No, seguir con la carrera
 ```
 
-*No* vuelve a la carrera como si nada. *Sí* la finaliza, muestra el total y cierra el programa. Un segundo `Ctrl+C` cuenta como *No*. Cerrar la entrada (`Ctrl+D`) durante una carrera la finaliza y muestra el total antes de salir, de modo que el importe nunca se pierde sin verse. Fuera de una carrera, `Ctrl+C` y `Ctrl+D` cierran el programa.
+*No* vuelve a la carrera como si nada. *Sí* la finaliza, la guarda en el histórico, muestra el total y cierra el programa. Un segundo `Ctrl+C` cuenta como *No*. Cerrar la entrada (`Ctrl+D`) durante una carrera la finaliza y muestra el total antes de salir, de modo que el importe nunca se pierde sin verse. Fuera de una carrera, `Ctrl+C` y `Ctrl+D` cierran el programa.
 
-El flujo completo, con todas sus ramas, está en [`docs/flujo-fase1.md`](docs/flujo-fase1.md) (bucle de carreras) y [`docs/flujo-fase2.md`](docs/flujo-fase2.md) (perfiles, tarifas y `Ctrl+C`).
+El flujo completo, con todas sus ramas, está en [`docs/flujo-fase1.md`](docs/flujo-fase1.md) (bucle de carreras) y [`docs/flujo-fase2.md`](docs/flujo-fase2.md) (perfiles, tarifas, histórico y `Ctrl+C`).
 
 ## Tarifas configurables
 
@@ -168,6 +170,20 @@ Las tarifas viven en `config/tarifas.json` (en €/s), que también se puede edi
 
 Si el fichero no existe, se crea al arrancar con las tarifas por defecto. Si no es válido, el programa arranca igualmente con las tarifas por defecto y deja el fichero como está para que se pueda corregir. [`config/tarifas.example.json`](config/tarifas.example.json) documenta el formato; el `tarifas.json` real no se versiona.
 
+## Histórico de carreras
+
+Cada carrera terminada se guarda en `data/historial.csv`, termine como termine (menú, `Ctrl+C` → *Sí* o `Ctrl+D`). Desde **Administrador → Ver histórico** se ven las de hoy y el total de caja:
+
+```
+Histórico de hoy · 21/09/2026
+    Nº  Inicio    Fin          Importe
+     1  08:00:00  08:01:00      3,00 €
+     2  08:01:00  08:01:20      1,00 €
+  2 carreras · Total del día: 4,00 €
+```
+
+Se guarda el importe cobrado, el mismo del ticket, así que el total del día cuadra con la caja. La numeración de carreras continúa de una sesión a otra. El fichero solo crece (una fila por carrera, nunca se reescribe), se puede abrir con una hoja de cálculo y no se versiona.
+
 > En la Fase 2 el perfil Administrador **no tiene contraseña**. La protección llega con la US-08 (Fase 3).
 
 ## Tests
@@ -177,7 +193,7 @@ pytest                              # tests + cobertura (falla por debajo del 90
 pytest --cov-report=term-missing    # detalle de líneas sin cubrir
 ```
 
-195 tests, 99 % de cobertura. La lógica de tarifas se comprueba contra los valores del briefing, y los relojes se inyectan, así que la batería corre en décimas de segundo sin esperar tiempo real.
+234 tests, 99 % de cobertura. La lógica de tarifas se comprueba contra los valores del briefing, y los relojes se inyectan, así que la batería corre en décimas de segundo sin esperar tiempo real.
 
 ## Estructura
 
@@ -186,6 +202,7 @@ taximetro/
     carrera.py          # Carrera: una carrera, su estado y su importe
     tarifa.py           # Tarifa: € por segundo según el estado, validadas
     config_tarifas.py   # ConfigTarifas: lee y guarda config/tarifas.json
+    historial.py        # Historial: carreras terminadas en data/historial.csv
     taximetro.py        # Taximetro: carrera activa, tarifa y numeración
     taximetro_app.py    # TaximetroApp: menú de inicio y bucles de cada perfil
     utils.py            # formato_euros()
@@ -201,7 +218,7 @@ docs/                   # briefing, flujo, decisiones, demo
 |---|---|
 | [`docs/project-brief.md`](docs/project-brief.md) | Encargo del cliente, historias de usuario y fases |
 | [`docs/flujo-fase1.md`](docs/flujo-fase1.md) | Diagrama y comportamiento del CLI de Fase 1 |
-| [`docs/flujo-fase2.md`](docs/flujo-fase2.md) | Perfiles, cambio de tarifas y `Ctrl+C` en la Fase 2 |
+| [`docs/flujo-fase2.md`](docs/flujo-fase2.md) | Perfiles, tarifas, histórico y `Ctrl+C` en la Fase 2 |
 | [`docs/decisions-fase2.md`](docs/decisions-fase2.md) | Decisiones de la Fase 2 |
 | [`docs/decisions-fase1-scaffold.md`](docs/decisions-fase1-scaffold.md) | Decisiones de diseño del código |
 | [`docs/decisions-proceso.md`](docs/decisions-proceso.md) | Decisiones de proceso: idioma, ramas, CI, cobertura, tablero |

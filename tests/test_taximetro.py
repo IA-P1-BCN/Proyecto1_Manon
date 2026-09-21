@@ -13,8 +13,9 @@ import pytest
 
 from taximetro.carrera import Carrera, Estado
 from taximetro.config_tarifas import ConfigTarifas
+from taximetro.historial import Historial
 from taximetro.tarifa import Tarifa
-from taximetro.taximetro import CarreraActivaError, Taximetro
+from taximetro.taximetro import CarreraActivaError, SinCarreraError, Taximetro
 
 
 @pytest.fixture
@@ -173,3 +174,73 @@ class TestCambiarTarifa:
         with pytest.raises(OSError):
             taximetro.cambiar_tarifa(Tarifa(0.03, 0.10))
         assert taximetro.tarifa.parado == 0.02
+
+
+class TestFinalizarCarrera:
+    """US-05 / T5.1: toda carrera cerrada por el Taximetro se guarda."""
+
+    @pytest.fixture
+    def historial(self, tmp_path: Path) -> Historial:
+        return Historial(tmp_path / "historial.csv")
+
+    def test_devuelve_el_total_y_cierra_la_carrera(self, taximetro, reloj) -> None:
+        carrera = taximetro.iniciar_carrera()
+        reloj.avanzar(60)
+        assert taximetro.finalizar_carrera() == pytest.approx(3.00)
+        assert carrera.finalizada
+        assert taximetro.carrera_activa is None
+
+    def test_sin_carrera_activa_falla(self, taximetro) -> None:
+        with pytest.raises(SinCarreraError):
+            taximetro.finalizar_carrera()
+
+    def test_guarda_la_carrera_en_el_historial(
+        self, historial, reloj, calendario
+    ) -> None:
+        taximetro = Taximetro(historial=historial, reloj=reloj, calendario=calendario)
+        taximetro.iniciar_carrera()
+        reloj.avanzar(60)
+        taximetro.finalizar_carrera()
+        assert [r.importe for r in historial.registros()] == [3.00]
+
+    def test_si_no_se_puede_guardar_el_cobro_no_se_pierde(
+        self, tmp_path: Path, reloj
+    ) -> None:
+        (tmp_path / "data").write_text("", encoding="utf-8")  # bloquea mkdir
+        taximetro = Taximetro(historial=Historial(tmp_path / "data" / "h.csv"), reloj=reloj)
+        carrera = taximetro.iniciar_carrera()
+        reloj.avanzar(60)
+        with pytest.raises(OSError):
+            taximetro.finalizar_carrera()
+        assert carrera.finalizada
+        assert carrera.importe == pytest.approx(3.00)
+        assert taximetro.carrera_activa is None
+
+    def test_la_numeracion_sigue_desde_el_historial(
+        self, historial, reloj, calendario
+    ) -> None:
+        # Un reinicio del programa no repite números en el histórico del día.
+        primera_sesion = Taximetro(historial=historial, reloj=reloj, calendario=calendario)
+        for _ in range(2):
+            primera_sesion.iniciar_carrera()
+            primera_sesion.finalizar_carrera()
+        segunda_sesion = Taximetro(historial=historial, reloj=reloj, calendario=calendario)
+        assert segunda_sesion.iniciar_carrera().id == 3
+
+
+class TestResumenDelDia:
+    """US-05: el Taximetro pide al histórico las carreras de hoy."""
+
+    def test_sin_historial_el_resumen_esta_vacio(self, taximetro) -> None:
+        resumen = taximetro.resumen_del_dia()
+        assert resumen.carreras == ()
+        assert resumen.fecha == datetime(2025, 6, 1).date()
+
+    def test_hoy_lo_dice_el_calendario(self, tmp_path: Path, reloj, calendario) -> None:
+        historial = Historial(tmp_path / "historial.csv")
+        taximetro = Taximetro(historial=historial, reloj=reloj, calendario=calendario)
+        taximetro.iniciar_carrera()
+        taximetro.finalizar_carrera()
+        assert len(taximetro.resumen_del_dia().carreras) == 1
+        calendario.avanzar(24 * 3600)
+        assert taximetro.resumen_del_dia().carreras == ()

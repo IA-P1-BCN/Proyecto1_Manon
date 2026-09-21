@@ -98,6 +98,15 @@ Ctrl+C while typing a new fare in Admin cancels the edit, saves nothing and retu
 
 **Why:** appending one row per ride is truly incremental: a crash can't corrupt earlier rides, and the fleet manager can open the file in a spreadsheet to reconcile the till ("cuadrar caja"). Keeping all rows costs nothing and gives Fase 4 (migration to a relational DB) real data to migrate. Picking an arbitrary date and one file per day were considered. Today-only matches the story ("del día") with the least input handling.
 
+### Implementation choices (made while building US-05, stated as assumptions)
+
+- **Every close goes through `Taximetro.finalizar_carrera()`**, which closes the ride and then records it. Rides end in three places (the *Finalizar* option, EOF, Ctrl+C → *Sí*); if the CLI did the recording, one path could forget it. The ride is closed *before* the write, so if the file can't be written the total is still frozen and shown, followed by a warning to note it down by hand.
+- **Ride numbers continue from the history.** Before US-05, every restart began again at *Carrera nº 1*, so one day's history could hold several nº 1. `Taximetro` now starts at the last number in the file + 1.
+- **The amount stored is the one charged, in cents**, formatted exactly like `formato_euros`. The day's total is then the exact sum of the tickets the drivers showed, which is what reconciling the till needs. Side effect worth knowing: Python rounds an exact half cent to the even digit, so a ride of exactly 0,625 € is charged and stored as 0,62 €. This comes from Fase 1's `formato_euros`, isn't new, and is left as it is while the MVP is being validated. See `docs/future-implementation-ideas.md` if it needs to change.
+- **Plain CSV**: comma separator, dot decimal, ISO timestamps (`carrera,hora_inicio,hora_fin,importe,distancia`). Easy to parse and to migrate in Fase 4. A Spanish-locale Excel may need *Datos → Desde texto/CSV* to read the columns correctly.
+- **Unreadable rows are skipped** rather than making the whole history unreadable (a hand edit, or a write cut off by a crash).
+- **Admin menu order:** `1) Cambiar tarifas · 2) Ver histórico · 3) Volver`. *Ver histórico* was added as the second option so *Cambiar tarifas* keeps its number.
+
 ## US-06: operation logs
 
 **Decision:** `logging` runs in both roles, silently, to a rotating file (`RotatingFileHandler`): startup, role chosen, ride started / state changed / finished, fare changed, invalid config, errors. It isn't shown in any menu.

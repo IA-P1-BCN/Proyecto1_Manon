@@ -10,7 +10,7 @@ El menú es numerado y los números son locales a cada modo (ver
     Menú de inicio  1 Conductor · 2 Administrador · 3 Salir
     Sin carrera     1 Iniciar carrera · 2 Ayuda · 3 Volver
     Carrera activa  1 Parar/Arrancar · 2 Ver importe · 3 Finalizar · 4 Ayuda
-    Administrador   1 Cambiar tarifas · 2 Volver
+    Administrador   1 Cambiar tarifas · 2 Ver histórico · 3 Volver
 
 La mayoría de los tests son del conductor: el fixture `sesion` teclea el `1`
 (Conductor) del menú de inicio por ellos. `sesion_libre` empieza en el menú de
@@ -25,9 +25,11 @@ from typing import Iterable
 import pytest
 
 from taximetro.config_tarifas import ConfigTarifas
+from taximetro.historial import Historial
 from taximetro.taximetro import Taximetro
 from taximetro.taximetro_app import (
     DESCRIPCIONES,
+    HISTORICO_NO_GUARDADO,
     NADA_GUARDADO,
     OPCION_NO_VALIDA,
     TaximetroApp,
@@ -48,6 +50,7 @@ class EntradaGuionizada:
 
 
 CONDUCTOR = "1"  # opción del menú de inicio
+ADMIN_VOLVER = "3"  # Volver en el menú de Administrador
 ADMINISTRADOR = "\nAdministrador"  # cómo empieza el menú de Administrador
 
 
@@ -350,13 +353,13 @@ class TestMenuDeInicio:
     def test_volver_del_administrador_regresa_al_menu_de_inicio(
         self, sesion_libre
     ) -> None:
-        lineas = sesion_libre("2", "2")
+        lineas = sesion_libre("2", ADMIN_VOLVER)
         assert lineas[-1].startswith("\nMenú de inicio")
 
     def test_la_numeracion_sigue_al_volver_al_conductor(self, sesion_libre) -> None:
         # El taxímetro es el mismo en toda la sesión: salir al menú de inicio
         # no reinicia la cuenta de carreras.
-        salida = texto(sesion_libre("1", "1", "3", "3", "2", "2", "1", "1"))
+        salida = texto(sesion_libre("1", "1", "3", "3", "2", ADMIN_VOLVER, "1", "1"))
         assert "Carrera nº 2 iniciada" in salida
 
     @pytest.mark.parametrize("tecleado", ["0", "4", "abc", ""])
@@ -503,7 +506,7 @@ class TestInterrupciones:
 class TestCambiarTarifas:
     """T7.6: el Administrador cambia las tarifas y se aplican a la próxima carrera.
 
-    Menú de Administrador: 1 Cambiar tarifas · 2 Volver.
+    Menú de Administrador: 1 Cambiar tarifas · 2 Ver histórico · 3 Volver.
     """
 
     ADMIN_TARIFAS = ("2", "1")  # Administrador -> Cambiar tarifas
@@ -525,11 +528,11 @@ class TestCambiarTarifas:
 
     def test_la_proxima_carrera_cobra_la_tarifa_nueva(self, sesion_libre) -> None:
         # Administrador -> cambiar -> Volver -> Conductor -> Iniciar carrera
-        lineas = sesion_libre(*self.ADMIN_TARIFAS, "0,03", "0,06", "2", "1", "1")
+        lineas = sesion_libre(*self.ADMIN_TARIFAS, "0,03", "0,06", ADMIN_VOLVER, "1", "1")
         assert "Carrera nº 1 iniciada · EN MOVIMIENTO · 0,06 €/s" in lineas
 
     def test_la_ayuda_muestra_las_tarifas_nuevas(self, sesion_libre) -> None:
-        salida = texto(sesion_libre(*self.ADMIN_TARIFAS, "0,03", "0,06", "2", "1", "2"))
+        salida = texto(sesion_libre(*self.ADMIN_TARIFAS, "0,03", "0,06", ADMIN_VOLVER, "1", "2"))
         assert "En movimiento ........ 0,06 €/s" in salida
 
     def test_tras_cambiar_vuelve_al_menu_de_administrador(self, sesion_libre) -> None:
@@ -610,3 +613,131 @@ class TestCambiarTarifasEnFichero:
         assert lineas[-1].startswith(ADMINISTRADOR)
         assert taximetro.tarifa.parado == 0.02
         assert ConfigTarifas(ruta).cargar().parado == 0.02
+
+
+class Avanzar:
+    """Paso de guion: deja pasar `segundos` en los dos relojes, sin teclear nada."""
+
+    def __init__(self, segundos: float) -> None:
+        self.segundos = segundos
+
+
+class TestVerHistorico:
+    """US-05 / T5.3: el Administrador ve las carreras de hoy y el total de caja.
+
+    Menú de Administrador: 1 Cambiar tarifas · 2 Ver histórico · 3 Volver.
+    """
+
+    ADMIN_HISTORICO = ("2", "2")  # Administrador -> Ver histórico
+    # Conductor -> Iniciar -> 60 s en movimiento (3,00 €) -> Finalizar -> Volver
+    CARRERA_DE_3_EUROS = ("1", "1", Avanzar(60), "3", "3")
+
+    @pytest.fixture
+    def historial(self, tmp_path: Path) -> Historial:
+        return Historial(tmp_path / "data" / "historial.csv")
+
+    @pytest.fixture
+    def ejecutar(self, historial, reloj, calendario):
+        """Ejecuta un guion con histórico real; `Avanzar` y excepciones valen como pasos."""
+
+        def _ejecutar(*guion, historial=historial) -> list[str]:
+            lineas: list[str] = []
+            pasos = iter(guion)
+
+            def entrada(prompt: str = "") -> str:
+                while True:
+                    try:
+                        paso = next(pasos)
+                    except StopIteration:
+                        raise EOFError from None
+                    if isinstance(paso, Avanzar):
+                        reloj.avanzar(paso.segundos)
+                        calendario.avanzar(paso.segundos)
+                        continue
+                    if isinstance(paso, type) and issubclass(paso, BaseException):
+                        raise paso
+                    return paso
+
+            taximetro = Taximetro(historial=historial, reloj=reloj, calendario=calendario)
+            TaximetroApp(taximetro=taximetro, entrada=entrada, salida=lineas.append).ejecutar()
+            return lineas
+
+        return _ejecutar
+
+    def test_el_menu_de_administrador_ofrece_el_historico(self, ejecutar) -> None:
+        menu = menus(ejecutar("2"), ADMINISTRADOR + "\n")[0]
+        assert "2) Ver histórico" in menu
+        assert "3) Volver" in menu
+
+    def test_sin_carreras(self, ejecutar) -> None:
+        lineas = ejecutar(*self.ADMIN_HISTORICO)
+        assert "Histórico de hoy · 01/06/2025\nNo hay carreras terminadas hoy." in lineas
+
+    def test_lista_las_carreras_y_el_total(self, ejecutar) -> None:
+        # Una de 3,00 € y otra de 20 s (1,00 €).
+        lineas = ejecutar(
+            *self.CARRERA_DE_3_EUROS,
+            "1", "1", Avanzar(20), "3", "3",
+            *self.ADMIN_HISTORICO,
+        )
+        tabla = next(linea for linea in lineas if linea.startswith("Histórico de hoy"))
+        assert tabla.splitlines() == [
+            "Histórico de hoy · 01/06/2025",
+            "    Nº  Inicio    Fin          Importe",
+            "     1  08:00:00  08:01:00      3,00 €",
+            "     2  08:01:00  08:01:20      1,00 €",
+            "  2 carreras · Total del día: 4,00 €",
+        ]
+
+    def test_una_sola_carrera_en_singular(self, ejecutar) -> None:
+        salida = texto(ejecutar(*self.CARRERA_DE_3_EUROS, *self.ADMIN_HISTORICO))
+        assert "1 carrera · Total del día: 3,00 €" in salida
+
+    def test_tras_el_historico_vuelve_al_menu_de_administrador(self, ejecutar) -> None:
+        lineas = ejecutar(*self.ADMIN_HISTORICO)
+        assert lineas[-1].startswith(ADMINISTRADOR)
+
+    def test_las_carreras_de_ayer_no_cuentan(self, ejecutar) -> None:
+        lineas = ejecutar(*self.CARRERA_DE_3_EUROS, Avanzar(24 * 3600), *self.ADMIN_HISTORICO)
+        assert any("No hay carreras terminadas hoy." in linea for linea in lineas)
+
+    def test_el_historico_sobrevive_al_cierre(self, ejecutar) -> None:
+        ejecutar(*self.CARRERA_DE_3_EUROS)
+        salida = texto(ejecutar(*self.ADMIN_HISTORICO))
+        assert "Total del día: 3,00 €" in salida
+
+    def test_la_numeracion_sigue_en_la_siguiente_sesion(self, ejecutar) -> None:
+        ejecutar(*self.CARRERA_DE_3_EUROS, *self.CARRERA_DE_3_EUROS)
+        assert "Carrera nº 3 iniciada · EN MOVIMIENTO · 0,05 €/s" in ejecutar("1", "1")
+
+    @pytest.mark.parametrize(
+        "cierre",
+        [
+            pytest.param(("3",), id="finalizar"),
+            pytest.param((KeyboardInterrupt, "1"), id="ctrl_c_si"),
+            pytest.param((), id="eof"),
+        ],
+    )
+    def test_todo_cierre_de_carrera_se_guarda(self, ejecutar, historial, cierre) -> None:
+        ejecutar("1", "1", Avanzar(60), *cierre)
+        assert [r.importe for r in historial.registros()] == [3.00]
+
+    def test_si_no_se_puede_guardar_muestra_el_total_y_avisa(
+        self, ejecutar, tmp_path: Path
+    ) -> None:
+        (tmp_path / "bloqueo").write_text("", encoding="utf-8")  # bloquea mkdir
+        historial = Historial(tmp_path / "bloqueo" / "historial.csv")
+        lineas = ejecutar("1", "1", Avanzar(60), "3", historial=historial)
+        assert "TOTAL A COBRAR: 3,00 €" in lineas
+        assert lineas[lineas.index("TOTAL A COBRAR: 3,00 €") + 1] == HISTORICO_NO_GUARDADO
+        # La carrera está cerrada: el menú vuelve a ser el de sin carrera.
+        assert lineas[-1].startswith("\nSin carrera")
+
+    def test_si_no_se_puede_leer_lo_dice(self, ejecutar, historial) -> None:
+        class HistorialIlegible(Historial):
+            def resumen_del_dia(self, fecha):
+                raise PermissionError
+
+        lineas = ejecutar(*self.ADMIN_HISTORICO, historial=HistorialIlegible(historial.ruta))
+        assert "No se pudo leer el histórico." in lineas
+        assert lineas[-1].startswith(ADMINISTRADOR)

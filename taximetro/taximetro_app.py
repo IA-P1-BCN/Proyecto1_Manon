@@ -7,6 +7,7 @@ from typing import Callable
 
 from taximetro.carrera import Carrera, Estado
 from taximetro.config_tarifas import ConfigTarifas
+from taximetro.historial import Historial, ResumenDia
 from taximetro.tarifa import Tarifa, TarifaInvalidaError
 from taximetro.taximetro import Taximetro
 from taximetro.utils import formato_euros
@@ -16,7 +17,7 @@ from taximetro.utils import formato_euros
 OPCIONES_INICIO = ("conductor", "administrador", "salir")
 OPCIONES_SIN_CARRERA = ("iniciar", "ayuda", "volver")
 OPCIONES_CON_CARRERA = ("cambiar", "importe", "finalizar", "ayuda")
-OPCIONES_ADMINISTRADOR = ("tarifas", "volver")
+OPCIONES_ADMINISTRADOR = ("tarifas", "historico", "volver")
 OPCIONES_CONFIRMAR_SALIDA = ("confirmar", "seguir")
 
 ETIQUETAS = {
@@ -24,6 +25,7 @@ ETIQUETAS = {
     "administrador": "Administrador",
     "iniciar": "Iniciar carrera",
     "tarifas": "Cambiar tarifas",
+    "historico": "Ver histórico",
     "importe": "Ver importe",
     "finalizar": "Finalizar carrera",
     "ayuda": "Ayuda",
@@ -58,12 +60,16 @@ DESCRIPCIONES = {
     ),
     "Administrador": (
         ("Cambiar tarifas", "fija los €/s de cada estado, desde la próxima carrera"),
+        ("Ver histórico", "carreras terminadas hoy y total de caja"),
         ("Volver", "vuelve al menú de inicio"),
     ),
 }
 
 OPCION_NO_VALIDA = "Opción no válida. Elige un número del menú."
 NADA_GUARDADO = "No se ha guardado nada."
+HISTORICO_NO_GUARDADO = (
+    "Aviso: no se pudo guardar la carrera en el histórico. Anota el total."
+)
 
 
 class TaximetroApp:
@@ -144,7 +150,7 @@ class TaximetroApp:
                 if carrera is None:
                     raise
                 if self._confirmar_salida(carrera):
-                    self._salida(self._cerrar(carrera))
+                    self._cerrar(carrera)
                     return False
                 continue
             except EOFError:
@@ -152,7 +158,7 @@ class TaximetroApp:
                     raise
                 # EOF no es reintentable: volver a leer sería un bucle infinito,
                 # así que se cierra la carrera en vez de avisar y reintentar.
-                self._salida(self._cerrar(carrera))
+                self._cerrar(carrera)
                 return False
 
             if opcion == "volver":
@@ -219,12 +225,22 @@ class TaximetroApp:
                 f"{formato_euros(carrera.importe_actual())} acumulado"
             )
         else:  # finalizar
-            self._salida(self._cerrar(carrera))
+            self._cerrar(carrera)
 
-    def _cerrar(self, carrera: Carrera) -> str:
-        """Finaliza la carrera y devuelve la línea del total a cobrar."""
-        total = carrera.finalizar()
-        return f"TOTAL A COBRAR: {formato_euros(total)}"
+    def _cerrar(self, carrera: Carrera) -> None:
+        """Finaliza la carrera, la guarda en el histórico y muestra el total.
+
+        Si el histórico no se puede escribir, la carrera ya está cerrada y el
+        total se muestra igualmente: el cobro al pasajero no depende del disco.
+        """
+        try:
+            self._taximetro.finalizar_carrera()
+            aviso = None
+        except OSError:
+            aviso = HISTORICO_NO_GUARDADO
+        self._salida(f"TOTAL A COBRAR: {formato_euros(carrera.importe)}")
+        if aviso:
+            self._salida(aviso)
 
     # ------------------------------------------------------------------
     # Administrador
@@ -240,7 +256,19 @@ class TaximetroApp:
             opcion = self._leer("Administrador", OPCIONES_ADMINISTRADOR)
             if opcion == "volver":
                 return
-            self._cambiar_tarifas()
+            if opcion == "historico":
+                self._ver_historico()
+            else:
+                self._cambiar_tarifas()
+
+    def _ver_historico(self) -> None:
+        """Las carreras terminadas hoy y el total de caja (US-05 / T5.3)."""
+        try:
+            resumen = self._taximetro.resumen_del_dia()
+        except OSError:
+            self._salida("No se pudo leer el histórico.")
+            return
+        self._salida(self._tabla_historico(resumen))
 
     def _cambiar_tarifas(self) -> None:
         """Pide las dos tarifas nuevas y se las pasa al Taximetro (T7.6).
@@ -361,6 +389,26 @@ class TaximetroApp:
             ]
         )
 
+    def _tabla_historico(self, resumen: ResumenDia) -> str:
+        """El histórico del día en columnas, con el total al pie."""
+        lineas = [f"Histórico de hoy · {resumen.fecha:%d/%m/%Y}"]
+        if not resumen.carreras:
+            lineas.append("No hay carreras terminadas hoy.")
+            return "\n".join(lineas)
+
+        lineas.append(f"  {'Nº':>4}  {'Inicio':<8}  {'Fin':<8}  {'Importe':>10}")
+        lineas += [
+            f"  {r.carrera:>4}  {r.hora_inicio:%H:%M:%S}  {r.hora_fin:%H:%M:%S}  "
+            f"{formato_euros(r.importe):>10}"
+            for r in resumen.carreras
+        ]
+        cuantas = len(resumen.carreras)
+        lineas.append(
+            f"  {cuantas} {'carrera' if cuantas == 1 else 'carreras'} · "
+            f"Total del día: {formato_euros(resumen.total)}"
+        )
+        return "\n".join(lineas)
+
     def _resumen(self, tarifa: Tarifa) -> str:
         """Las dos tarifas en una línea: 'parado 0,02 €/s · en movimiento 0,05 €/s'."""
         return (
@@ -384,6 +432,7 @@ if __name__ == "__main__":
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(errors="replace")
 
-    # Solo el programa real lee y escribe config/tarifas.json; los tests usan
-    # un Taximetro en memoria o una ruta temporal.
-    TaximetroApp(Taximetro(config=ConfigTarifas())).ejecutar()
+    # Solo el programa real lee y escribe config/tarifas.json y
+    # data/historial.csv; los tests usan un Taximetro en memoria o rutas
+    # temporales.
+    TaximetroApp(Taximetro(config=ConfigTarifas(), historial=Historial())).ejecutar()

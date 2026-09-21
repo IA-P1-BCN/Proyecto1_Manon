@@ -79,6 +79,13 @@ class TestTaximetro:
         assert "config" not in parametros(Carrera.__init__)
         assert callable(Taximetro.cambiar_tarifa)
 
+    def test_cierra_carreras_y_resume_el_dia(self) -> None:
+        # US-05: el histórico entra por `Taximetro`, que es quien cierra las
+        # carreras; así ningún camino de cierre se queda sin guardar.
+        assert "historial" in parametros(Taximetro.__init__)
+        assert callable(Taximetro.finalizar_carrera)
+        assert callable(Taximetro.resumen_del_dia)
+
 
 class TestTaximetroApp:
     """Contrato de la capa CLI (US-04, EPIC D)."""
