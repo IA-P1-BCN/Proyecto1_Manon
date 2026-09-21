@@ -44,11 +44,13 @@ Companion docs: `docs/decisions-fase1-scaffold.md` (code structure), `docs/flujo
 
 ## Task board
 
-**Decision:** the board's `Status` field stays as one column per phase (`User Stories · Fase 1 … Fase 4`), exactly as the client's constraints require. Day-to-day progress is tracked by a separate `Progreso` single-select field (`To Do · En curso · En review · Done`) and by closing issues as PRs merge. A second, filtered view is used for daily work; the per-phase board view is what gets shown at the demo.
+**Decision:** the board's `Status` field stays as one column per phase (`User Stories · Fase 1 … Fase 4`), exactly as the client's constraints require. Day-to-day progress is tracked by a separate `Progreso` single-select field (`To Do · En curso · En review · Done`) and by closing issues as PRs merge. The single per-phase board view is used both for daily work and at the demo.
 
 **Why:** the client asked for "una columna por fase", which spends the only column axis GitHub Projects offers. Without a second field, twenty Fase 1 cards sit in one column with no visible todo/doing/done during the demo. Milestones were considered for the phases instead (freeing `Status` for a workflow) but that stops the board literally showing a column per phase.
 
 **Consequence:** `Backlog.md` previously documented a five-column flow (`Backlog → To Do → In Progress → In Review → Done`) that never existed on the board. Corrected to describe what is actually there.
+
+**Update — second view dropped.** A second, Fase-1-filtered view was planned for daily work (TP.6). Dropped before it was built: `Progreso` already shows what is in flight inside the Fase 1 column, and a view can only be created by hand in the browser (the Projects API cannot), so it would be one more thing to keep in sync for no new information.
 
 ## README
 

@@ -242,7 +242,7 @@ Tareas:
 - [x] **TP.3** Inyección de `entrada`/`salida` en `TaximetroApp` — `tech-task`, `must` — [#65](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/65) ✅
 - [x] **TP.4** Gestión de EOF (Ctrl+D) en el bucle CLI — `feature`, `must` — [#66](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/66) ✅
 - [x] **TP.5** `formato_euros` en formato español (`12,34 €`) — `tech-task`, `must` — [#67](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/67) ✅
-- [ ] **TP.6** Campo `Progreso` y segunda vista en el tablero — `tech-task`, `must` — [#68](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/68)
+- [x] **TP.6** Campo `Progreso` en el tablero — `tech-task`, `must` — [#68](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/68) ✅ *(la segunda vista filtrada se descartó: `Progreso` ya basta)*
 - [x] **TP.7** Unificar el brief del cliente en `docs/project-brief.md` — `docs`, `must` — [#69](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/69) ✅
 - [x] **TP.8** Workflow de CI: `pytest` en cada push y PR — `tech-task`, `must` — [#70](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/70) ✅
 - [x] **TP.9** Umbral de cobertura del 90 % en `pyproject.toml` — `test`, `must` — [#71](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/71) ✅
@@ -251,8 +251,6 @@ Tareas:
 - [x] **TP.12** `conftest` con relojes falsos y test de estructura — `test`, `must` — [#74](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/74) ✅
 
 **Relación con tareas existentes:** TP.1 se implementa junto a **T1.1** (clase `Carrera`); TP.3 junto a **T4.1** (bucle principal); TP.4 junto a **TD.7** (gestión de Ctrl+C), que es la otra mitad de la misma rama del bucle; TP.5 concreta el formato que produce **T3.2**.
-
-**Pendiente manual:** la segunda vista del tablero (TP.6) hay que crearla en el navegador — la API de GitHub Projects permite crear campos, pero no vistas.
 
 ---
 
