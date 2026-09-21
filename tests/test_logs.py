@@ -104,3 +104,34 @@ class TestCampos:
 
     def test_los_float_salen_con_dos_decimales(self) -> None:
         assert campos(importe=3.0, tarifa=0.05) == "importe=3.00 tarifa=0.05"
+
+
+class TestLoggersDelPaquete:
+    """Todos los módulos escriben bajo `taximetro`, que es donde está el handler."""
+
+    def test_lanzado_con_python_m_escribe_en_el_fichero(self, tmp_path: Path) -> None:
+        # Con `python -m`, el módulo de la capa CLI se llama `__main__`, y un
+        # logger con `__name__` quedaría fuera del fichero. Bajo pytest el
+        # módulo se importa con su nombre normal y el fallo no se ve, así que
+        # se lanza el programa real, en una carpeta temporal.
+        import os
+        import subprocess
+        import sys
+
+        raiz = Path(__file__).parent.parent
+        entorno = {**os.environ, "PYTHONPATH": str(raiz), "PYTHONIOENCODING": "utf-8"}
+        resultado = subprocess.run(
+            [sys.executable, "-m", "taximetro.taximetro_app"],
+            input="2\n1\nabc\n3\n3\n",
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            cwd=tmp_path,
+            env=entorno,
+            timeout=30,
+        )
+        log = (tmp_path / "logs" / "taximetro.log").read_text(encoding="utf-8")
+        assert "aplicacion_iniciada" in log
+        assert "WARNING taximetro.taximetro_app tarifa_rechazada" in log
+        assert "aplicacion_cerrada motivo=salir" in log
+        assert "tarifa_rechazada" not in resultado.stderr  # nada en la consola

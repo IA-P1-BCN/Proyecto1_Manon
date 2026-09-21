@@ -19,6 +19,7 @@ inicio.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Iterable
 
@@ -741,3 +742,107 @@ class TestVerHistorico:
         lineas = ejecutar(*self.ADMIN_HISTORICO, historial=HistorialIlegible(historial.ruta))
         assert "No se pudo leer el histórico." in lineas
         assert lineas[-1].startswith(ADMINISTRADOR)
+
+
+class TestLogs:
+    """US-06 / T6.2: la capa CLI registra arranque, cierre y decisiones del usuario."""
+
+    @pytest.fixture
+    def guion(self, reloj, calendario):
+        """Ejecuta un guion donde un paso puede ser una excepción a lanzar."""
+
+        def _ejecutar(*pasos, taximetro=None) -> list[str]:
+            lineas: list[str] = []
+            restantes = iter(pasos)
+
+            def entrada(prompt: str = "") -> str:
+                try:
+                    paso = next(restantes)
+                except StopIteration:
+                    raise EOFError from None
+                if isinstance(paso, BaseException) or (
+                    isinstance(paso, type) and issubclass(paso, BaseException)
+                ):
+                    raise paso
+                return paso
+
+            TaximetroApp(
+                taximetro=taximetro or Taximetro(reloj=reloj, calendario=calendario),
+                entrada=entrada,
+                salida=lineas.append,
+            ).ejecutar()
+            return lineas
+
+        return _ejecutar
+
+    def test_registra_el_arranque_con_las_tarifas(self, eventos, guion) -> None:
+        guion("3")
+        assert eventos()[0] == "aplicacion_iniciada parado=0.02 movimiento=0.05"
+
+    @pytest.mark.parametrize(
+        ("pasos", "motivo"),
+        [
+            pytest.param(("3",), "salir", id="salir"),
+            pytest.param((KeyboardInterrupt,), "ctrl_c", id="ctrl_c"),
+            pytest.param((), "eof", id="eof"),
+            pytest.param(("1", "1", KeyboardInterrupt, "1"), "ctrl_c_con_carrera", id="ctrl_c_si"),
+            pytest.param(("1", "1"), "eof_con_carrera", id="eof_carrera"),
+        ],
+    )
+    def test_registra_el_cierre_y_su_motivo(self, eventos, guion, pasos, motivo) -> None:
+        guion(*pasos)
+        assert eventos()[-1] == f"aplicacion_cerrada motivo={motivo}"
+
+    def test_registra_el_perfil_elegido(self, eventos, guion) -> None:
+        guion("1", "3", "2", ADMIN_VOLVER, "3")
+        assert "perfil_elegido perfil=conductor" in eventos()
+        assert "perfil_elegido perfil=administrador" in eventos()
+
+    @pytest.mark.parametrize(
+        ("respuesta", "evento"),
+        [("1", "salida_confirmada"), ("2", "salida_cancelada"), (KeyboardInterrupt, "salida_cancelada")],
+    )
+    def test_registra_la_respuesta_a_ctrl_c(self, eventos, guion, respuesta, evento) -> None:
+        guion("1", "1", KeyboardInterrupt, respuesta)
+        registrados = eventos()
+        assert "salida_solicitada carrera=1" in registrados
+        assert f"{evento} carrera=1" in registrados
+
+    def test_una_tarifa_rechazada_es_warning(self, eventos, guion) -> None:
+        guion("2", "1", "0,06", "0,05", "2", "1", "abc")
+        assert eventos(logging.WARNING) == [
+            "tarifa_rechazada parado=0.06 movimiento=0.05 "
+            "motivo='La tarifa parado no puede ser mayor que la de en movimiento.'",
+            "tarifa_rechazada tecleado='abc' motivo=no_numerica",
+        ]
+
+    def test_registra_el_cambio_cancelado(self, eventos, guion) -> None:
+        guion("2", "1", KeyboardInterrupt)
+        assert "cambio_tarifas_cancelado" in eventos()
+
+    def test_registra_la_consulta_del_historico(
+        self, eventos, guion, tmp_path: Path, reloj, calendario
+    ) -> None:
+        historial = Historial(tmp_path / "historial.csv")
+        taximetro = Taximetro(historial=historial, reloj=reloj, calendario=calendario)
+        guion("1", "1", "3", "3", "2", "2", taximetro=taximetro)
+        assert "historico_consultado fecha=2025-06-01 carreras=1 total=0.00" in eventos()
+
+    def test_un_historico_ilegible_es_error(self, eventos, guion, tmp_path: Path) -> None:
+        class HistorialIlegible(Historial):
+            def resumen_del_dia(self, fecha):
+                raise PermissionError
+
+        taximetro = Taximetro(historial=HistorialIlegible(tmp_path / "h.csv"))
+        guion("2", "2", taximetro=taximetro)
+        assert eventos(logging.ERROR) == ["historico_ilegible"]
+
+    def test_un_error_inesperado_queda_registrado_con_su_traza(
+        self, eventos, guion, caplog
+    ) -> None:
+        with pytest.raises(RuntimeError):
+            guion(RuntimeError("fallo"))
+        (registro,) = [r for r in caplog.records if r.getMessage() == "error_inesperado"]
+        assert registro.levelno == logging.ERROR
+        assert registro.exc_info is not None
+        assert not any(e.startswith("aplicacion_cerrada") for e in eventos())
