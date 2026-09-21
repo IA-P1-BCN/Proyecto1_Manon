@@ -10,7 +10,7 @@ El menú es numerado y los números son locales a cada modo (ver
     Menú de inicio  1 Conductor · 2 Administrador · 3 Salir
     Sin carrera     1 Iniciar carrera · 2 Ayuda · 3 Volver
     Carrera activa  1 Parar/Arrancar · 2 Ver importe · 3 Finalizar · 4 Ayuda
-    Administrador   1 Volver
+    Administrador   1 Cambiar tarifas · 2 Volver
 
 La mayoría de los tests son del conductor: el fixture `sesion` teclea el `1`
 (Conductor) del menú de inicio por ellos. `sesion_libre` empieza en el menú de
@@ -19,13 +19,16 @@ inicio.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Iterable
 
 import pytest
 
+from taximetro.config_tarifas import ConfigTarifas
 from taximetro.taximetro import Taximetro
 from taximetro.taximetro_app import (
     DESCRIPCIONES,
+    NADA_GUARDADO,
     OPCION_NO_VALIDA,
     SALIR_CON_CARRERA,
     TaximetroApp,
@@ -46,6 +49,7 @@ class EntradaGuionizada:
 
 
 CONDUCTOR = "1"  # opción del menú de inicio
+ADMINISTRADOR = "\nAdministrador"  # cómo empieza el menú de Administrador
 
 
 @pytest.fixture
@@ -347,13 +351,13 @@ class TestMenuDeInicio:
     def test_volver_del_administrador_regresa_al_menu_de_inicio(
         self, sesion_libre
     ) -> None:
-        lineas = sesion_libre("2", "1")
+        lineas = sesion_libre("2", "2")
         assert lineas[-1].startswith("\nMenú de inicio")
 
     def test_la_numeracion_sigue_al_volver_al_conductor(self, sesion_libre) -> None:
         # El taxímetro es el mismo en toda la sesión: salir al menú de inicio
         # no reinicia la cuenta de carreras.
-        salida = texto(sesion_libre("1", "1", "3", "3", "2", "1", "1", "1"))
+        salida = texto(sesion_libre("1", "1", "3", "3", "2", "2", "1", "1"))
         assert "Carrera nº 2 iniciada" in salida
 
     @pytest.mark.parametrize("tecleado", ["0", "4", "abc", ""])
@@ -429,3 +433,115 @@ class TestInterrupciones:
         # del pasajero (y soltaría un traceback).
         lineas = self._sesion_conductor(reloj, calendario, ["1"])
         assert any(linea.startswith("TOTAL A COBRAR") for linea in lineas)
+
+
+class TestCambiarTarifas:
+    """T7.6: el Administrador cambia las tarifas y se aplican a la próxima carrera.
+
+    Menú de Administrador: 1 Cambiar tarifas · 2 Volver.
+    """
+
+    ADMIN_TARIFAS = ("2", "1")  # Administrador -> Cambiar tarifas
+
+    def test_muestra_las_tarifas_vigentes_antes_de_pedir(self, sesion_libre) -> None:
+        lineas = sesion_libre(*self.ADMIN_TARIFAS)
+        assert "Tarifas vigentes: parado 0,02 €/s · en movimiento 0,05 €/s" in lineas
+
+    def test_guarda_y_confirma_las_tarifas_nuevas(self, sesion_libre) -> None:
+        lineas = sesion_libre(*self.ADMIN_TARIFAS, "0,03", "0,06")
+        assert (
+            "Tarifas guardadas: parado 0,03 €/s · en movimiento 0,06 €/s. "
+            "Se aplican desde la próxima carrera."
+        ) in lineas
+
+    def test_acepta_punto_decimal(self, sesion_libre) -> None:
+        lineas = sesion_libre(*self.ADMIN_TARIFAS, "0.03", " 0.06 ")
+        assert any(linea.startswith("Tarifas guardadas") for linea in lineas)
+
+    def test_la_proxima_carrera_cobra_la_tarifa_nueva(self, sesion_libre) -> None:
+        # Administrador -> cambiar -> Volver -> Conductor -> Iniciar carrera
+        lineas = sesion_libre(*self.ADMIN_TARIFAS, "0,03", "0,06", "2", "1", "1")
+        assert "Carrera nº 1 iniciada · EN MOVIMIENTO · 0,06 €/s" in lineas
+
+    def test_la_ayuda_muestra_las_tarifas_nuevas(self, sesion_libre) -> None:
+        salida = texto(sesion_libre(*self.ADMIN_TARIFAS, "0,03", "0,06", "2", "1", "2"))
+        assert "En movimiento ........ 0,06 €/s" in salida
+
+    def test_tras_cambiar_vuelve_al_menu_de_administrador(self, sesion_libre) -> None:
+        lineas = sesion_libre(*self.ADMIN_TARIFAS, "0,03", "0,06")
+        assert lineas[-1].startswith(ADMINISTRADOR)
+
+    @pytest.mark.parametrize(
+        ("parado", "en_movimiento", "mensaje"),
+        [
+            ("0,06", "0,05", "no puede ser mayor"),
+            ("0", "0,05", "mayor que 0"),
+            ("0,025", "0,05", "2 decimales"),
+            ("0,02", "2", "como máximo 1,00"),
+        ],
+    )
+    def test_rechaza_tarifas_invalidas_sin_cambiar_nada(
+        self, sesion_libre, parado: str, en_movimiento: str, mensaje: str
+    ) -> None:
+        lineas = sesion_libre(*self.ADMIN_TARIFAS, parado, en_movimiento, "1")
+        rechazo = next(linea for linea in lineas if mensaje in linea)
+        assert rechazo.endswith(NADA_GUARDADO)
+        assert "Tarifas vigentes: parado 0,02 €/s · en movimiento 0,05 €/s" in lineas[-3:]
+
+    def test_rechaza_lo_que_no_es_un_numero(self, sesion_libre) -> None:
+        lineas = sesion_libre(*self.ADMIN_TARIFAS, "abc")
+        assert (
+            f"«abc» no es un número. Escribe, por ejemplo, 0,03. {NADA_GUARDADO}"
+        ) in lineas
+        # No llega a pedir la segunda tarifa: vuelve al menú de Administrador.
+        assert lineas[-1].startswith(ADMINISTRADOR)
+
+    def test_el_segundo_valor_tampoco_puede_ser_texto(self, sesion_libre) -> None:
+        lineas = sesion_libre(*self.ADMIN_TARIFAS, "0,03", "")
+        assert any("no es un número" in linea for linea in lineas)
+        assert not any(linea.startswith("Tarifas guardadas") for linea in lineas)
+
+
+class TestCambiarTarifasEnFichero:
+    """T7.6 con fichero real: lo que guarda el Administrador sobrevive al cierre."""
+
+    def _ejecutar(self, taximetro: Taximetro, *guion) -> list[str]:
+        lineas: list[str] = []
+        pasos = iter(guion)
+
+        def entrada(prompt: str = "") -> str:
+            try:
+                paso = next(pasos)
+            except StopIteration:
+                raise EOFError from None
+            if isinstance(paso, type) and issubclass(paso, BaseException):
+                raise paso
+            return paso
+
+        TaximetroApp(taximetro=taximetro, entrada=entrada, salida=lineas.append).ejecutar()
+        return lineas
+
+    def test_la_siguiente_sesion_arranca_con_las_tarifas_guardadas(
+        self, tmp_path: Path
+    ) -> None:
+        ruta = tmp_path / "tarifas.json"
+        self._ejecutar(Taximetro(config=ConfigTarifas(ruta)), "2", "1", "0,03", "0,06")
+        salida = texto(self._ejecutar(Taximetro(config=ConfigTarifas(ruta))))
+        assert "En movimiento ........ 0,06 €/s" in salida
+
+    def test_si_no_se_puede_escribir_avisa_y_no_cambia_nada(self, tmp_path: Path) -> None:
+        (tmp_path / "config").write_text("", encoding="utf-8")  # bloquea mkdir
+        config = ConfigTarifas(tmp_path / "config" / "tarifas.json")
+        lineas = self._ejecutar(Taximetro(config=config), "2", "1", "0,03", "0,06", "1")
+        assert f"No se pudo escribir el fichero de tarifas. {NADA_GUARDADO}" in lineas
+        assert "Tarifas vigentes: parado 0,02 €/s · en movimiento 0,05 €/s" in lineas[-3:]
+
+    @pytest.mark.parametrize("guion", [[KeyboardInterrupt], ["0,03", KeyboardInterrupt]])
+    def test_ctrl_c_mientras_se_teclea_cancela(self, tmp_path: Path, guion) -> None:
+        ruta = tmp_path / "tarifas.json"
+        taximetro = Taximetro(config=ConfigTarifas(ruta))
+        lineas = self._ejecutar(taximetro, "2", "1", *guion)
+        assert f"Cambio cancelado. {NADA_GUARDADO}" in lineas
+        assert lineas[-1].startswith(ADMINISTRADOR)
+        assert taximetro.tarifa.parado == 0.02
+        assert ConfigTarifas(ruta).cargar().parado == 0.02

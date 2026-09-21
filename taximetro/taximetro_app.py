@@ -6,6 +6,8 @@ import sys
 from typing import Callable
 
 from taximetro.carrera import Carrera, Estado
+from taximetro.config_tarifas import ConfigTarifas
+from taximetro.tarifa import Tarifa, TarifaInvalidaError
 from taximetro.taximetro import Taximetro
 from taximetro.utils import formato_euros
 
@@ -14,12 +16,13 @@ from taximetro.utils import formato_euros
 OPCIONES_INICIO = ("conductor", "administrador", "salir")
 OPCIONES_SIN_CARRERA = ("iniciar", "ayuda", "volver")
 OPCIONES_CON_CARRERA = ("cambiar", "importe", "finalizar", "ayuda")
-OPCIONES_ADMINISTRADOR = ("volver",)
+OPCIONES_ADMINISTRADOR = ("tarifas", "volver")
 
 ETIQUETAS = {
     "conductor": "Conductor",
     "administrador": "Administrador",
     "iniciar": "Iniciar carrera",
+    "tarifas": "Cambiar tarifas",
     "importe": "Ver importe",
     "finalizar": "Finalizar carrera",
     "ayuda": "Ayuda",
@@ -51,12 +54,14 @@ DESCRIPCIONES = {
         ("Volver", "vuelve al menú de inicio (sin carrera en curso)"),
     ),
     "Administrador": (
+        ("Cambiar tarifas", "fija los €/s de cada estado, desde la próxima carrera"),
         ("Volver", "vuelve al menú de inicio"),
     ),
 }
 
 OPCION_NO_VALIDA = "Opción no válida. Elige un número del menú."
 SALIR_CON_CARRERA = "Para salir, finaliza la carrera."
+NADA_GUARDADO = "No se ha guardado nada."
 
 
 class TaximetroApp:
@@ -215,6 +220,54 @@ class TaximetroApp:
             opcion = self._leer("Administrador", OPCIONES_ADMINISTRADOR)
             if opcion == "volver":
                 return
+            self._cambiar_tarifas()
+
+    def _cambiar_tarifas(self) -> None:
+        """Pide las dos tarifas nuevas y se las pasa al Taximetro (T7.6).
+
+        Las reglas de qué es una tarifa válida son de `Tarifa`; aquí solo se
+        traduce lo tecleado a número. Cualquier fallo vuelve al menú de
+        Administrador sin haber cambiado nada. Ctrl+C a mitad cancela; EOF
+        sube hasta `ejecutar` y cierra el programa, también sin cambiar nada.
+        """
+        self._salida(f"Tarifas vigentes: {self._resumen(self._taximetro.tarifa)}")
+        try:
+            parado = self._leer_tarifa("Nueva tarifa parado (€/s): ")
+            if parado is None:
+                return
+            en_movimiento = self._leer_tarifa("Nueva tarifa en movimiento (€/s): ")
+            if en_movimiento is None:
+                return
+        except KeyboardInterrupt:
+            self._salida(f"Cambio cancelado. {NADA_GUARDADO}")
+            return
+
+        try:
+            tarifa = Tarifa(parado=parado, en_movimiento=en_movimiento)
+            self._taximetro.cambiar_tarifa(tarifa)
+        except TarifaInvalidaError as error:
+            self._salida(f"{error} {NADA_GUARDADO}")
+            return
+        except OSError:
+            self._salida(f"No se pudo escribir el fichero de tarifas. {NADA_GUARDADO}")
+            return
+
+        self._salida(
+            f"Tarifas guardadas: {self._resumen(tarifa)}. "
+            "Se aplican desde la próxima carrera."
+        )
+
+    def _leer_tarifa(self, pregunta: str) -> float | None:
+        """Lee una tarifa en €/s; acepta coma o punto decimal. None si no es un número."""
+        tecleado = self._entrada(pregunta).strip()
+        try:
+            return float(tecleado.replace(",", "."))
+        except ValueError:
+            self._salida(
+                f"«{tecleado}» no es un número. Escribe, por ejemplo, 0,03. "
+                f"{NADA_GUARDADO}"
+            )
+            return None
 
     # ------------------------------------------------------------------
     # Presentación
@@ -288,6 +341,13 @@ class TaximetroApp:
             ]
         )
 
+    def _resumen(self, tarifa: Tarifa) -> str:
+        """Las dos tarifas en una línea: 'parado 0,02 €/s · en movimiento 0,05 €/s'."""
+        return (
+            f"parado {formato_euros(tarifa.parado)}/s · "
+            f"en movimiento {formato_euros(tarifa.en_movimiento)}/s"
+        )
+
     def _tarifa_por_segundo(self, estado: Estado) -> str:
         """La tarifa del estado, formateada — el importe de un solo segundo."""
         return formato_euros(self._taximetro.tarifa.calcular_importe(estado, 1))
@@ -304,4 +364,6 @@ if __name__ == "__main__":
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(errors="replace")
 
-    TaximetroApp().ejecutar()
+    # Solo el programa real lee y escribe config/tarifas.json; los tests usan
+    # un Taximetro en memoria o una ruta temporal.
+    TaximetroApp(Taximetro(config=ConfigTarifas())).ejecutar()
