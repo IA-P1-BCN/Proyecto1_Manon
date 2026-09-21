@@ -142,8 +142,9 @@ Tareas:
 - [ ] **T7.4** Tests: fichero válido, fichero corrupto/ausente → defaults — `test`, `should` — [#43](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/43)
 - [ ] **T7.5** Menú de roles al arrancar (`Conductor` · `Administrador` · `Salir`) — `feature`, `should` — [#84](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/84)
 - [ ] **T7.6** Opción de Administrador: cambiar tarifas y guardar el fichero — `feature`, `should` — [#85](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/85)
+- [ ] **T7.7** Ctrl+C durante una carrera pide confirmación antes de salir — `feature`, `should` — [#87](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/87)
 
-*T7.5 y T7.6 no vienen del cliente: salen de la separación Conductor / Administrador decidida para la Fase 2 (ver `docs/decisions-fase2.md`). El menú de roles llega con US-07 porque es la primera historia que necesita el modo Administrador.*
+*T7.5 a T7.7 no vienen del cliente: salen de la separación Conductor / Administrador decidida para la Fase 2 (ver `docs/decisions-fase2.md`). El menú de roles llega con US-07 porque es la primera historia que necesita el modo Administrador.*
 
 ---
 

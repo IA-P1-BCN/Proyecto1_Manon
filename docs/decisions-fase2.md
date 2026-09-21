@@ -36,7 +36,7 @@ Point 3 was reversed during the session (see *Tests*). The rest shaped every dec
 
 ### Switching roles
 
-**Decision:** `Volver` returns to the role menu. The driver's `Volver` exists only in the *Sin carrera* menu. With a ride open, the only way out is to finish it, exactly like `Salir` in Fase 1.
+**Decision:** `Volver` returns to the role menu. The driver's `Volver` exists only in the *Sin carrera* menu. With a ride open, every way out finishes it first: *Finalizar carrera*, or Ctrl+C confirmed with *Sí* (see *Ctrl+C and EOF*), which also closes the program.
 
 **Why:** it makes "a fare change never lands mid-ride" true by construction: while a ride is running you cannot reach Admin, so the passenger is always charged the fare announced when the ride started. The alternatives were a role fixed until the program exits (clumsy for the demo) and switching at any time (needs a rule for what a running ride pays after a fare change).
 
@@ -46,9 +46,29 @@ Point 3 was reversed during the session (see *Tests*). The rest shaped every dec
 
 **Why:** one exit point and shorter menus. Quitting from the driver's screen costs one extra keypress (`Volver`, then `Salir`).
 
-### Ctrl+C and EOF (assumption, not asked)
+### Ctrl+C and EOF
 
-Extended from `flujo-fase1.md` rather than re-decided. Outside an active ride (role menu, Admin menu, driver *Sin carrera*), Ctrl+C and EOF exit cleanly. During a ride, behaviour is unchanged: Ctrl+C is ignored with a message, and EOF finishes the ride, shows the total and exits. A finished ride is written to the history whichever way it ends. Ctrl+C in the middle of typing a new fare cancels the edit and nothing is saved.
+**Decision:** outside an active ride (role menu, Admin menu, driver *Sin carrera*), Ctrl+C and EOF exit cleanly, as in Fase 1. **During a ride, Ctrl+C now asks for confirmation** instead of being ignored:
+
+```
+Vas a salir del programa con la carrera nº 3 en curso.
+  1) Sí, finalizar la carrera y salir
+  2) No, seguir con la carrera
+```
+
+The meter keeps running while the question is on screen: accrual is based on timestamps, so nothing needs pausing. *No* returns to the ride menu as if nothing happened. *Sí* finishes the ride, shows **TOTAL A COBRAR**, writes it to the history and closes the program, which is exactly what EOF already did. EOF during a ride is unchanged: finish, total, exit.
+
+Details not specified by the user, decided as assumptions:
+- A second Ctrl+C at the confirmation counts as *No*. A nervous double tap must never end a ride.
+- EOF at the confirmation counts as *Sí*, since EOF can't be retried (same reasoning as in `flujo-fase1.md`).
+- Any other input repeats the question with «Opción no válida».
+- *Sí* closes the program rather than returning to the role menu: the driver asked to leave the app.
+
+Ctrl+C while typing a new fare in Admin cancels the edit, saves nothing and returns to the Admin menu.
+
+**Why:** in Fase 1, Ctrl+C mid-ride was ignored (`'Para salir, finaliza la carrera.'`) because it was the only way left to kill a ride by accident. The user wants a real exit path from a ride that is still deliberate. A confirmation keeps the Fase 1 guarantee (a ride never ends by accident, a total is never lost without being shown) while no longer trapping the driver.
+
+**Consequence:** this changes Fase 1 behaviour that the client is currently validating, so it ships on `fase-2`, not as an MVP fix on `dev`. `flujo-fase1.md` stays as the record of the MVP; the Fase 2 flow doc will supersede its Ctrl+C section. Tracked as T7.7 and implemented with T7.5, since both rewrite the loop's exit paths.
 
 ### No protection on Admin in Fase 2
 
