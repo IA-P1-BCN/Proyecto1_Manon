@@ -17,6 +17,7 @@ OPCIONES_INICIO = ("conductor", "administrador", "salir")
 OPCIONES_SIN_CARRERA = ("iniciar", "ayuda", "volver")
 OPCIONES_CON_CARRERA = ("cambiar", "importe", "finalizar", "ayuda")
 OPCIONES_ADMINISTRADOR = ("tarifas", "volver")
+OPCIONES_CONFIRMAR_SALIDA = ("confirmar", "seguir")
 
 ETIQUETAS = {
     "conductor": "Conductor",
@@ -28,6 +29,8 @@ ETIQUETAS = {
     "ayuda": "Ayuda",
     "volver": "Volver",
     "salir": "Salir",
+    "confirmar": "Sí, finalizar la carrera y salir",
+    "seguir": "No, seguir con la carrera",
 }
 
 # `cambiar` es una sola opción con dos caras: el menú ofrece siempre la acción
@@ -60,7 +63,6 @@ DESCRIPCIONES = {
 }
 
 OPCION_NO_VALIDA = "Opción no válida. Elige un número del menú."
-SALIR_CON_CARRERA = "Para salir, finaliza la carrera."
 NADA_GUARDADO = "No se ha guardado nada."
 
 
@@ -141,7 +143,9 @@ class TaximetroApp:
             except KeyboardInterrupt:
                 if carrera is None:
                     raise
-                self._salida(SALIR_CON_CARRERA)
+                if self._confirmar_salida(carrera):
+                    self._salida(self._cerrar(carrera))
+                    return False
                 continue
             except EOFError:
                 if carrera is None:
@@ -154,6 +158,22 @@ class TaximetroApp:
             if opcion == "volver":
                 return True
             self._aplicar(opcion, carrera)
+
+    def _confirmar_salida(self, carrera: Carrera) -> bool:
+        """Ctrl+C con carrera activa: pregunta antes de cerrar el programa (T7.7).
+
+        El taxímetro sigue contando mientras se pregunta: el importe se calcula
+        con marcas de tiempo, así que no hay nada que pausar. Un segundo Ctrl+C
+        cuenta como «No», para que un doble toque nervioso no termine la
+        carrera; EOF cuenta como «Sí», porque no es reintentable.
+        """
+        cabecera = f"Vas a salir del programa con la carrera nº {carrera.id} en curso."
+        try:
+            return self._leer(cabecera, OPCIONES_CONFIRMAR_SALIDA) == "confirmar"
+        except KeyboardInterrupt:
+            return False
+        except EOFError:
+            return True
 
     def _opcion(self, eleccion: str, opciones: tuple[str, ...]) -> str | None:
         """Traduce lo tecleado a una opción del menú, o None si no lo es."""

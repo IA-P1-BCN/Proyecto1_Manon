@@ -30,7 +30,6 @@ from taximetro.taximetro_app import (
     DESCRIPCIONES,
     NADA_GUARDADO,
     OPCION_NO_VALIDA,
-    SALIR_CON_CARRERA,
     TaximetroApp,
 )
 
@@ -402,7 +401,7 @@ class TestInterrupciones:
 
     def test_ctrl_c_sin_carrera_sale_limpiamente(self, reloj, calendario) -> None:
         lineas = self._sesion_conductor(reloj, calendario, [KeyboardInterrupt, "1"])
-        assert SALIR_CON_CARRERA not in lineas
+        assert not menus(lineas, "Vas a salir")
         assert not any("iniciada" in linea for linea in lineas)
 
     @pytest.mark.parametrize("interrupcion", [KeyboardInterrupt, EOFError])
@@ -414,13 +413,79 @@ class TestInterrupciones:
             lineas = self._sesion_interrumpida(reloj, calendario, guion)
             assert not menus(lineas, "Sin carrera")
 
-    def test_ctrl_c_durante_una_carrera_no_la_pierde(self, reloj, calendario) -> None:
+    def test_ctrl_c_durante_una_carrera_pide_confirmacion(
+        self, reloj, calendario
+    ) -> None:
+        lineas = self._sesion_conductor(reloj, calendario, ["1", KeyboardInterrupt])
+        pregunta = menus(lineas, "Vas a salir")[0]
+        assert "Vas a salir del programa con la carrera nº 1 en curso." in pregunta
+        assert "1) Sí, finalizar la carrera y salir" in pregunta
+        assert "2) No, seguir con la carrera" in pregunta
+
+    def test_confirmar_finaliza_cobra_y_sale(self, reloj, calendario) -> None:
+        # El "1" posterior no llega a ejecutarse: el programa ya se ha cerrado.
         lineas = self._sesion_conductor(
-            reloj, calendario, ["1", KeyboardInterrupt, "2", "3"]
+            reloj, calendario, ["1", KeyboardInterrupt, "1", "1"]
         )
-        assert SALIR_CON_CARRERA in lineas
+        assert lineas[-1] == "TOTAL A COBRAR: 0,00 €"
+
+    def test_no_vuelve_a_la_carrera_como_si_nada(self, reloj, calendario) -> None:
+        lineas = self._sesion_conductor(
+            reloj, calendario, ["1", KeyboardInterrupt, "2", "2", "3"]
+        )
         assert any("Carrera nº 1 · EN MOVIMIENTO" in linea for linea in lineas)
         assert "TOTAL A COBRAR: 0,00 €" in lineas
+        # Tras el total, la sesión sigue: vuelve el menú sin carrera.
+        assert lineas[-1].startswith("\nSin carrera")
+
+    @pytest.mark.parametrize("tecleado", ["3", "abc", ""])
+    def test_una_respuesta_no_valida_repite_la_pregunta(
+        self, reloj, calendario, tecleado: str
+    ) -> None:
+        lineas = self._sesion_conductor(
+            reloj, calendario, ["1", KeyboardInterrupt, tecleado, "2"]
+        )
+        assert OPCION_NO_VALIDA in lineas
+        assert len(menus(lineas, "Vas a salir")) == 2
+        # «No» devuelve a la carrera; el EOF del final del guion la cierra.
+        assert lineas[-2].startswith("\nCarrera nº 1 en curso")
+
+    def test_un_segundo_ctrl_c_cuenta_como_no(self, reloj, calendario) -> None:
+        lineas = self._sesion_conductor(
+            reloj, calendario, ["1", KeyboardInterrupt, KeyboardInterrupt]
+        )
+        # Sigue la carrera; el EOF final es lo único que la cierra.
+        ultimo_menu = [linea for linea in lineas if "  1) " in linea][-1]
+        assert "Carrera nº 1 en curso" in ultimo_menu
+
+    def test_eof_en_la_pregunta_cuenta_como_si(self, reloj, calendario) -> None:
+        lineas = self._sesion_conductor(reloj, calendario, ["1", KeyboardInterrupt])
+        assert lineas[-1] == "TOTAL A COBRAR: 0,00 €"
+
+    def test_el_taximetro_sigue_contando_durante_la_pregunta(
+        self, reloj, calendario
+    ) -> None:
+        lineas: list[str] = []
+        pasos = iter([CONDUCTOR, "1", KeyboardInterrupt, "2", "3"])
+
+        def entrada(prompt: str = "") -> str:
+            try:
+                paso = next(pasos)
+            except StopIteration:
+                raise EOFError from None
+            if paso == "2":
+                reloj.avanzar(60)  # un minuto pensando con la pregunta en pantalla
+            if paso is KeyboardInterrupt:
+                raise paso
+            return paso
+
+        TaximetroApp(
+            taximetro=Taximetro(reloj=reloj, calendario=calendario),
+            entrada=entrada,
+            salida=lineas.append,
+        ).ejecutar()
+        # 60 s en movimiento a 0,05 €/s.
+        assert "TOTAL A COBRAR: 3,00 €" in lineas
 
     def test_eof_sin_carrera_sale_limpiamente(self, reloj, calendario) -> None:
         lineas = self._sesion_conductor(reloj, calendario, [])
