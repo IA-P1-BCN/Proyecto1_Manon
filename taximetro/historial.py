@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import csv
+import logging
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from taximetro.logs import campos
+
 if TYPE_CHECKING:
     from taximetro.carrera import Carrera
+
+logger = logging.getLogger(__name__)
 
 # Relativa al directorio desde el que se lanza el programa, igual que
 # `config/tarifas.json`.
@@ -70,20 +75,32 @@ class Historial:
             raise ValueError(f"La carrera nº {carrera.id} no está finalizada.")
 
         nuevo = not self._ruta.exists()
-        self._ruta.parent.mkdir(parents=True, exist_ok=True)
-        with self._ruta.open("a", encoding="utf-8", newline="") as fichero:
-            escritor = csv.writer(fichero)
-            if nuevo:
-                escritor.writerow(COLUMNAS)
-            escritor.writerow(
-                (
-                    carrera.id,
-                    carrera.hora_inicio.isoformat(timespec="seconds"),
-                    carrera.hora_fin.isoformat(timespec="seconds"),
-                    f"{carrera.importe:.2f}",
-                    f"{carrera.distancia:.2f}",
+        try:
+            self._ruta.parent.mkdir(parents=True, exist_ok=True)
+            with self._ruta.open("a", encoding="utf-8", newline="") as fichero:
+                escritor = csv.writer(fichero)
+                if nuevo:
+                    escritor.writerow(COLUMNAS)
+                escritor.writerow(
+                    (
+                        carrera.id,
+                        carrera.hora_inicio.isoformat(timespec="seconds"),
+                        carrera.hora_fin.isoformat(timespec="seconds"),
+                        f"{carrera.importe:.2f}",
+                        f"{carrera.distancia:.2f}",
+                    )
                 )
+        except OSError:
+            logger.error(
+                "carrera_no_guardada %s",
+                campos(carrera=carrera.id, importe=carrera.importe, ruta=self._ruta),
+                exc_info=True,
             )
+            raise
+        logger.info(
+            "carrera_guardada %s",
+            campos(carrera=carrera.id, importe=carrera.importe, ruta=self._ruta),
+        )
 
     def registros(self) -> list[RegistroCarrera]:
         """Todas las carreras guardadas, en el orden en que se cerraron.
@@ -97,7 +114,8 @@ class Historial:
 
         registros = []
         with self._ruta.open(encoding="utf-8", newline="") as fichero:
-            for fila in csv.DictReader(fichero):
+            lector = csv.DictReader(fichero)
+            for fila in lector:
                 try:
                     registros.append(
                         RegistroCarrera(
@@ -109,6 +127,9 @@ class Historial:
                         )
                     )
                 except (KeyError, TypeError, ValueError):
+                    logger.warning(
+                        "fila_ilegible %s", campos(ruta=self._ruta, linea=lector.line_num)
+                    )
                     continue
         return registros
 

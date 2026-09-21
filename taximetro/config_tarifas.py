@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
+from taximetro.logs import campos
 from taximetro.tarifa import Tarifa, TarifaInvalidaError
+
+logger = logging.getLogger(__name__)
 
 # Relativa al directorio desde el que se lanza el programa, que es la raíz del
 # repo (`python -m taximetro.taximetro_app`). Si en la Fase 4 se empaqueta, se
@@ -43,19 +47,34 @@ class ConfigTarifas:
             try:
                 self.guardar(tarifa)
             except OSError:
-                pass  # sin permisos de escritura se sigue con las de por defecto
+                pass  # ya registrado por `guardar`; se sigue con las de por defecto
+            else:
+                logger.info("tarifas_creadas %s", campos(ruta=self._ruta))
             return tarifa
 
         try:
             datos = json.loads(self._ruta.read_text(encoding="utf-8"))
-            return Tarifa(parado=datos["parado"], en_movimiento=datos["en_movimiento"])
-        except (OSError, ValueError, KeyError, TypeError, TarifaInvalidaError):
+            tarifa = Tarifa(parado=datos["parado"], en_movimiento=datos["en_movimiento"])
+        except (OSError, ValueError, KeyError, TypeError, TarifaInvalidaError) as error:
             # ValueError cubre el JSON mal formado (JSONDecodeError) y
             # TarifaInvalidaError; TypeError, un JSON que no es un objeto.
+            logger.warning(
+                "tarifas_invalidas %s",
+                campos(ruta=self._ruta, error=type(error).__name__, detalle=repr(str(error))),
+            )
             return Tarifa()
+        logger.info(
+            "tarifas_cargadas %s",
+            campos(ruta=self._ruta, parado=tarifa.parado, movimiento=tarifa.en_movimiento),
+        )
+        return tarifa
 
     def guardar(self, tarifa: Tarifa) -> None:
         """Escribe las tarifas en el fichero, creando la carpeta si hace falta."""
-        self._ruta.parent.mkdir(parents=True, exist_ok=True)
         datos = {"parado": tarifa.parado, "en_movimiento": tarifa.en_movimiento}
-        self._ruta.write_text(json.dumps(datos, indent=2) + "\n", encoding="utf-8")
+        try:
+            self._ruta.parent.mkdir(parents=True, exist_ok=True)
+            self._ruta.write_text(json.dumps(datos, indent=2) + "\n", encoding="utf-8")
+        except OSError:
+            logger.error("tarifas_no_guardadas %s", campos(ruta=self._ruta), exc_info=True)
+            raise

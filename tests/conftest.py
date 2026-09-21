@@ -7,6 +7,7 @@ tiempo real ni parchear el módulo `time`: avanzan el reloj a mano.
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timedelta
 
 import pytest
@@ -61,3 +62,23 @@ def reloj() -> RelojFalso:
 def calendario() -> CalendarioFalso:
     """Calendario falso para sellar hora_inicio / hora_fin de forma estable."""
     return CalendarioFalso()
+
+
+@pytest.fixture
+def eventos(caplog):
+    """Lee los logs de operación del paquete (US-06).
+
+    Activa la captura desde INFO para los loggers `taximetro.*` y devuelve una
+    función que da los mensajes de un nivel, en orden. Hay que pedir este
+    fixture antes que los que ya generan eventos al crearse.
+    """
+    caplog.set_level(logging.INFO, logger="taximetro")
+
+    def _eventos(nivel: int = logging.INFO) -> list[str]:
+        return [
+            registro.getMessage()
+            for registro in caplog.records
+            if registro.name.startswith("taximetro") and registro.levelno == nivel
+        ]
+
+    return _eventos
