@@ -184,12 +184,15 @@ Estas tareas no añaden funcionalidad nueva al producto, pero definen el comport
 
 | Decisión | Efecto |
 |---|---|
-| Menús contextuales | El conductor solo ve los comandos válidos en cada momento |
-| `salir` fuera del menú de carrera activa | `finalizar` termina la carrera, `salir` termina el programa |
-| Comando `importe` | Total acumulado bajo demanda, solo lectura |
-| Comando `ayuda` | Reimprime el banner cuando se ha ido de pantalla |
+| Menús contextuales | El conductor solo ve las opciones válidas en cada momento |
+| Menú numerado | Se teclea un número, no un comando; los números son locales a cada menú |
+| Una sola opción de estado | El menú ofrece `Parar` o `Arrancar`, siempre lo contrario de lo actual |
+| La carrera nace EN MOVIMIENTO | Se inicia cuando el taxi arranca: 0,05 €/s desde el primer segundo |
+| `Salir` fuera del menú de carrera activa | `Finalizar carrera` termina la carrera, `Salir` termina el programa |
+| Opción `Ver importe` | Total acumulado bajo demanda, solo lectura |
+| Opción `Ayuda` | Reimprime el banner cuando se ha ido de pantalla |
 | Ctrl+C gestionado | Una carrera solo termina de forma deliberada |
-| Errores diferenciados | Estado incorrecto vs. comando desconocido |
+| Un único error posible | Lo que no es un número del menú se rechaza sin tocar la carrera |
 
 Tareas:
 - [x] **TD.1** Diagrama de flujo del CLI de Fase 1 — `docs`, `must` — [#53](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/53) ✅
@@ -199,12 +202,21 @@ Tareas:
 - [x] **TD.5** Test: `importe_actual()` no altera el importe acumulado — `test`, `must` — [#57](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/57) ✅
 - [x] **TD.6** Comando CLI `ayuda` (reimprimir banner) — `feature`, `must` — [#58](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/58) ✅
 - [x] **TD.7** Gestión de Ctrl+C según el estado del bucle — `tech-task`, `must` — [#59](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/59) ✅
-- [x] **TD.8** Mensajes de error diferenciados en el CLI — `feature`, `must` — [#60](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/60) ✅
+- [x] ~~**TD.8** Mensajes de error diferenciados en el CLI~~ — `feature`, `must` — [#60](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/60) — *superada por TD.10: cerrada como no planificada*
 - [x] **TD.9** Tests del bucle CLI: menús, errores y Ctrl+C — `test`, `must` — [#61](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/61) ✅
 
 **Orden sugerido:** TD.4 → TD.5 → TD.3 (el accesor de solo lectura y su test de regresión antes del comando que lo usa), luego TD.2 → TD.8 → TD.7 (los menús contextuales primero, porque los otros dos dependen de que el bucle sepa en qué modo está), TD.6 en cualquier momento, y TD.9 al final.
 
 **Relación con tareas existentes:** TD.2 concreta cómo debe comportarse el menú de **T4.1**; TD.9 complementa **T4.3** cubriendo las ramas de error y Ctrl+C que el ciclo funcional no toca.
+
+**Revisión posterior (cambio de CLI a menú numerado).** A petición del cliente, el CLI pasó de comandos escritos a un menú numerado, la opción de estado se convirtió en un único conmutador `Parar`/`Arrancar` y la carrera pasa a nacer `EN_MOVIMIENTO`. Efecto sobre las tareas ya cerradas de este épico:
+
+- **TD.2**, **TD.3**, **TD.6**, **TD.7**, **TD.9** siguen vigentes; solo cambia la forma de la entrada (un número en vez de una palabra).
+- **TD.8** (mensajes de error diferenciados) queda **superada**: con el menú numerado el caso "comando correcto en el modo equivocado" no puede darse, así que solo queda un mensaje de error. El razonamiento está en `docs/flujo-fase1.md`.
+Tareas de la revisión:
+- [x] **TD.10** Menú numerado en lugar de comandos escritos — `feature`, `must` — [#80](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/80) ✅
+- [x] **TD.11** Opción única `Parar`/`Arrancar` en lugar de `parado` y `movimiento` — `feature`, `must` — [#81](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/81) ✅
+- [x] **TD.12** La carrera nace `EN_MOVIMIENTO` — `tech-task`, `must` — [#82](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/82) ✅
 
 ---
 

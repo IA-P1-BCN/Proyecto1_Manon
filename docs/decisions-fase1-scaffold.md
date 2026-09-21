@@ -71,6 +71,8 @@ Because the loop is now mode-aware (see "Context-sensitive menus" in `docs/flujo
 
 In normal CLI use the domain exceptions should therefore **never surface** — the menu prevents reaching them. They are now a safety net for direct API use (and for Fase 4's REST layer, which will have no menu to lean on), not the CLI's primary error path. A `try/except` around dispatch is still worth keeping as defence in depth, but it is no longer what makes the messages correct.
 
+**Superseded again (numbered-menu session).** The three messages above collapsed into one. With a numbered menu, a valid option for the *other* mode cannot be typed at all — there is no key that finalises a non-existent ride, and none that opens a second ride while one is open — so the only remaining error is input that isn't a number in the menu on screen: `'Opción no válida. Elige un número del menú.'` The conclusion about the domain exceptions is unchanged and, if anything, stronger: they are now unreachable from the CLI by construction.
+
 ## Rounding / precision
 
 **Decision:** `importe` stays full-precision internally (a `float`); rounding to 2 decimals happens only at display/formatting time, in `utils.formato_euros()`.
@@ -117,6 +119,20 @@ Three changes from the original entry:
 - **`ayuda` added** — reprints the banner, available in both modes, because the banner scrolls off screen after a couple of rides and US-01's "no external docs" requirement shouldn't expire when the terminal scrolls.
 - **`salir` removed from the active menu** — it now exists only while idle. To leave mid-ride the driver runs `finalizar` (which prints the total and returns to the idle menu, where `iniciar` and `salir` are both offered). This gives each command one meaning — `finalizar` ends a *ride*, `salir` ends the *program* — and dissolves the "should `salir` auto-finalizar or discard the fare?" question rather than answering it. It also makes US-04 a visible prompt instead of an implicit property of the loop.
 
+**Superseded again (numbered-menu session).** Typed words are gone; the driver types the option's number. Authoritative version, per `docs/flujo-fase1.md`:
+
+| Mode | Options offered |
+|---|---|
+| Sin carrera (idle) | `1) Iniciar carrera` · `2) Ayuda` · `3) Salir` |
+| Carrera activa | `1) Parar` *or* `1) Arrancar` · `2) Ver importe` · `3) Finalizar carrera` · `4) Ayuda` |
+
+Two further changes:
+
+- **Numbers are per-menu, not global.** The `1` starts a ride when idle and toggles the vehicle's state during one. Fixed global numbers would leave gaps (`2 · 3 · 5 · 6`) that force reading instead of counting. Only one menu is ever on screen.
+- **`parado` and `movimiento` merged into one toggle.** The menu offers whichever is the opposite of the current state, so it never presents a key that does nothing. The label is derived from `carrera.estado`; the action is `cambiar_estado()` to the opposite state. `cambiar_estado()`'s silent no-op on a repeated state survives as a domain guarantee (still unit-tested) but is now unreachable from the CLI.
+
+The live-ticker rejection above still holds for the same reason: the driver still types into a blocking `input()`, so a background redraw would still corrupt half-typed input.
+
 **Consequence — Ctrl+C:** removing `salir` from the active menu made Ctrl+C the only remaining mid-ride exit, which would have lost the fare and printed a traceback mid-demo. It is therefore caught: during a ride it prints `'Para salir, finaliza la carrera.'` and redraws the menu; while idle it exits cleanly. A ride can only ever end deliberately.
 
 ## Euro-formatting location
@@ -150,6 +166,8 @@ Rounding direction is left as Python's default (`format` rounds the underlying b
 **Decision:** a new `Carrera` starts in `Estado.PARADO`.
 
 **Why:** a taxi ride typically begins with the vehicle stationary (picking up the passenger) before pulling away.
+
+**Superseded (numbered-menu session).** A new `Carrera` now starts in `Estado.EN_MOVIMIENTO`, billing at 0,05 €/s from the first second. The client's reading: the ride is started when the taxi pulls away with the passenger already aboard, not while waiting for them — so starting `PARADO` billed the low rate over the first seconds of real travel. A taxi that does start stationary is one keypress away (`Parar`). Knock-on: the first segment of every ride is the expensive one, and the accrual tests in `test_carrera.py` were recalculated on 0,05 €/s.
 
 ## Tarifa's public interface
 

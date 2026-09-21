@@ -35,6 +35,8 @@ python -m taximetro.taximetro_app
 
 La aplicación muestra al arrancar las instrucciones y las tarifas: no hace falta consultar esta página para usarla.
 
+No se escriben comandos: cada opción lleva un número y el conductor teclea el número.
+
 ```
 ======================================================
   TAXÍMETRO TTX-247 · TaxiTech Solutions
@@ -42,32 +44,73 @@ La aplicación muestra al arrancar las instrucciones y las tarifas: no hace falt
 Tarifas vigentes:
   Parado o < 20 km/h ... 0,02 €/s
   En movimiento ........ 0,05 €/s
+
+Escribe el número de la opción que quieras y pulsa Intro.
+El menú ofrece Arrancar o Parar según cómo esté el taxi.
+
+Opciones:
+  Iniciar carrera    empieza una carrera nueva y cobra desde ese segundo
+  Arrancar           el taxi se pone en movimiento
+  Parar              el taxi se detiene
+  Ver importe        muestra el importe acumulado
+  Finalizar carrera  cierra la carrera y muestra el total
+  Ayuda              vuelve a mostrar estas instrucciones
+  Salir              cierra el programa
+
 ======================================================
-Sin carrera · Comandos: iniciar · ayuda · salir
-> iniciar
-Carrera nº 1 iniciada · PARADO · 0,02 €/s
-Carrera nº 1 en curso (PARADO) · Comandos: parado · movimiento · importe · finalizar · ayuda
-> movimiento
-EN MOVIMIENTO · 0,40 € acumulado
-> importe
-Carrera nº 1 · EN MOVIMIENTO · 1,90 € acumulado
-> finalizar
-TOTAL A COBRAR: 3,25 €
-Sin carrera · Comandos: iniciar · ayuda · salir
+
+Sin carrera
+  1) Iniciar carrera
+  2) Ayuda
+  3) Salir
+> 1
+Carrera nº 1 iniciada · EN MOVIMIENTO · 0,05 €/s
+
+Carrera nº 1 en curso (EN MOVIMIENTO)
+  1) Parar
+  2) Ver importe
+  3) Finalizar carrera
+  4) Ayuda
+> 1
+PARADO · 1,50 € acumulado
+
+Carrera nº 1 en curso (PARADO)
+  1) Arrancar
+  2) Ver importe
+  3) Finalizar carrera
+  4) Ayuda
+> 2
+Carrera nº 1 · PARADO · 1,90 € acumulado
+
+Carrera nº 1 en curso (PARADO)
+  1) Arrancar
+  2) Ver importe
+  3) Finalizar carrera
+  4) Ayuda
+> 3
+TOTAL A COBRAR: 2,25 €
+
+Sin carrera
+  1) Iniciar carrera
+  2) Ayuda
+  3) Salir
 ```
 
-Los comandos disponibles dependen de si hay una carrera en curso; en cada momento solo se ofrecen los válidos:
+Las opciones disponibles dependen de si hay una carrera en curso; en cada momento solo se ofrecen las válidas, y **los números son propios de cada menú** (el `1` inicia una carrera si no hay ninguna, y cambia el estado del vehículo si la hay):
 
-| Situación | Comando | Qué hace |
-|---|---|---|
-| Sin carrera | `iniciar` | Empieza una carrera nueva y cobra desde ese segundo |
-| | `ayuda` | Reimprime las instrucciones |
-| | `salir` | Cierra el programa |
-| Carrera activa | `parado` | El taxi está detenido: pasa a 0,02 €/s |
-| | `movimiento` | El taxi circula: pasa a 0,05 €/s |
-| | `importe` | Muestra el importe acumulado sin alterarlo |
-| | `finalizar` | Cierra la carrera y muestra el total a cobrar |
-| | `ayuda` | Reimprime las instrucciones |
+| Situación | Nº | Opción | Qué hace |
+|---|---:|---|---|
+| Sin carrera | 1 | Iniciar carrera | Empieza una carrera nueva y cobra desde ese segundo |
+| | 2 | Ayuda | Reimprime las instrucciones |
+| | 3 | Salir | Cierra el programa |
+| Carrera activa | 1 | Parar / Arrancar | Alterna el estado del vehículo; el menú ofrece siempre el contrario del actual |
+| | 2 | Ver importe | Muestra el importe acumulado sin alterarlo |
+| | 3 | Finalizar carrera | Cierra la carrera y muestra el total a cobrar |
+| | 4 | Ayuda | Reimprime las instrucciones |
+
+La carrera nace **en movimiento**, porque se inicia cuando el taxi arranca con el pasajero dentro: cobra a 0,05 €/s desde el primer segundo. Si el taxi arranca detenido, el conductor pulsa `Parar`.
+
+Cualquier otra cosa que se teclee —un número que no esté en el menú, una letra o una línea vacía— responde `Opción no válida. Elige un número del menú.` y deja la carrera intacta.
 
 **Interrupciones.** `Ctrl+C` con una carrera abierta no cierra el programa: avisa de que hay que finalizar primero, para que una carrera solo termine de forma deliberada. Cerrar la entrada (`Ctrl+D`) durante una carrera la finaliza y muestra el total antes de salir, de modo que el importe nunca se pierde sin verse.
 
