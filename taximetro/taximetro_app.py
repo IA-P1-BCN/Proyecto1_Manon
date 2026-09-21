@@ -9,16 +9,21 @@ from taximetro.carrera import Carrera, Estado
 from taximetro.taximetro import Taximetro
 from taximetro.utils import formato_euros
 
-# Cada menú es una tupla de opciones y la posición manda: el número que teclea
-# el conductor es el índice + 1. Reordenar una tupla renumera ese menú.
-OPCIONES_SIN_CARRERA = ("iniciar", "ayuda", "salir")
+# Cada menú es una tupla de opciones y la posición manda: el número que se
+# teclea es el índice + 1. Reordenar una tupla renumera ese menú.
+OPCIONES_INICIO = ("conductor", "administrador", "salir")
+OPCIONES_SIN_CARRERA = ("iniciar", "ayuda", "volver")
 OPCIONES_CON_CARRERA = ("cambiar", "importe", "finalizar", "ayuda")
+OPCIONES_ADMINISTRADOR = ("volver",)
 
 ETIQUETAS = {
+    "conductor": "Conductor",
+    "administrador": "Administrador",
     "iniciar": "Iniciar carrera",
     "importe": "Ver importe",
     "finalizar": "Finalizar carrera",
     "ayuda": "Ayuda",
+    "volver": "Volver",
     "salir": "Salir",
 }
 
@@ -31,30 +36,39 @@ ETIQUETAS_CAMBIO = {
     Estado.PARADO: "Parar",
 }
 
-# Para el banner: qué hace cada opción. Sin números, porque una misma opción
-# lleva un número distinto en cada menú (Ayuda es la 2 sin carrera y la 4 con
-# carrera); los números solo son ciertos en el menú que está en pantalla.
-DESCRIPCIONES = (
-    ("Iniciar carrera", "empieza una carrera nueva y cobra desde ese segundo"),
-    ("Arrancar", "el taxi se pone en movimiento"),
-    ("Parar", "el taxi se detiene"),
-    ("Ver importe", "muestra el importe acumulado"),
-    ("Finalizar carrera", "cierra la carrera y muestra el total"),
-    ("Ayuda", "vuelve a mostrar estas instrucciones"),
-    ("Salir", "cierra el programa"),
-)
+# Para el banner: qué hace cada opción, agrupadas por perfil. Sin números,
+# porque una misma opción lleva un número distinto en cada menú (Ayuda es la 2
+# sin carrera y la 4 con carrera); los números solo son ciertos en el menú que
+# está en pantalla.
+DESCRIPCIONES = {
+    "Conductor": (
+        ("Iniciar carrera", "empieza una carrera nueva y cobra desde ese segundo"),
+        ("Arrancar", "el taxi se pone en movimiento"),
+        ("Parar", "el taxi se detiene"),
+        ("Ver importe", "muestra el importe acumulado"),
+        ("Finalizar carrera", "cierra la carrera y muestra el total"),
+        ("Ayuda", "vuelve a mostrar estas instrucciones"),
+        ("Volver", "vuelve al menú de inicio (sin carrera en curso)"),
+    ),
+    "Administrador": (
+        ("Volver", "vuelve al menú de inicio"),
+    ),
+}
 
 OPCION_NO_VALIDA = "Opción no válida. Elige un número del menú."
 SALIR_CON_CARRERA = "Para salir, finaliza la carrera."
 
 
 class TaximetroApp:
-    """Capa CLI: muestra el menú numerado y llama al Taximetro.
+    """Capa CLI: muestra los menús numerados y llama al Taximetro.
+
+    Arranca en el menú de inicio, donde se elige perfil: Conductor (el bucle de
+    carreras de la Fase 1) o Administrador (las funciones de la Fase 2). Ver
+    `docs/decisions-fase2.md`.
 
     `entrada` y `salida` se inyectan para que los tests puedan guionizar una
     sesión completa (lista de opciones dentro, lista de líneas fuera) sin
-    parchear `input`/`print` ni leer de stdout. El comportamiento del bucle
-    está definido en `docs/flujo-fase1.md`.
+    parchear `input`/`print` ni leer de stdout.
     """
 
     def __init__(
@@ -73,40 +87,71 @@ class TaximetroApp:
     # ------------------------------------------------------------------
 
     def ejecutar(self) -> None:
-        """Muestra las instrucciones de uso y arranca el bucle principal del menú."""
+        """Muestra las instrucciones de uso y arranca en el menú de inicio."""
         self._salida(self._banner())
 
+        try:
+            while True:
+                opcion = self._leer("Menú de inicio", OPCIONES_INICIO)
+                if opcion == "salir":
+                    return
+                if opcion == "administrador":
+                    self._administrador()
+                elif not self._conductor():
+                    return
+        except (KeyboardInterrupt, EOFError):
+            # Solo llegan aquí desde fuera de una carrera: no hay importe que
+            # perder, así que se sale limpiamente. Con carrera activa, los
+            # atiende `_conductor`.
+            return
+
+    def _leer(
+        self, cabecera: str, opciones: tuple[str, ...], carrera: Carrera | None = None
+    ) -> str:
+        """Muestra un menú y repite hasta que se teclea uno de sus números."""
+        while True:
+            self._salida(self._menu(cabecera, opciones, carrera))
+            opcion = self._opcion(self._entrada("> ").strip(), opciones)
+            if opcion is not None:
+                return opcion
+            self._salida(OPCION_NO_VALIDA)
+
+    # ------------------------------------------------------------------
+    # Conductor
+    # ------------------------------------------------------------------
+
+    def _conductor(self) -> bool:
+        """El bucle de carreras. Devuelve False si el programa debe cerrarse.
+
+        `Volver` solo existe sin carrera: con una carrera abierta no se puede
+        llegar al Administrador, y por tanto las tarifas no cambian a mitad de
+        carrera.
+        """
         while True:
             carrera = self._taximetro.carrera_activa
-            self._salida(self._menu(carrera))
-
             try:
-                eleccion = self._entrada("> ").strip()
+                opcion = self._leer(
+                    self._cabecera(carrera), self._opciones(carrera), carrera
+                )
             except KeyboardInterrupt:
-                # Sin carrera no hay nada que perder; con carrera activa, salir
-                # a destiempo perdería el importe del pasajero.
                 if carrera is None:
-                    return
+                    raise
                 self._salida(SALIR_CON_CARRERA)
                 continue
             except EOFError:
+                if carrera is None:
+                    raise
                 # EOF no es reintentable: volver a leer sería un bucle infinito,
                 # así que se cierra la carrera en vez de avisar y reintentar.
-                if carrera is not None:
-                    self._salida(self._cerrar(carrera))
-                return
+                self._salida(self._cerrar(carrera))
+                return False
 
-            opcion = self._opcion(eleccion, carrera)
-            if opcion is None:
-                self._salida(OPCION_NO_VALIDA)
-            elif opcion == "salir":
-                return
-            else:
-                self._aplicar(opcion, carrera)
+            if opcion == "volver":
+                return True
+            self._aplicar(opcion, carrera)
 
-    def _opcion(self, eleccion: str, carrera: Carrera | None) -> str | None:
-        """Traduce lo tecleado a una opción del menú actual, o None si no lo es."""
-        opciones = self._opciones(carrera)
+    def _opcion(self, eleccion: str, opciones: tuple[str, ...]) -> str | None:
+        """Traduce lo tecleado a una opción del menú, o None si no lo es."""
         try:
             numero = int(eleccion)
         except ValueError:
@@ -157,6 +202,21 @@ class TaximetroApp:
         return f"TOTAL A COBRAR: {formato_euros(total)}"
 
     # ------------------------------------------------------------------
+    # Administrador
+    # ------------------------------------------------------------------
+
+    def _administrador(self) -> None:
+        """El menú de Administrador, hasta que se elige `Volver`.
+
+        Sin contraseña en la Fase 2: la protección llega con US-08 (Fase 3),
+        que solo tendrá que ponerse delante de este método.
+        """
+        while True:
+            opcion = self._leer("Administrador", OPCIONES_ADMINISTRADOR)
+            if opcion == "volver":
+                return
+
+    # ------------------------------------------------------------------
     # Presentación
     # ------------------------------------------------------------------
 
@@ -176,30 +236,39 @@ class TaximetroApp:
             return ETIQUETAS_CAMBIO[self._contrario(carrera.estado)]
         return ETIQUETAS[opcion]
 
-    def _menu(self, carrera: Carrera | None) -> str:
-        """La situación actual y, numeradas, las opciones válidas ahora mismo.
+    def _cabecera(self, carrera: Carrera | None) -> str:
+        """La situación del conductor, encima de su menú."""
+        if carrera is None:
+            return "Sin carrera"
+        return f"Carrera nº {carrera.id} en curso ({self._legible(carrera.estado)})"
+
+    def _menu(
+        self, cabecera: str, opciones: tuple[str, ...], carrera: Carrera | None = None
+    ) -> str:
+        """La cabecera y, numeradas, las opciones válidas ahora mismo.
 
         Abre con una línea en blanco para separarlo de lo que se acaba de
-        imprimir: el conductor busca el menú de un vistazo, no leyendo.
+        imprimir: el menú se busca de un vistazo, no leyendo.
         """
-        if carrera is None:
-            lineas = ["", "Sin carrera"]
-        else:
-            lineas = [
-                "",
-                f"Carrera nº {carrera.id} en curso ({self._legible(carrera.estado)})",
-            ]
-
+        lineas = ["", cabecera]
         lineas += [
             f"  {numero}) {self._etiqueta(opcion, carrera)}"
-            for numero, opcion in enumerate(self._opciones(carrera), start=1)
+            for numero, opcion in enumerate(opciones, start=1)
         ]
         return "\n".join(lineas)
 
     def _banner(self) -> str:
         """Instrucciones de uso y tarifas vigentes."""
         raya = "=" * 54
-        ancho = max(len(etiqueta) for etiqueta, _ in DESCRIPCIONES)
+        ancho = max(
+            len(etiqueta) for grupo in DESCRIPCIONES.values() for etiqueta, _ in grupo
+        )
+        perfiles: list[str] = []
+        for perfil, grupo in DESCRIPCIONES.items():
+            perfiles += ["", f"{perfil}:"]
+            perfiles += [
+                f"  {etiqueta:<{ancho}}  {descripcion}" for etiqueta, descripcion in grupo
+            ]
         return "\n".join(
             [
                 raya,
@@ -211,12 +280,9 @@ class TaximetroApp:
                 f"{self._tarifa_por_segundo(Estado.EN_MOVIMIENTO)}/s",
                 "",
                 "Escribe el número de la opción que quieras y pulsa Intro.",
-                "",
-                "Opciones:",
-                *(
-                    f"  {etiqueta:<{ancho}}  {descripcion}"
-                    for etiqueta, descripcion in DESCRIPCIONES
-                ),
+                "Al empezar, elige tu perfil: Conductor o Administrador.",
+                "Salir, en el menú de inicio, cierra el programa.",
+                *perfiles,
                 "",
                 raya,
             ]
