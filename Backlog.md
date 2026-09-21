@@ -119,10 +119,10 @@ Tareas:
 - Los logs incluyen timestamp y nivel (INFO/WARNING/ERROR).
 
 Tareas:
-- [ ] **T6.1** Configurar módulo `logging` (formato, niveles, salida a fichero) — `tech-task`, `should` — [#36](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/36)
-- [ ] **T6.2** Instrumentar eventos clave en `Carrera` / `Taximetro` — `tech-task`, `should` — [#37](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/37)
-- [ ] **T6.3** Rotación de logs (`RotatingFileHandler`) — `tech-task`, `should` — [#38](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/38)
-- [ ] **T6.4** Tests de logging (verificar que se generan entradas) — `test`, `should` — [#39](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/39)
+- [x] **T6.1** Configurar módulo `logging` (formato, niveles, salida a fichero) — `tech-task`, `should` — [#36](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/36) ✅
+- [x] **T6.2** Instrumentar eventos clave en `Carrera` / `Taximetro` — `tech-task`, `should` — [#37](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/37) ✅
+- [x] **T6.3** Rotación de logs (`RotatingFileHandler`) — `tech-task`, `should` — [#38](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/38) ✅
+- [x] **T6.4** Tests de logging (verificar que se generan entradas) — `test`, `should` — [#39](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/39) ✅
 
 ---
 
