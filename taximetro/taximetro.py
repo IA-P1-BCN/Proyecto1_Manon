@@ -39,6 +39,11 @@ class Taximetro:
         self._siguiente_id = 1
 
     @property
+    def tarifa(self) -> Tarifa:
+        """Las tarifas vigentes, para que la capa CLI pueda mostrarlas."""
+        return self._tarifa
+
+    @property
     def carrera_activa(self) -> Carrera | None:
         """La carrera en curso, o None si el taxímetro está libre.
 

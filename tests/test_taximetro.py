@@ -33,7 +33,7 @@ class TestIniciarCarrera:
     def test_devuelve_una_carrera_nueva(self, taximetro: Taximetro) -> None:
         carrera = taximetro.iniciar_carrera()
         assert isinstance(carrera, Carrera)
-        assert carrera.estado is Estado.PARADO
+        assert carrera.estado is Estado.EN_MOVIMIENTO
 
     def test_la_carrera_queda_activa(self, taximetro: Taximetro) -> None:
         carrera = taximetro.iniciar_carrera()

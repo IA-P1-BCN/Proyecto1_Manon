@@ -45,13 +45,13 @@ class Carrera:
         reloj: Callable[[], float] = time.monotonic,
         calendario: Callable[[], datetime] = datetime.now,
     ) -> None:
-        """Crea una carrera nueva en estado PARADO, con el importe a cero.
+        """Crea una carrera nueva en estado EN_MOVIMIENTO, con el importe a cero.
 
         El número de carrera (`id`) lo asigna quien la crea — en la práctica,
         `Taximetro` —, no un contador global de la clase.
         """
         self.id = id
-        self.estado = Estado.PARADO
+        self.estado = Estado.EN_MOVIMIENTO
         self.importe = 0.0
         self.distancia = 0.0
         self.hora_inicio = calendario()
