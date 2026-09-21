@@ -29,3 +29,7 @@ dist/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Ficheros que escribe el taxímetro al usarse (Fase 2). Se versiona solo
+# config/tarifas.example.json, que documenta el formato.
+config/tarifas.json

@@ -25,18 +25,20 @@ Before changing behaviour, check whether it was already decided:
 
 - **`docs/decisions-fase1-scaffold.md`** — structural decisions (what lives where, and why).
 - **`docs/flujo-fase1.md`** — authority on CLI behaviour: the command loop, menus per mode, error messages, Ctrl+C / EOF.
+- **`docs/flujo-fase2.md`** — what Fase 2 changes in the CLI: role menu, Admin fare change, Ctrl+C confirmation mid-ride (supersedes Fase 1's Ctrl+C rule).
 - **`docs/decisions-fase2.md`** — Fase 2 decisions: roles, fare config, history, logs, the `fase-2` branch.
 - **`docs/decisions-proceso.md`** — how the project is run: language, git workflow, CI, coverage gate, board.
 - **`docs/future-implementation-ideas.md`** — ideas deliberately postponed; check before "improving" something that was dropped on purpose.
 - **`docs/demo-fase1.md`** — the script for the client demo; keep it true to the real CLI output.
 
-## Structure (Fase 1)
+## Structure (Fase 1 + Fase 2 so far)
 
 ```
 taximetro/
     __init__.py
     carrera.py          # Carrera: id, hora_inicio, hora_fin, estado, distancia, importe
-    tarifa.py           # Tarifa: rate lookup + accrual calculation
+    tarifa.py           # Tarifa: rate lookup + accrual calculation; validates its rates
+    config_tarifas.py   # ConfigTarifas: load/save config/tarifas.json (Fase 2, US-07)
     taximetro.py        # Taximetro: owns the Tarifa and the active Carrera
     taximetro_app.py    # TaximetroApp: CLI loop, prints usage on startup, no docs required to use it
     utils.py            # formato_euros()
@@ -45,6 +47,7 @@ tests/
     test_estructura.py  # design contract: the agreed public API still exists
     test_carrera.py
     test_tarifa.py
+    test_config_tarifas.py
     test_taximetro.py
     test_taximetro_app.py
     test_utils.py

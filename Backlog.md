@@ -136,13 +136,15 @@ Tareas:
 **Diseño sugerido**: clase `ConfigTarifas` que carga y valida el fichero; inyectada en `Tarifa`.
 
 Tareas:
-- [ ] **T7.1** Definir esquema del fichero de configuración (`config/tarifas.json`) — `tech-task`, `should` — [#40](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/40)
-- [ ] **T7.2** Implementar `ConfigTarifas` (carga, validación, defaults) — `tech-task`, `should` — [#41](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/41)
-- [ ] **T7.3** Integrar `ConfigTarifas` en `Tarifa` — `tech-task`, `should` — [#42](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/42)
-- [ ] **T7.4** Tests: fichero válido, fichero corrupto/ausente → defaults — `test`, `should` — [#43](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/43)
-- [ ] **T7.5** Menú de roles al arrancar (`Conductor` · `Administrador` · `Salir`) — `feature`, `should` — [#84](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/84)
-- [ ] **T7.6** Opción de Administrador: cambiar tarifas y guardar el fichero — `feature`, `should` — [#85](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/85)
-- [ ] **T7.7** Ctrl+C durante una carrera pide confirmación antes de salir — `feature`, `should` — [#87](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/87)
+- [x] **T7.1** Definir esquema del fichero de configuración (`config/tarifas.json`) — `tech-task`, `should` — [#40](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/40) ✅
+- [x] **T7.2** Implementar `ConfigTarifas` (carga, validación, defaults) — `tech-task`, `should` — [#41](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/41) ✅
+- [x] **T7.3** Integrar `ConfigTarifas` en `Tarifa` — `tech-task`, `should` — [#42](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/42) ✅
+- [x] **T7.4** Tests: fichero válido, fichero corrupto/ausente → defaults — `test`, `should` — [#43](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/43) ✅
+- [x] **T7.5** Menú de roles al arrancar (`Conductor` · `Administrador` · `Salir`) — `feature`, `should` — [#84](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/84) ✅
+- [x] **T7.6** Opción de Administrador: cambiar tarifas y guardar el fichero — `feature`, `should` — [#85](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/85) ✅
+- [x] **T7.7** Ctrl+C durante una carrera pide confirmación antes de salir — `feature`, `should` — [#87](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/87) ✅
+
+*T7.3: `ConfigTarifas` se integra en `Taximetro`, no en `Tarifa`, como se decidió en la Fase 1: `Taximetro` construye la `Tarifa` y se la inyecta a cada `Carrera`. `Tarifa` solo valida sus valores.*
 
 *T7.5 a T7.7 no vienen del cliente: salen de la separación Conductor / Administrador decidida para la Fase 2 (ver `docs/decisions-fase2.md`). El menú de roles llega con US-07 porque es la primera historia que necesita el modo Administrador.*
 
