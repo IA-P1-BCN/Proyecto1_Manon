@@ -2,7 +2,7 @@
 
 Taxímetro software para **TaxiTech Solutions**, en sustitución de los equipos físicos Hale T200 sin soporte desde 2023. Prototipo en Python con programación orientada a objetos.
 
-**Estado:** Fase 1 (MVP en CLI) completa — US-01 a US-04 — y en validación por el cliente. Fase 2 en curso en la rama `fase-2`: tarifas configurables (US-07) e histórico de carreras (US-05) hechos; logs (US-06) pendientes. Contexto completo del encargo en [`docs/project-brief.md`](docs/project-brief.md); tareas en [`Backlog.md`](Backlog.md) y en el [tablero del proyecto](https://github.com/orgs/IA-P1-BCN/projects/2).
+**Estado:** Fase 1 (MVP en CLI) completa — US-01 a US-04 — y en validación por el cliente. Fase 2 (tarifas configurables, histórico y logs: US-05 a US-07) completa en la rama `fase-2`, a la espera de que el cliente valide la Fase 1. Contexto completo del encargo en [`docs/project-brief.md`](docs/project-brief.md); tareas en [`Backlog.md`](Backlog.md) y en el [tablero del proyecto](https://github.com/orgs/IA-P1-BCN/projects/2).
 
 ## Tarifas vigentes
 
@@ -186,6 +186,27 @@ Se guarda el importe cobrado, el mismo del ticket, así que el total del día cu
 
 > En la Fase 2 el perfil Administrador **no tiene contraseña**. La protección llega con la US-08 (Fase 3).
 
+## Logs de operación
+
+El programa registra su actividad en `logs/taximetro.log`, sin mostrar nada en pantalla: está pensado para el equipo técnico. Una línea por evento, con fecha, nivel y datos en formato `clave=valor`:
+
+```
+2026-09-21 18:48:54 INFO taximetro.taximetro_app aplicacion_iniciada parado=0.02 movimiento=0.05
+2026-09-21 18:48:54 INFO taximetro.carrera carrera_iniciada carrera=1 estado=en_movimiento tarifa=0.05
+2026-09-21 18:49:54 INFO taximetro.carrera carrera_finalizada carrera=1 importe=3.00 duracion_s=60
+2026-09-21 18:49:54 INFO taximetro.historial carrera_guardada carrera=1 importe=3.00 ruta=data/historial.csv
+2026-09-21 18:50:02 WARNING taximetro.taximetro_app tarifa_rechazada tecleado='abc' motivo=no_numerica
+2026-09-21 18:50:10 INFO taximetro.taximetro_app aplicacion_cerrada motivo=salir
+```
+
+| Nivel | Cuándo |
+|---|---|
+| `INFO` | Funcionamiento normal: arranque y cierre (con el motivo), perfil elegido, inicio, cambios de estado y fin de cada carrera, carrera guardada, tarifas cargadas o cambiadas |
+| `WARNING` | Algo rechazado o ignorado: fichero de tarifas no válido, tarifa mal tecleada, fila ilegible en el histórico |
+| `ERROR` | Un fichero que no se pudo escribir, o un error inesperado (con su traza) |
+
+El fichero rota al llegar a 1 MB y se conservan 5 copias (`taximetro.log.1` … `.5`), así que nunca llena el disco. Si no se puede escribir, el taxímetro funciona igual, sin logs. No se versiona.
+
 ## Tests
 
 ```bash
@@ -193,7 +214,7 @@ pytest                              # tests + cobertura (falla por debajo del 90
 pytest --cov-report=term-missing    # detalle de líneas sin cubrir
 ```
 
-234 tests, 99 % de cobertura. La lógica de tarifas se comprueba contra los valores del briefing, y los relojes se inyectan, así que la batería corre en décimas de segundo sin esperar tiempo real.
+276 tests, 99 % de cobertura. La lógica de tarifas se comprueba contra los valores del briefing, y los relojes se inyectan, así que la batería corre en décimas de segundo sin esperar tiempo real.
 
 ## Estructura
 
@@ -203,6 +224,7 @@ taximetro/
     tarifa.py           # Tarifa: € por segundo según el estado, validadas
     config_tarifas.py   # ConfigTarifas: lee y guarda config/tarifas.json
     historial.py        # Historial: carreras terminadas en data/historial.csv
+    logs.py             # configurar_logs(): logs/taximetro.log con rotación
     taximetro.py        # Taximetro: carrera activa, tarifa y numeración
     taximetro_app.py    # TaximetroApp: menú de inicio y bucles de cada perfil
     utils.py            # formato_euros()
