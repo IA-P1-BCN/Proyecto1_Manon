@@ -24,10 +24,11 @@ def carrera(reloj, calendario) -> Carrera:
 class TestCarreraNueva:
     """Estado inicial de una carrera (US-01)."""
 
-    def test_empieza_parada(self, carrera: Carrera) -> None:
-        # El taxi recoge al pasajero con el vehículo detenido, así que la
-        # carrera nace en PARADO y no en movimiento.
-        assert carrera.estado is Estado.PARADO
+    def test_empieza_en_movimiento(self, carrera: Carrera) -> None:
+        # La carrera se inicia cuando el taxi arranca con el pasajero dentro,
+        # así que nace EN_MOVIMIENTO y cobra a la tarifa alta desde el primer
+        # segundo. Si el taxi arranca detenido, el conductor pulsa `Parar`.
+        assert carrera.estado is Estado.EN_MOVIMIENTO
 
     def test_empieza_sin_importe(self, carrera: Carrera) -> None:
         assert carrera.importe == 0.0
@@ -79,9 +80,9 @@ class TestCambiarEstado:
         assert carrera.estado is Estado.EN_MOVIMIENTO
 
     def test_cobra_el_tramo_anterior_al_cambiar(self, carrera: Carrera, reloj) -> None:
-        reloj.avanzar(100)  # 100 s parado a 0,02 €/s
-        carrera.cambiar_estado(Estado.EN_MOVIMIENTO)
-        assert carrera.importe == pytest.approx(2.00)
+        reloj.avanzar(100)  # 100 s en movimiento a 0,05 €/s
+        carrera.cambiar_estado(Estado.PARADO)
+        assert carrera.importe == pytest.approx(5.00)
 
     def test_repetir_el_mismo_estado_no_interrumpe_la_acumulacion(
         self, carrera: Carrera, reloj
@@ -89,13 +90,13 @@ class TestCambiarEstado:
         # Decisión registrada: repetir estado es un no-op silencioso, pensado
         # para el conductor que pulsa dos veces el mismo comando.
         reloj.avanzar(50)
-        carrera.cambiar_estado(Estado.PARADO)
+        carrera.cambiar_estado(Estado.EN_MOVIMIENTO)  # ya está en movimiento
         reloj.avanzar(50)
-        carrera.cambiar_estado(Estado.EN_MOVIMIENTO)
+        carrera.cambiar_estado(Estado.PARADO)
 
-        # Los 100 s se cobran enteros a tarifa de parado, sin perder el primer
-        # tramo ni cobrarlo dos veces.
-        assert carrera.importe == pytest.approx(2.00)
+        # Los 100 s se cobran enteros a tarifa de movimiento, sin perder el
+        # primer tramo ni cobrarlo dos veces.
+        assert carrera.importe == pytest.approx(5.00)
 
     def test_una_carrera_finalizada_no_admite_cambios(self, carrera: Carrera) -> None:
         carrera.finalizar()
@@ -107,12 +108,12 @@ class TestAcumulacionContinua:
     """US-02 / T2.3: el importe se acumula tramo a tramo según el estado."""
 
     def test_suma_tramos_a_tarifas_distintas(self, carrera: Carrera, reloj) -> None:
-        reloj.avanzar(100)  # 100 s parado      -> 2,00 €
-        carrera.cambiar_estado(Estado.EN_MOVIMIENTO)
-        reloj.avanzar(60)  # 60 s en movimiento -> 3,00 €
+        reloj.avanzar(100)  # 100 s en movimiento -> 5,00 €
         carrera.cambiar_estado(Estado.PARADO)
+        reloj.avanzar(60)  # 60 s parado          -> 1,20 €
+        carrera.cambiar_estado(Estado.EN_MOVIMIENTO)
 
-        assert carrera.importe == pytest.approx(5.00)
+        assert carrera.importe == pytest.approx(6.20)
 
     def test_cambiar_de_estado_no_reinicia_el_importe(
         self, carrera: Carrera, reloj
@@ -120,22 +121,22 @@ class TestAcumulacionContinua:
         # Criterio de aceptación de US-02: "cambiar de estado no interrumpe el
         # cálculo acumulado del importe".
         reloj.avanzar(100)
-        carrera.cambiar_estado(Estado.EN_MOVIMIENTO)
+        carrera.cambiar_estado(Estado.PARADO)
         acumulado = carrera.importe
 
-        carrera.cambiar_estado(Estado.PARADO)
+        carrera.cambiar_estado(Estado.EN_MOVIMIENTO)
         assert carrera.importe >= acumulado
 
     def test_un_semaforo_no_cobra_como_una_avenida(
         self, carrera: Carrera, reloj
     ) -> None:
         reloj.avanzar(60)
-        carrera.cambiar_estado(Estado.EN_MOVIMIENTO)
-        parado = carrera.importe
+        carrera.cambiar_estado(Estado.PARADO)
+        en_marcha = carrera.importe
 
         reloj.avanzar(60)
-        carrera.cambiar_estado(Estado.PARADO)
-        en_marcha = carrera.importe - parado
+        carrera.cambiar_estado(Estado.EN_MOVIMIENTO)
+        parado = carrera.importe - en_marcha
 
         assert en_marcha == pytest.approx(parado * 2.5)
 
@@ -145,7 +146,7 @@ class TestImporteActual:
 
     def test_incluye_el_tramo_en_curso(self, carrera: Carrera, reloj) -> None:
         reloj.avanzar(30)
-        assert carrera.importe_actual() == pytest.approx(0.60)
+        assert carrera.importe_actual() == pytest.approx(1.50)
 
     def test_el_importe_almacenado_no_cambia_al_leer(
         self, carrera: Carrera, reloj
@@ -166,11 +167,11 @@ class TestImporteActual:
         leida.importe_actual()
         reloj.avanzar(40)
 
-        leida.cambiar_estado(Estado.EN_MOVIMIENTO)
-        intacta.cambiar_estado(Estado.EN_MOVIMIENTO)
+        leida.cambiar_estado(Estado.PARADO)
+        intacta.cambiar_estado(Estado.PARADO)
 
         assert leida.importe == pytest.approx(intacta.importe)
-        assert leida.importe == pytest.approx(1.60)  # 80 s a 0,02 €/s
+        assert leida.importe == pytest.approx(4.00)  # 80 s a 0,05 €/s
 
     def test_sobre_una_carrera_cerrada_devuelve_el_total_congelado(
         self, carrera: Carrera, reloj
@@ -201,13 +202,13 @@ class TestFinalizar:
     def test_devuelve_el_total_con_el_ultimo_tramo_incluido(
         self, carrera: Carrera, reloj
     ) -> None:
-        reloj.avanzar(100)  # 100 s parado       -> 2,00 €
-        carrera.cambiar_estado(Estado.EN_MOVIMIENTO)
-        reloj.avanzar(60)  # 60 s en movimiento  -> 3,00 €
+        reloj.avanzar(100)  # 100 s en movimiento -> 5,00 €
+        carrera.cambiar_estado(Estado.PARADO)
+        reloj.avanzar(60)  # 60 s parado          -> 1,20 €
 
         # El último tramo no se ha cerrado con ningún cambio de estado: si
-        # finalizar() no lo cobrase, el trayecto final del taxi saldría gratis.
-        assert carrera.finalizar() == pytest.approx(5.00)
+        # finalizar() no lo cobrase, la última espera del taxi saldría gratis.
+        assert carrera.finalizar() == pytest.approx(6.20)
 
     def test_sella_la_hora_de_fin(self, carrera: Carrera, calendario) -> None:
         carrera.finalizar()
