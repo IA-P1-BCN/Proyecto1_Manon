@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Callable
 
 from taximetro.carrera import Carrera
+from taximetro.config_tarifas import ConfigTarifas
 from taximetro.tarifa import Tarifa
 
 
@@ -18,8 +19,9 @@ class Taximetro:
     """Gestiona la carrera activa: inicio, cambios de estado y finalización.
 
     Es el dueño de la `Tarifa` y de los dos relojes, y se los inyecta a cada
-    `Carrera` que crea. Así, cuando la Fase 2 cargue las tarifas de un fichero
-    de configuración (US-07), el cambio se queda aquí y `Carrera` no se toca.
+    `Carrera` que crea. Las tarifas pueden venir de un fichero de
+    configuración (US-07): el cambio se queda aquí y `Carrera` no se toca.
+    Cada carrera se queda con la tarifa que había al iniciarse.
 
     También numera las carreras: el contador vive en el taxímetro, no en la
     clase `Carrera`, para no compartir estado global entre instancias.
@@ -28,11 +30,19 @@ class Taximetro:
     def __init__(
         self,
         tarifa: Tarifa | None = None,
+        config: ConfigTarifas | None = None,
         reloj: Callable[[], float] = time.monotonic,
         calendario: Callable[[], datetime] = datetime.now,
     ) -> None:
-        """Inicializa el taxímetro sin ninguna carrera activa."""
-        self._tarifa = tarifa or Tarifa()
+        """Inicializa el taxímetro sin ninguna carrera activa.
+
+        Sin `tarifa` ni `config`, usa las tarifas por defecto y no toca el
+        disco; con `config`, las carga del fichero y guarda en él cada cambio.
+        """
+        self._config = config
+        if tarifa is None:
+            tarifa = config.cargar() if config is not None else Tarifa()
+        self._tarifa = tarifa
         self._reloj = reloj
         self._calendario = calendario
         self._carrera: Carrera | None = None
@@ -42,6 +52,20 @@ class Taximetro:
     def tarifa(self) -> Tarifa:
         """Las tarifas vigentes, para que la capa CLI pueda mostrarlas."""
         return self._tarifa
+
+    def cambiar_tarifa(self, tarifa: Tarifa) -> None:
+        """Aplica una tarifa nueva desde la próxima carrera y la guarda.
+
+        Se guarda antes de aplicarla: si el fichero no se puede escribir, sale
+        el `OSError` y la tarifa en uso no cambia, así fichero y taxímetro
+        nunca discrepan. Falla con una carrera activa, porque al pasajero se le
+        cobra la tarifa anunciada al empezar.
+        """
+        if self.carrera_activa is not None:
+            raise CarreraActivaError("No se cambian las tarifas con una carrera activa.")
+        if self._config is not None:
+            self._config.guardar(tarifa)
+        self._tarifa = tarifa
 
     @property
     def carrera_activa(self) -> Carrera | None:

@@ -73,6 +73,12 @@ class TestTaximetro:
     def test_inicia_carreras(self) -> None:
         assert callable(Taximetro.iniciar_carrera)
 
+    def test_carga_y_cambia_tarifas_desde_la_configuracion(self) -> None:
+        # US-07: la configuración entra por `Taximetro`, nunca por `Carrera`.
+        assert "config" in parametros(Taximetro.__init__)
+        assert "config" not in parametros(Carrera.__init__)
+        assert callable(Taximetro.cambiar_tarifa)
+
 
 class TestTaximetroApp:
     """Contrato de la capa CLI (US-04, EPIC D)."""

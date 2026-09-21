@@ -7,10 +7,13 @@ Cubre el inicio de carreras y la validación de "no hay carrera activa"
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 
 from taximetro.carrera import Carrera, Estado
+from taximetro.config_tarifas import ConfigTarifas
+from taximetro.tarifa import Tarifa
 from taximetro.taximetro import CarreraActivaError, Taximetro
 
 
@@ -115,3 +118,58 @@ class TestCarreraDuplicada:
         carrera = taximetro.iniciar_carrera()
         carrera.finalizar()
         assert taximetro.carrera_activa is None
+
+
+class TestTarifasDesdeConfiguracion:
+    """US-07 / T7.3: `Taximetro` carga las tarifas del fichero y guarda los cambios."""
+
+    def test_sin_configuracion_usa_las_tarifas_por_defecto(self, taximetro) -> None:
+        assert taximetro.tarifa.parado == 0.02
+
+    def test_carga_las_tarifas_del_fichero(self, tmp_path: Path, reloj) -> None:
+        ruta = tmp_path / "tarifas.json"
+        ruta.write_text('{"parado": 0.03, "en_movimiento": 0.06}', encoding="utf-8")
+        taximetro = Taximetro(config=ConfigTarifas(ruta), reloj=reloj)
+        assert taximetro.tarifa.en_movimiento == 0.06
+
+    def test_una_tarifa_explicita_manda_sobre_el_fichero(self, tmp_path: Path) -> None:
+        ruta = tmp_path / "tarifas.json"
+        ruta.write_text('{"parado": 0.03, "en_movimiento": 0.06}', encoding="utf-8")
+        taximetro = Taximetro(tarifa=Tarifa(0.01, 0.01), config=ConfigTarifas(ruta))
+        assert taximetro.tarifa.parado == 0.01
+
+
+class TestCambiarTarifa:
+    """T7.6 en el dominio: la tarifa nueva se aplica desde la próxima carrera."""
+
+    def test_la_proxima_carrera_cobra_la_tarifa_nueva(self, taximetro, reloj) -> None:
+        taximetro.cambiar_tarifa(Tarifa(parado=0.03, en_movimiento=0.10))
+        carrera = taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        assert carrera.importe_actual() == pytest.approx(1.00)
+
+    def test_la_carrera_ya_cerrada_conserva_su_tarifa(self, taximetro, reloj) -> None:
+        carrera = taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        carrera.finalizar()
+        taximetro.cambiar_tarifa(Tarifa(parado=0.03, en_movimiento=0.10))
+        assert carrera.importe_actual() == pytest.approx(0.50)
+
+    def test_con_una_carrera_activa_falla(self, taximetro) -> None:
+        taximetro.iniciar_carrera()
+        with pytest.raises(CarreraActivaError):
+            taximetro.cambiar_tarifa(Tarifa(parado=0.03, en_movimiento=0.10))
+        assert taximetro.tarifa.parado == 0.02
+
+    def test_guarda_la_tarifa_en_el_fichero(self, tmp_path: Path) -> None:
+        config = ConfigTarifas(tmp_path / "tarifas.json")
+        Taximetro(config=config).cambiar_tarifa(Tarifa(0.03, 0.10))
+        assert ConfigTarifas(config.ruta).cargar().en_movimiento == 0.10
+
+    def test_si_no_se_puede_guardar_no_la_aplica(self, tmp_path: Path) -> None:
+        # Fichero y taxímetro nunca discrepan: sin guardar, no hay cambio.
+        (tmp_path / "config").write_text("", encoding="utf-8")  # bloquea mkdir
+        taximetro = Taximetro(config=ConfigTarifas(tmp_path / "config" / "t.json"))
+        with pytest.raises(OSError):
+            taximetro.cambiar_tarifa(Tarifa(0.03, 0.10))
+        assert taximetro.tarifa.parado == 0.02
