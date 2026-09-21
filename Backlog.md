@@ -104,10 +104,10 @@ Tareas:
 **Diseño sugerido**: clase `Historial` con persistencia en CSV/JSON; método `resumen_del_dia()`.
 
 Tareas:
-- [ ] **T5.1** Implementar clase `Historial` (registro de carreras) — `tech-task`, `should` — [#32](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/32)
-- [ ] **T5.2** Persistencia en fichero (CSV o JSON) — `tech-task`, `should` — [#33](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/33)
-- [ ] **T5.3** Comando `historial` con resumen y total de caja del día (opción «Ver histórico» del Administrador) — `feature`, `should` — [#34](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/34)
-- [ ] **T5.4** Tests de persistencia y cálculo de totales — `test`, `should` — [#35](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/35)
+- [x] **T5.1** Implementar clase `Historial` (registro de carreras) — `tech-task`, `should` — [#32](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/32) ✅
+- [x] **T5.2** Persistencia en fichero (CSV o JSON) — `tech-task`, `should` — [#33](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/33) ✅
+- [x] **T5.3** Comando `historial` con resumen y total de caja del día (opción «Ver histórico» del Administrador) — `feature`, `should` — [#34](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/34) ✅
+- [x] **T5.4** Tests de persistencia y cálculo de totales — `test`, `should` — [#35](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/35) ✅
 
 ---
 
