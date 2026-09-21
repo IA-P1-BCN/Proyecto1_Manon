@@ -28,3 +28,11 @@ That is a substantial amount of display-layer and platform machinery for a phase
 **What we did instead:** the importe is echoed after every command, plus a dedicated read-only `importe` command for the driver who changes state zero times during a long traffic jam. The driver can always see the number on demand; it just doesn't animate.
 
 **Still cheap to add later.** The timestamp-delta model supports a live display unchanged — "what is the importe right now?" is already a cheap read-only computation (`importe_actual()`). A future ticker only has to call it on a timer; no domain change required. Fase 3's GUI is the natural home, since a GUI has an event loop and separate widgets, so neither the blocking-input nor the shared-line problem exists there at all.
+
+## Round half cents up when charging (Fase 2 — noticed, not changed)
+
+**Context:** while building the US-05 history, a test for a ride of exactly 0,625 € showed that `formato_euros` charges **0,62 €**. Python's `format` rounds an exact binary half to the even digit ("banker's rounding"); customers and cash registers usually expect half-up (0,63 €). It only bites on exact half cents, which at 0,02 / 0,05 €/s means a duration that lands exactly on one, so it's rare in practice.
+
+**Why not now:** it's Fase 1 behaviour, and the MVP is currently being validated by the client exactly as it is. The history stores the amount formatted the same way, so the till always matches the tickets either way.
+
+**If it changes:** round with `decimal.Decimal(...).quantize(Decimal("0.01"), ROUND_HALF_UP)` in **one** place, used by both `formato_euros` and `Historial.registrar`, so the ticket and the till can never disagree. Decide it with the client, since it changes what passengers pay.
