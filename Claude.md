@@ -40,6 +40,7 @@ taximetro/
     tarifa.py           # Tarifa: rate lookup + accrual calculation; validates its rates
     config_tarifas.py   # ConfigTarifas: load/save config/tarifas.json (Fase 2, US-07)
     historial.py        # Historial: append-only CSV of finished rides (Fase 2, US-05)
+    logs.py             # configurar_logs(): rotating logs/taximetro.log, called only from __main__ (US-06)
     taximetro.py        # Taximetro: owns the Tarifa and the active Carrera
     taximetro_app.py    # TaximetroApp: CLI loop, prints usage on startup, no docs required to use it
     utils.py            # formato_euros()
@@ -50,6 +51,7 @@ tests/
     test_tarifa.py
     test_config_tarifas.py
     test_historial.py
+    test_logs.py
     test_taximetro.py
     test_taximetro_app.py
     test_utils.py
@@ -61,7 +63,7 @@ Claude.md
 README.md
 ```
 
-One test file per module. Later phases add `historial.py`, `config_tarifas.py`, `auth.py`, a GUI module, then `api/` and a DB layer — don't create these ahead of their phase.
+One test file per module. Later phases add `auth.py`, a GUI module, then `api/` and a DB layer — don't create these ahead of their phase.
 
 ## Object responsibilities
 

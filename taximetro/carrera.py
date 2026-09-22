@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Callable
+
+from taximetro.logs import campos
 
 if TYPE_CHECKING:
     # Solo para anotaciones: `tarifa.py` importa `Estado` de este módulo, así que
@@ -13,6 +16,8 @@ if TYPE_CHECKING:
     # Con `from __future__ import annotations` las anotaciones no se evalúan,
     # por lo que basta con importarla bajo TYPE_CHECKING.
     from taximetro.tarifa import Tarifa
+
+logger = logging.getLogger(__name__)
 
 
 class Estado(Enum):
@@ -63,6 +68,14 @@ class Carrera:
         # Instante en que empezó el tramo actual. Se reinicia en cada cambio de
         # estado, y es lo que se resta para saber cuántos segundos cobrar.
         self._inicio_tramo = reloj()
+        logger.info(
+            "carrera_iniciada %s",
+            campos(
+                carrera=self.id,
+                estado=self.estado.value,
+                tarifa=tarifa.calcular_importe(self.estado, 1),
+            ),
+        )
 
     @property
     def finalizada(self) -> bool:
@@ -90,14 +103,25 @@ class Carrera:
         `CarreraFinalizadaError`.
         """
         if self.finalizada:
+            logger.warning("cambio_rechazado %s", campos(carrera=self.id, motivo="finalizada"))
             raise CarreraFinalizadaError(
                 f"La carrera nº {self.id} ya está finalizada."
             )
         if nuevo_estado is self.estado:
             return
 
+        anterior = self.estado
         self._cerrar_tramo()
         self.estado = nuevo_estado
+        logger.info(
+            "estado_cambiado %s",
+            campos(
+                carrera=self.id,
+                de=anterior.value,
+                a=nuevo_estado.value,
+                acumulado=self.importe,
+            ),
+        )
 
     def importe_actual(self) -> float:
         """Devuelve el importe acumulado más el tramo en curso, sin mutar nada.
@@ -117,10 +141,21 @@ class Carrera:
         total ya se cobró y no puede recalcularse.
         """
         if self.finalizada:
+            logger.warning(
+                "finalizar_rechazado %s", campos(carrera=self.id, motivo="finalizada")
+            )
             raise CarreraFinalizadaError(
                 f"La carrera nº {self.id} ya está finalizada."
             )
 
         self._cerrar_tramo()
         self.hora_fin = self._calendario()
+        logger.info(
+            "carrera_finalizada %s",
+            campos(
+                carrera=self.id,
+                importe=self.importe,
+                duracion_s=int((self.hora_fin - self.hora_inicio).total_seconds()),
+            ),
+        )
         return self.importe

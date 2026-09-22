@@ -7,6 +7,7 @@ Cada test trabaja en su propia carpeta temporal (`tmp_path`): ninguno toca el
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 import pytest
@@ -114,3 +115,30 @@ class TestRuta:
         # que son los mismos, y el test pasaría con un ejemplo roto.
         ejemplo = Path(__file__).parent.parent / "config" / "tarifas.example.json"
         Tarifa(**json.loads(ejemplo.read_text(encoding="utf-8")))
+
+
+class TestLogs:
+    """US-06 / T6.2: el técnico ve en el log qué tarifas se cargaron y por qué."""
+
+    def test_registra_las_tarifas_cargadas(self, eventos, ruta: Path) -> None:
+        escribir(ruta, '{"parado": 0.03, "en_movimiento": 0.06}')
+        ConfigTarifas(ruta).cargar()
+        assert eventos() == [f"tarifas_cargadas ruta={ruta} parado=0.03 movimiento=0.06"]
+
+    def test_registra_la_creacion_del_fichero(self, eventos, ruta: Path) -> None:
+        ConfigTarifas(ruta).cargar()
+        assert eventos() == [f"tarifas_creadas ruta={ruta}"]
+
+    def test_un_fichero_invalido_es_warning_con_el_motivo(self, eventos, ruta: Path) -> None:
+        escribir(ruta, '{"parado": 0.06, "en_movimiento": 0.05}')
+        ConfigTarifas(ruta).cargar()
+        (aviso,) = eventos(logging.WARNING)
+        assert aviso.startswith(f"tarifas_invalidas ruta={ruta} error=TarifaInvalidaError")
+        assert "parado no puede ser mayor" in aviso
+
+    def test_no_poder_guardar_es_error(self, eventos, tmp_path: Path) -> None:
+        (tmp_path / "config").write_text("", encoding="utf-8")  # bloquea mkdir
+        ruta = tmp_path / "config" / "tarifas.json"
+        with pytest.raises(OSError):
+            ConfigTarifas(ruta).guardar(Tarifa())
+        assert eventos(logging.ERROR) == [f"tarifas_no_guardadas ruta={ruta}"]

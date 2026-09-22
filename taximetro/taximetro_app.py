@@ -2,15 +2,22 @@
 
 from __future__ import annotations
 
+import logging
 import sys
 from typing import Callable
 
 from taximetro.carrera import Carrera, Estado
 from taximetro.config_tarifas import ConfigTarifas
 from taximetro.historial import Historial, ResumenDia
+from taximetro.logs import campos, configurar_logs
 from taximetro.tarifa import Tarifa, TarifaInvalidaError
 from taximetro.taximetro import Taximetro
 from taximetro.utils import formato_euros
+
+# Nombre fijo, no `__name__`: con `python -m taximetro.taximetro_app` este
+# módulo se llama `__main__`, y su logger quedaría fuera de `taximetro`, sin
+# el handler del fichero. Sus WARNING acabarían en la consola del conductor.
+logger = logging.getLogger("taximetro.taximetro_app")
 
 # Cada menú es una tupla de opciones y la posición manda: el número que se
 # teclea es el índice + 1. Reordenar una tupla renumera ese menú.
@@ -100,23 +107,46 @@ class TaximetroApp:
     # ------------------------------------------------------------------
 
     def ejecutar(self) -> None:
-        """Muestra las instrucciones de uso y arranca en el menú de inicio."""
+        """Muestra las instrucciones de uso y arranca en el menú de inicio.
+
+        Registra el arranque y el cierre, con el motivo del cierre (US-06). Un
+        error inesperado queda en el log con su traza antes de propagarse.
+        """
+        tarifa = self._taximetro.tarifa
+        logger.info(
+            "aplicacion_iniciada %s",
+            campos(parado=tarifa.parado, movimiento=tarifa.en_movimiento),
+        )
+        try:
+            motivo = self._bucle()
+        except Exception:
+            logger.exception("error_inesperado")
+            raise
+        logger.info("aplicacion_cerrada %s", campos(motivo=motivo))
+
+    def _bucle(self) -> str:
+        """El menú de inicio, hasta que el programa termina; devuelve el motivo."""
         self._salida(self._banner())
 
         try:
             while True:
                 opcion = self._leer("Menú de inicio", OPCIONES_INICIO)
                 if opcion == "salir":
-                    return
+                    return "salir"
+                logger.info("perfil_elegido %s", campos(perfil=opcion))
                 if opcion == "administrador":
                     self._administrador()
-                elif not self._conductor():
-                    return
-        except (KeyboardInterrupt, EOFError):
+                else:
+                    motivo = self._conductor()
+                    if motivo is not None:
+                        return motivo
+        except KeyboardInterrupt:
             # Solo llegan aquí desde fuera de una carrera: no hay importe que
             # perder, así que se sale limpiamente. Con carrera activa, los
             # atiende `_conductor`.
-            return
+            return "ctrl_c"
+        except EOFError:
+            return "eof"
 
     def _leer(
         self, cabecera: str, opciones: tuple[str, ...], carrera: Carrera | None = None
@@ -133,8 +163,9 @@ class TaximetroApp:
     # Conductor
     # ------------------------------------------------------------------
 
-    def _conductor(self) -> bool:
-        """El bucle de carreras. Devuelve False si el programa debe cerrarse.
+    def _conductor(self) -> str | None:
+        """El bucle de carreras. None al volver al menú de inicio; si el
+        programa debe cerrarse, el motivo.
 
         `Volver` solo existe sin carrera: con una carrera abierta no se puede
         llegar al Administrador, y por tanto las tarifas no cambian a mitad de
@@ -151,7 +182,7 @@ class TaximetroApp:
                     raise
                 if self._confirmar_salida(carrera):
                     self._cerrar(carrera)
-                    return False
+                    return "ctrl_c_con_carrera"
                 continue
             except EOFError:
                 if carrera is None:
@@ -159,10 +190,10 @@ class TaximetroApp:
                 # EOF no es reintentable: volver a leer sería un bucle infinito,
                 # así que se cierra la carrera en vez de avisar y reintentar.
                 self._cerrar(carrera)
-                return False
+                return "eof_con_carrera"
 
             if opcion == "volver":
-                return True
+                return None
             self._aplicar(opcion, carrera)
 
     def _confirmar_salida(self, carrera: Carrera) -> bool:
@@ -174,12 +205,19 @@ class TaximetroApp:
         carrera; EOF cuenta como «Sí», porque no es reintentable.
         """
         cabecera = f"Vas a salir del programa con la carrera nº {carrera.id} en curso."
+        logger.info("salida_solicitada %s", campos(carrera=carrera.id))
         try:
-            return self._leer(cabecera, OPCIONES_CONFIRMAR_SALIDA) == "confirmar"
+            confirmada = self._leer(cabecera, OPCIONES_CONFIRMAR_SALIDA) == "confirmar"
         except KeyboardInterrupt:
-            return False
+            confirmada = False
         except EOFError:
-            return True
+            confirmada = True
+        logger.info(
+            "salida_%s %s",
+            "confirmada" if confirmada else "cancelada",
+            campos(carrera=carrera.id),
+        )
+        return confirmada
 
     def _opcion(self, eleccion: str, opciones: tuple[str, ...]) -> str | None:
         """Traduce lo tecleado a una opción del menú, o None si no lo es."""
@@ -266,8 +304,13 @@ class TaximetroApp:
         try:
             resumen = self._taximetro.resumen_del_dia()
         except OSError:
+            logger.error("historico_ilegible", exc_info=True)
             self._salida("No se pudo leer el histórico.")
             return
+        logger.info(
+            "historico_consultado %s",
+            campos(fecha=resumen.fecha, carreras=len(resumen.carreras), total=resumen.total),
+        )
         self._salida(self._tabla_historico(resumen))
 
     def _cambiar_tarifas(self) -> None:
@@ -287,6 +330,7 @@ class TaximetroApp:
             if en_movimiento is None:
                 return
         except KeyboardInterrupt:
+            logger.info("cambio_tarifas_cancelado")
             self._salida(f"Cambio cancelado. {NADA_GUARDADO}")
             return
 
@@ -294,9 +338,14 @@ class TaximetroApp:
             tarifa = Tarifa(parado=parado, en_movimiento=en_movimiento)
             self._taximetro.cambiar_tarifa(tarifa)
         except TarifaInvalidaError as error:
+            logger.warning(
+                "tarifa_rechazada %s",
+                campos(parado=parado, movimiento=en_movimiento, motivo=repr(str(error))),
+            )
             self._salida(f"{error} {NADA_GUARDADO}")
             return
         except OSError:
+            # El detalle ya lo registró ConfigTarifas.
             self._salida(f"No se pudo escribir el fichero de tarifas. {NADA_GUARDADO}")
             return
 
@@ -311,6 +360,9 @@ class TaximetroApp:
         try:
             return float(tecleado.replace(",", "."))
         except ValueError:
+            logger.warning(
+                "tarifa_rechazada %s", campos(tecleado=repr(tecleado), motivo="no_numerica")
+            )
             self._salida(
                 f"«{tecleado}» no es un número. Escribe, por ejemplo, 0,03. "
                 f"{NADA_GUARDADO}"
@@ -432,7 +484,9 @@ if __name__ == "__main__":
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(errors="replace")
 
-    # Solo el programa real lee y escribe config/tarifas.json y
-    # data/historial.csv; los tests usan un Taximetro en memoria o rutas
-    # temporales.
+    # Solo el programa real lee y escribe config/tarifas.json,
+    # data/historial.csv y logs/taximetro.log; los tests usan un Taximetro en
+    # memoria o rutas temporales. Los logs se configuran primero para que
+    # también quede registrada la carga de las tarifas.
+    configurar_logs()
     TaximetroApp(Taximetro(config=ConfigTarifas(), historial=Historial())).ejecutar()

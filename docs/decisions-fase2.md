@@ -113,6 +113,16 @@ Ctrl+C while typing a new fare in Admin cancels the edit, saves nothing and retu
 
 **Why:** the story's user is the technician, who reads a file, not the driver or the fleet manager. An Admin log viewer was offered and not taken.
 
+### Implementation choices (made while building US-06, stated as assumptions)
+
+- **Module loggers, configured only at the entry point.** Every module writes to `logging.getLogger(__name__)`, all under `taximetro`. `taximetro/logs.py::configurar_logs()` attaches the file handler, and only `__main__` calls it. Library code never decides where logs go, so tests and any other use of the package never write to disk; tests read events through pytest's `caplog` (the `eventos` fixture in `conftest.py`). The logger isn't injected like the clocks, because `logging` already provides that test seam.
+- **One line per event, `evento clave=valor`**, e.g. `2026-09-21 18:48:54 INFO taximetro.carrera carrera_finalizada carrera=1 importe=3.00 duracion_s=60`. This is the "structured log" the brief asks for, searchable with grep and without parsing sentences. Amounts use 2 decimals, as on the ticket.
+- **`logs/taximetro.log`, `RotatingFileHandler`, 1 MB × 5 files**, UTF-8, gitignored. Enough for weeks of shifts, and the disk in the taxi can't fill up. Level INFO: DEBUG is never written.
+- **Each event is logged by whoever knows it.** `Carrera` logs its own lifecycle; `Taximetro` logs rejected actions and fare changes; `ConfigTarifas` and `Historial` log their file events. Failed writes are logged as ERROR with a traceback *where the I/O happens*, then re-raised unchanged, so the CLI keeps its messages and doesn't log them twice. The CLI logs only what it alone knows: startup, exit reason, role chosen, the Ctrl+C answer, fares rejected or cancelled in Admin, history views.
+- **Levels:** INFO = normal operation, WARNING = something refused or ignored (invalid config file, invalid fare typed, unreadable history row, action on a closed ride), ERROR = a write that failed, or an unexpected exception (`error_inesperado`, logged with its traceback in `ejecutar()` before it propagates).
+- **Logging never stops the meter.** If the log file can't be opened, `configurar_logs()` installs a `NullHandler` and the app runs without logs. Without that, Python would print warnings on the driver's console.
+- **Gotcha, found in a manual run: the CLI module's logger has a fixed name.** Under `python -m taximetro.taximetro_app` that module's `__name__` is `__main__`, so `getLogger(__name__)` sat outside `taximetro`, missed the file handler, and printed its WARNINGs on the driver's console. Tests didn't notice, because under pytest the module is imported with its normal name. Fixed with `getLogger("taximetro.taximetro_app")`, and guarded by a test that runs the real program in a subprocess.
+
 ## Runtime files and git
 
 **Decision:** commit `config/tarifas.example.json` with the default fares. The app creates `config/tarifas.json` from the defaults if it's missing. `.gitignore` the live `config/tarifas.json`, the history CSV (under `data/`) and `logs/`.

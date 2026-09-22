@@ -30,7 +30,8 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
-# Ficheros que escribe el taxímetro al usarse (Fase 2): tarifas e histórico.
+# Ficheros que escribe el taxímetro al usarse (Fase 2): tarifas, histórico y logs.
 # Se versiona solo config/tarifas.example.json, que documenta el formato.
 config/tarifas.json
 data/
+logs/

@@ -7,6 +7,7 @@ al cambiar de estado (US-02 / T2.1, T2.3) y la lectura del importe bajo demanda
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 
 import pytest
@@ -250,3 +251,43 @@ class TestFinalizar:
         reloj.avanzar(45)
 
         assert consultada.finalizar() == pytest.approx(intacta.finalizar())
+
+
+class TestLogs:
+    """US-06 / T6.2: la carrera deja rastro de su ciclo de vida."""
+
+    def test_registra_el_inicio(self, eventos, reloj, calendario) -> None:
+        Carrera(id=7, tarifa=Tarifa(), reloj=reloj, calendario=calendario)
+        assert eventos() == ["carrera_iniciada carrera=7 estado=en_movimiento tarifa=0.05"]
+
+    def test_registra_el_cambio_de_estado(self, eventos, carrera, reloj) -> None:
+        reloj.avanzar(60)
+        carrera.cambiar_estado(Estado.PARADO)
+        assert (
+            "estado_cambiado carrera=1 de=en_movimiento a=parado acumulado=3.00"
+            in eventos()
+        )
+
+    def test_repetir_el_estado_no_registra_nada(self, eventos, carrera) -> None:
+        antes = len(eventos())
+        carrera.cambiar_estado(Estado.EN_MOVIMIENTO)
+        assert len(eventos()) == antes
+
+    def test_registra_el_final_con_importe_y_duracion(
+        self, eventos, carrera, reloj, calendario
+    ) -> None:
+        reloj.avanzar(90)
+        calendario.avanzar(90)
+        carrera.finalizar()
+        assert "carrera_finalizada carrera=1 importe=4.50 duracion_s=90" in eventos()
+
+    def test_los_cambios_rechazados_son_warning(self, eventos, carrera) -> None:
+        carrera.finalizar()
+        with pytest.raises(CarreraFinalizadaError):
+            carrera.cambiar_estado(Estado.PARADO)
+        with pytest.raises(CarreraFinalizadaError):
+            carrera.finalizar()
+        assert eventos(logging.WARNING) == [
+            "cambio_rechazado carrera=1 motivo=finalizada",
+            "finalizar_rechazado carrera=1 motivo=finalizada",
+        ]

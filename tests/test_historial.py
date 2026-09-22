@@ -6,6 +6,7 @@ Cada test escribe en su propia carpeta temporal (`tmp_path`): ninguno toca el
 
 from __future__ import annotations
 
+import logging
 from datetime import date, datetime
 from pathlib import Path
 
@@ -148,3 +149,33 @@ class TestResumenDelDia:
 class TestRuta:
     def test_por_defecto_es_data_historial_csv(self) -> None:
         assert Historial().ruta == RUTA_POR_DEFECTO == Path("data/historial.csv")
+
+
+class TestLogs:
+    """US-06 / T6.2: cada carrera guardada, y cada fallo, queda en el log."""
+
+    def test_registra_la_carrera_guardada(self, eventos, historial, cerrar) -> None:
+        historial.registrar(cerrar(60))
+        assert (
+            f"carrera_guardada carrera=1 importe=3.00 ruta={historial.ruta}" in eventos()
+        )
+
+    def test_no_poder_guardar_es_error(self, eventos, tmp_path: Path, cerrar) -> None:
+        (tmp_path / "data").write_text("", encoding="utf-8")  # bloquea mkdir
+        historial = Historial(tmp_path / "data" / "historial.csv")
+        with pytest.raises(OSError):
+            historial.registrar(cerrar(60))
+        assert eventos(logging.ERROR) == [
+            f"carrera_no_guardada carrera=1 importe=3.00 ruta={historial.ruta}"
+        ]
+
+    def test_una_fila_ilegible_es_warning_con_su_linea(
+        self, eventos, historial, cerrar
+    ) -> None:
+        historial.registrar(cerrar(60))
+        with historial.ruta.open("a", encoding="utf-8") as fichero:
+            fichero.write("roto,,,\n")
+        historial.registros()
+        assert eventos(logging.WARNING) == [
+            f"fila_ilegible ruta={historial.ruta} linea=3"
+        ]

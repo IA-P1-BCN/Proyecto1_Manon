@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from datetime import datetime
 from typing import Callable
@@ -9,7 +10,10 @@ from typing import Callable
 from taximetro.carrera import Carrera
 from taximetro.config_tarifas import ConfigTarifas
 from taximetro.historial import Historial, ResumenDia
+from taximetro.logs import campos
 from taximetro.tarifa import Tarifa
+
+logger = logging.getLogger(__name__)
 
 
 class CarreraActivaError(Exception):
@@ -75,10 +79,20 @@ class Taximetro:
         cobra la tarifa anunciada al empezar.
         """
         if self.carrera_activa is not None:
+            logger.warning("cambio_tarifa_rechazado %s", campos(motivo="carrera_activa"))
             raise CarreraActivaError("No se cambian las tarifas con una carrera activa.")
         if self._config is not None:
             self._config.guardar(tarifa)
-        self._tarifa = tarifa
+        anterior, self._tarifa = self._tarifa, tarifa
+        logger.info(
+            "tarifa_cambiada %s",
+            campos(
+                parado_antes=anterior.parado,
+                movimiento_antes=anterior.en_movimiento,
+                parado=tarifa.parado,
+                movimiento=tarifa.en_movimiento,
+            ),
+        )
 
     @property
     def carrera_activa(self) -> Carrera | None:
@@ -94,6 +108,10 @@ class Taximetro:
     def iniciar_carrera(self) -> Carrera:
         """Crea y activa una nueva carrera. Falla si ya hay una en curso."""
         if self.carrera_activa is not None:
+            logger.warning(
+                "inicio_rechazado %s",
+                campos(carrera_activa=self.carrera_activa.id, motivo="carrera_activa"),
+            )
             raise CarreraActivaError("Ya hay una carrera activa.")
 
         self._carrera = Carrera(
@@ -115,6 +133,7 @@ class Taximetro:
         """
         carrera = self.carrera_activa
         if carrera is None:
+            logger.warning("finalizar_rechazado %s", campos(motivo="sin_carrera"))
             raise SinCarreraError("No hay ninguna carrera activa.")
         total = carrera.finalizar()
         if self._historial is not None:

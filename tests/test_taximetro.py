@@ -6,6 +6,7 @@ Cubre el inicio de carreras y la validación de "no hay carrera activa"
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -244,3 +245,33 @@ class TestResumenDelDia:
         assert len(taximetro.resumen_del_dia().carreras) == 1
         calendario.avanzar(24 * 3600)
         assert taximetro.resumen_del_dia().carreras == ()
+
+
+class TestLogs:
+    """US-06 / T6.2: los rechazos del taxímetro y los cambios de tarifa."""
+
+    def test_iniciar_dos_veces_es_warning(self, eventos, taximetro) -> None:
+        taximetro.iniciar_carrera()
+        with pytest.raises(CarreraActivaError):
+            taximetro.iniciar_carrera()
+        assert eventos(logging.WARNING) == [
+            "inicio_rechazado carrera_activa=1 motivo=carrera_activa"
+        ]
+
+    def test_finalizar_sin_carrera_es_warning(self, eventos, taximetro) -> None:
+        with pytest.raises(SinCarreraError):
+            taximetro.finalizar_carrera()
+        assert eventos(logging.WARNING) == ["finalizar_rechazado motivo=sin_carrera"]
+
+    def test_registra_el_cambio_de_tarifa(self, eventos, taximetro) -> None:
+        taximetro.cambiar_tarifa(Tarifa(parado=0.03, en_movimiento=0.10))
+        assert eventos() == [
+            "tarifa_cambiada parado_antes=0.02 movimiento_antes=0.05 "
+            "parado=0.03 movimiento=0.10"
+        ]
+
+    def test_cambiar_tarifa_con_carrera_es_warning(self, eventos, taximetro) -> None:
+        taximetro.iniciar_carrera()
+        with pytest.raises(CarreraActivaError):
+            taximetro.cambiar_tarifa(Tarifa(0.03, 0.10))
+        assert eventos(logging.WARNING) == ["cambio_tarifa_rechazado motivo=carrera_activa"]
