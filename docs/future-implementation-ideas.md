@@ -36,3 +36,22 @@ That is a substantial amount of display-layer and platform machinery for a phase
 **Why not now:** it's Fase 1 behaviour, and the MVP is currently being validated by the client exactly as it is. The history stores the amount formatted the same way, so the till always matches the tickets either way.
 
 **If it changes:** round with `decimal.Decimal(...).quantize(Decimal("0.01"), ROUND_HALF_UP)` in **one** place, used by both `formato_euros` and `Historial.registrar`, so the ticket and the till can never disagree. Decide it with the client, since it changes what passengers pay.
+
+## Freeze the amount while FINALIZAR is being confirmed (Fase 3 — requested, not built yet)
+
+**Context:** in the Fase 3 GUI, FINALIZAR opens a confirmation panel (`docs/diseno-interfaz-fase3.md`, *Confirmación al finalizar*), and as first designed the meter keeps running until the driver answers. The user pointed out, on 2026-09-22, that this is unfair to the passenger: the seconds spent answering the question are charged.
+
+**Requested behaviour:**
+
+- On pressing FINALIZAR, the displayed amount **freezes** at that instant.
+- **SÍ, FINALIZAR:** the ride is closed and charged the amount **frozen at the first press**, not the amount at the moment of the answer.
+- **NO, SEGUIR:** the ride resumes **as if it had never paused**. The time spent on the question is charged at the current state's rate, since the taxi was still occupied. The display jumps to the up-to-date amount.
+
+**What it touches:**
+
+- **Domain, not only the GUI.** Today `Carrera.finalizar()` / `Taximetro.finalizar_carrera()` close the ride at "now" (the injected `reloj`). They would need to close it at a given instant, e.g. `finalizar(en=instante)`, with that instant captured by the GUI when FINALIZAR is pressed. `hora_fin` must match (the `calendario` stamp taken at the same press), so the history row and the ticket agree. Closing at an instant earlier than "now" must still be guarded (not before the last state change).
+- **NO needs no domain change.** Accrual is timestamp-based, so resuming without a pause is the existing behaviour. Only the display is frozen during the question.
+- **Fase 2's Ctrl+C confirmation** has the same unfairness in the CLI (the meter keeps running while the question is on screen, as `decisions-fase2.md` states). Decide whether to align it, so both interfaces charge the same way.
+- **Tests:** a ride confirmed N seconds after pressing FINALIZAR is charged the amount at the press; a cancelled one is charged continuously.
+
+**When:** when the GUI's ride screen is implemented (US-09), or earlier if the client asks for it.

@@ -8,7 +8,7 @@ Context and instructions for Claude Code working in this repository. Read at the
 
 ## Current phase
 
-**Fase 2 — Observabilidad y Persistencia** (US-07 → US-05 → US-06, in that order), on the `fase-2` integration branch while Fase 1 awaits client approval. The app opens on a role menu (`Conductor` · `Administrador` · `Salir`); fare change and history are Admin-only. All decisions: **`docs/decisions-fase2.md`**. Don't start Fase 3+ work (auth/password, GUI, API, DB) unless explicitly asked — Admin stays unprotected until US-08.
+**Fase 3 — Arquitectura y Experiencia de Usuario** (US-09 GUI, US-08 password, structural refactor), on the `fase-3` integration branch (taken from `fase-2`, which still awaits merging). Currently in the **design stage**: decisions are taken one question at a time and recorded in `docs/decisions-fase3.md`; the visual design is iterated on an HTML mockup, then written into `docs/diseno-interfaz-fase3.md`. Don't write GUI or auth code until the relevant *Pendiente* sections are decided. Fase 4 work (API, DB) stays out of scope.
 
 ## Fare logic (do not guess — these are the real numbers)
 
@@ -27,6 +27,9 @@ Before changing behaviour, check whether it was already decided:
 - **`docs/flujo-fase1.md`** — authority on CLI behaviour: the command loop, menus per mode, error messages, Ctrl+C / EOF.
 - **`docs/flujo-fase2.md`** — what Fase 2 changes in the CLI: role menu, Admin fare change and history, Ctrl+C confirmation mid-ride (supersedes Fase 1's Ctrl+C rule).
 - **`docs/decisions-fase2.md`** — Fase 2 decisions: roles, fare config, history, logs, the `fase-2` branch.
+- **`docs/decisions-fase3.md`** — Fase 3 decisions: the `fase-3` branch, UI technology, real-time counter, password, refactor. Sections marked *Pendiente* are still open.
+- **`docs/diseno-interfaz-fase3.md`** — authority on the GUI: device, touch rules, colours per state, every screen and its texts.
+- **`docs/flujo-fase3.md`** — how the GUI screens connect, and how each Fase 2 CLI rule maps onto them.
 - **`docs/decisions-proceso.md`** — how the project is run: language, git workflow, CI, coverage gate, board.
 - **`docs/future-implementation-ideas.md`** — ideas deliberately postponed; check before "improving" something that was dropped on purpose.
 - **`docs/demo-fase1.md`** — the script for the client demo; keep it true to the real CLI output.
