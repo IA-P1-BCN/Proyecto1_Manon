@@ -245,6 +245,7 @@ docs/                   # briefing, flujo, decisiones, demo
 | [`docs/decisions-fase1-scaffold.md`](docs/decisions-fase1-scaffold.md) | Decisiones de diseño del código |
 | [`docs/decisions-proceso.md`](docs/decisions-proceso.md) | Decisiones de proceso: idioma, ramas, CI, cobertura, tablero |
 | [`docs/demo-fase1.md`](docs/demo-fase1.md) | Guion de la demo de Fase 1 |
+| [`docs/demo-fase2.md`](docs/demo-fase2.md) | Guion de la demo de Fase 2 y preguntas para el cliente |
 | [`docs/future-implementation-ideas.md`](docs/future-implementation-ideas.md) | Ideas aplazadas y por qué |
 
 ## Siguientes fases
