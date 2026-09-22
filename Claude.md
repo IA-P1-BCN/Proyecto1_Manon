@@ -29,7 +29,7 @@ Before changing behaviour, check whether it was already decided:
 - **`docs/decisions-fase2.md`** — Fase 2 decisions: roles, fare config, history, logs, the `fase-2` branch.
 - **`docs/decisions-proceso.md`** — how the project is run: language, git workflow, CI, coverage gate, board.
 - **`docs/future-implementation-ideas.md`** — ideas deliberately postponed; check before "improving" something that was dropped on purpose.
-- **`docs/demo-fase1.md`** — the script for the client demo; keep it true to the real CLI output.
+- **`docs/demo-fase1.md`** / **`docs/demo-fase2.md`** — the scripts for each phase's client demo; keep them true to the real CLI output. `demo-fase2.md` also lists the open questions for the client.
 
 ## Structure (Fase 1 + Fase 2 so far)
 
