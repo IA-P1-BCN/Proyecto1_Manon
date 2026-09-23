@@ -182,7 +182,7 @@ Tareas:
 Tareas:
 - [x] **T9.1** Spike técnico: elegir framework de UI — `tech-task`, `could` — [#48](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/48) ✅ *(se elige `tkinter`; alternativas y razones en `docs/decisions-fase3.md`)*
 - [x] **T9.2** Diseñar pantalla principal (botones grandes, tipografía táctil) — `tech-task`, `could` — [#49](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/49) ✅ *(y el resto de pantallas, en `docs/diseno-interfaz-fase3.md`)*
-- [ ] **T9.3** Conectar la interfaz gráfica a `ServicioTaximetro` — `tech-task`, `could` — [#50](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/50)
+- [x] **T9.3** Conectar la interfaz gráfica a `ServicioTaximetro` — `tech-task`, `could` — [#50](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/50) ✅
 - [ ] **T9.4** Tests manuales/UX en dispositivo táctil — `test`, `could` — [#51](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/51)
 - [ ] **T9.5** Tema visual de tkinter (colores, fuentes y tamaños táctiles) — `tech-task`, `could` — [#93](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/93)
 - [ ] **T9.6** Visor del importe con dígitos de 7 segmentos en un `Canvas` — `tech-task`, `could` — [#94](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/94)
@@ -193,7 +193,7 @@ Tareas:
 - [x] **T9.11** Refactorización: el CLI pasa a usar `ServicioTaximetro` sin cambiar su comportamiento — `tech-task`, `could` — [#101](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/101) ✅
 - [x] **T9.12** Test de estructura: las interfaces solo importan `ServicioTaximetro` del dominio — `test`, `could` — [#102](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/102) ✅
 - [ ] **T9.13** Pantalla del taxímetro, LIBRE/OCUPADO, con el importe refrescado cada 200 ms — `feature`, `could` — [#103](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/103)
-- [ ] **T9.14** CI: pantalla virtual (`xvfb`) para los tests de la interfaz gráfica — `tech-task`, `could` — [#104](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/104)
+- [x] **T9.14** CI: pantalla virtual (`xvfb`) para los tests de la interfaz gráfica — `tech-task`, `could` — [#104](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/104) ✅
 
 *T9.5 a T9.14 salen de la sesión de diseño de la Fase 3 (ver `docs/decisions-fase3.md` y `docs/diseno-interfaz-fase3.md`), no del cliente. T9.9 es lo que hace falta para que la US-06 se siga cumpliendo con la interfaz gráfica: tkinter se traga las excepciones de los callbacks.*
 
