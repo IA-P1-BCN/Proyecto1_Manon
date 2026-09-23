@@ -5,13 +5,18 @@ pública es la que se decidió en `docs/decisions-fase1-scaffold.md`. Si alguien
 renombra un método, le quita un parámetro inyectable o vuelve a poner el reloj
 de pared, estos tests fallan y la decisión se revisa a conciencia en vez de
 erosionarse sin querer.
+
+Desde la Fase 3 también vigilan la frontera entre las interfaces y el dominio
+(`docs/decisions-fase3.md`, *Structural refactor*).
 """
 
 from __future__ import annotations
 
+import ast
 import inspect
 import time
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 
@@ -145,3 +150,124 @@ class TestUtils:
     def test_existe_el_helper_de_formato(self) -> None:
         assert callable(formato_euros)
         assert "importe" in parametros(formato_euros)
+
+
+# ----------------------------------------------------------------------
+# Frontera interfaces / dominio (Fase 3, T9.12)
+# ----------------------------------------------------------------------
+
+RAIZ = Path(__file__).resolve().parent.parent
+PAQUETE = RAIZ / "taximetro"
+
+# Lo único del paquete que una interfaz puede importar. `logs` y `utils` no son
+# dominio: dan formato a los eventos y a los euros. Todo lo demás llega a través
+# del servicio, que en la Fase 4 se sustituye por un cliente HTTP.
+PERMITIDOS_A_LAS_INTERFACES = (
+    "taximetro.servicio_taximetro",
+    "taximetro.logs",
+    "taximetro.utils",
+)
+
+
+def modulos_de_interfaz() -> list[Path]:
+    """El CLI y todo lo que haya bajo `taximetro/gui/`, exista ya o no."""
+    return [PAQUETE / "taximetro_app.py", *sorted((PAQUETE / "gui").rglob("*.py"))]
+
+
+def nombre_de_modulo(ruta: Path) -> str:
+    """`taximetro/gui/inicio.py` → `taximetro.gui.inicio`."""
+    partes = ruta.relative_to(RAIZ).with_suffix("").parts
+    return ".".join(partes[:-1] if partes[-1] == "__init__" else partes)
+
+
+def importaciones_prohibidas(fuente: str, modulo: str, es_paquete: bool = False) -> list[str]:
+    """Lo que `fuente` importa del paquete `taximetro` sin estar permitido.
+
+    Usa `ast`, no expresiones regulares: ignora comentarios y cadenas, y ve
+    también los imports dentro de funciones o bajo `TYPE_CHECKING`. Los
+    relativos se resuelven, así que `from ..carrera import Carrera` no se cuela.
+    Cada interfaz puede importar además de su propio paquete (p. ej. las
+    pantallas de `taximetro.gui` entre sí).
+    """
+    paquete = modulo if es_paquete else modulo.rpartition(".")[0]
+    propio = paquete if paquete != "taximetro" else modulo
+    permitidos = (*PERMITIDOS_A_LAS_INTERFACES, propio)
+
+    destinos: list[str] = []
+    for nodo in ast.walk(ast.parse(fuente)):
+        if isinstance(nodo, ast.Import):
+            destinos += [alias.name for alias in nodo.names]
+        elif isinstance(nodo, ast.ImportFrom):
+            base = nodo.module or ""
+            if nodo.level:
+                partes = paquete.split(".")[: len(paquete.split(".")) - (nodo.level - 1)]
+                base = ".".join([*partes, base] if base else partes)
+            destinos += [f"{base}.{alias.name}" for alias in nodo.names]
+
+    def permitido(destino: str) -> bool:
+        return any(destino == p or destino.startswith(p + ".") for p in permitidos)
+
+    return [
+        destino
+        for destino in destinos
+        if (destino == "taximetro" or destino.startswith("taximetro."))
+        and not permitido(destino)
+    ]
+
+
+class TestFronteraDeLasInterfaces:
+    """Las interfaces solo conocen el servicio (US-09: «sin duplicarla»).
+
+    Si una pantalla o el CLI importara `Carrera`, `Tarifa` o `Taximetro`,
+    podría saltarse el servicio, y el día que este sea un cliente HTTP esa
+    interfaz dejaría de funcionar.
+    """
+
+    @pytest.mark.parametrize(
+        "ruta", modulos_de_interfaz(), ids=lambda ruta: nombre_de_modulo(ruta)
+    )
+    def test_solo_importa_el_servicio(self, ruta: Path) -> None:
+        fuente = ruta.read_text(encoding="utf-8")
+        modulo = nombre_de_modulo(ruta)
+        prohibidas = importaciones_prohibidas(fuente, modulo, ruta.name == "__init__.py")
+        assert prohibidas == [], (
+            f"{modulo} importa del dominio {prohibidas}; "
+            "debe pasar por taximetro.servicio_taximetro"
+        )
+
+    @pytest.mark.parametrize(
+        "fuente",
+        [
+            "from taximetro.carrera import Carrera",
+            "import taximetro.taximetro",
+            "from taximetro import tarifa",
+            "from ..historial import Historial",
+            "def f():\n    from taximetro.tarifa import Tarifa",
+            "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n"
+            "    from taximetro.carrera import Carrera",
+        ],
+    )
+    def test_el_comprobador_detecta_cada_forma_de_colarse(self, fuente: str) -> None:
+        # Sin esto, un comprobador roto daría el test de arriba por bueno.
+        assert importaciones_prohibidas(fuente, "taximetro.gui.pantalla") != []
+
+    @pytest.mark.parametrize(
+        "fuente",
+        [
+            "from taximetro.servicio_taximetro import Estado, ServicioTaximetro",
+            "from taximetro.utils import formato_euros",
+            "from taximetro.logs import campos",
+            "from taximetro.gui.estilo import COLORES",
+            "from .estilo import COLORES",
+            "import tkinter as tk",
+        ],
+    )
+    def test_el_comprobador_deja_pasar_lo_permitido(self, fuente: str) -> None:
+        assert importaciones_prohibidas(fuente, "taximetro.gui.pantalla") == []
+
+    def test_el_cli_no_puede_importar_de_otras_interfaces_como_propias(self) -> None:
+        # El CLI vive en la raíz del paquete: «su propio paquete» es él mismo,
+        # no todo `taximetro`, o cualquier import del dominio pasaría.
+        assert importaciones_prohibidas(
+            "from taximetro.carrera import Carrera", "taximetro.taximetro_app"
+        ) == ["taximetro.carrera.Carrera"]
