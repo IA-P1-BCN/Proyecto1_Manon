@@ -179,6 +179,10 @@ The Fase 2 requirement still holds: *"registrar en todo momento qué está ocurr
 
 **Also settled while building it:** the snapshot is `InstantaneaCarrera(id, estado, importe)` (nothing else is on screen). The rates come back as `TarifasVigentes(parado, en_movimiento)`, not as a `Tarifa`. `cambiar_estado(estado)` takes the target state, so each interface maps its single PARAR/ARRANCAR key to the opposite state. The service adds no log lines of its own, because the domain already logs each event where it happens.
 
+**Wiring in one place (T9.11):** `ServicioTaximetro.por_defecto()` builds the real program: `Taximetro` with `config/tarifas.json` and `data/historial.csv`. Both entry points (the CLI's `__main__` and, later, `python -m taximetro`) call it, so neither interface imports `Taximetro`, `ConfigTarifas` or `Historial`, and they can't wire the domain differently. `TaximetroApp` now requires a `servicio`; there is no hidden in-memory default any more.
+
+**Pitfall found while moving the CLI (T9.11):** the menu is drawn from a snapshot taken *before* waiting for input. Anything that shows the amount must ask again (`estado_actual()`), or the driver sees the amount from before they typed. A regression test covers *Ver importe*. The GUI has the same trap, because a snapshot never updates itself.
+
 ## Refactor: Fase 4 replacement points are already in place
 
 **Decision (2026-09-23):** no extra code for Fase 4. The replacement points are written down:

@@ -27,6 +27,7 @@ import pytest
 
 from taximetro.config_tarifas import ConfigTarifas
 from taximetro.historial import Historial
+from taximetro.servicio_taximetro import ServicioTaximetro
 from taximetro.taximetro import Taximetro
 from taximetro.taximetro_app import (
     DESCRIPCIONES,
@@ -62,7 +63,7 @@ def sesion_libre(reloj, calendario):
     def _ejecutar(*opciones: str) -> list[str]:
         lineas: list[str] = []
         app = TaximetroApp(
-            taximetro=Taximetro(reloj=reloj, calendario=calendario),
+            servicio=ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario)),
             entrada=EntradaGuionizada(opciones),
             salida=lineas.append,
         )
@@ -206,7 +207,7 @@ class TestCambiarEstado:
             return opcion
 
         TaximetroApp(
-            taximetro=Taximetro(reloj=reloj, calendario=calendario),
+            servicio=ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario)),
             entrada=entrada,
             salida=lineas.append,
         ).ejecutar()
@@ -220,6 +221,30 @@ class TestOpcionImporte:
     def test_muestra_el_importe_sin_cambiar_de_estado(self, sesion) -> None:
         salida = texto(sesion("1", "2"))
         assert "Carrera nº 1 · EN MOVIMIENTO · 0,00 € acumulado" in salida
+
+    def test_muestra_el_importe_de_cuando_se_pide(self, reloj, calendario) -> None:
+        # T9.11: el menú se pinta con una foto de la carrera tomada antes de
+        # esperar la opción. El importe tiene que ser el de cuando el
+        # conductor lo pide, no el de esa foto.
+        lineas: list[str] = []
+        opciones = iter([CONDUCTOR, "1", "2"])
+
+        def entrada(prompt: str = "") -> str:
+            try:
+                opcion = next(opciones)
+            except StopIteration:
+                raise EOFError from None
+            if opcion == "2":
+                reloj.avanzar(10)  # el conductor tarda 10 s en elegir
+            return opcion
+
+        TaximetroApp(
+            servicio=ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario)),
+            entrada=entrada,
+            salida=lineas.append,
+        ).ejecutar()
+
+        assert "Carrera nº 1 · EN MOVIMIENTO · 0,50 € acumulado" in texto(lineas)
 
     def test_consultar_el_importe_no_altera_el_total(self, reloj, calendario) -> None:
         # TD.5 desde el CLI: consultar el importe varias veces no puede cambiar
@@ -241,7 +266,7 @@ class TestOpcionImporte:
             return opcion
 
         TaximetroApp(
-            taximetro=Taximetro(reloj=reloj, calendario=calendario),
+            servicio=ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario)),
             entrada=entrada,
             salida=lineas.append,
         ).ejecutar()
@@ -393,7 +418,7 @@ class TestInterrupciones:
             return paso
 
         TaximetroApp(
-            taximetro=Taximetro(reloj=reloj, calendario=calendario),
+            servicio=ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario)),
             entrada=entrada,
             salida=lineas.append,
         ).ejecutar()
@@ -484,7 +509,7 @@ class TestInterrupciones:
             return paso
 
         TaximetroApp(
-            taximetro=Taximetro(reloj=reloj, calendario=calendario),
+            servicio=ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario)),
             entrada=entrada,
             salida=lineas.append,
         ).ejecutar()
@@ -587,7 +612,7 @@ class TestCambiarTarifasEnFichero:
                 raise paso
             return paso
 
-        TaximetroApp(taximetro=taximetro, entrada=entrada, salida=lineas.append).ejecutar()
+        TaximetroApp(ServicioTaximetro(taximetro), entrada=entrada, salida=lineas.append).ejecutar()
         return lineas
 
     def test_la_siguiente_sesion_arranca_con_las_tarifas_guardadas(
@@ -660,7 +685,7 @@ class TestVerHistorico:
                     return paso
 
             taximetro = Taximetro(historial=historial, reloj=reloj, calendario=calendario)
-            TaximetroApp(taximetro=taximetro, entrada=entrada, salida=lineas.append).ejecutar()
+            TaximetroApp(ServicioTaximetro(taximetro), entrada=entrada, salida=lineas.append).ejecutar()
             return lineas
 
         return _ejecutar
@@ -767,7 +792,9 @@ class TestLogs:
                 return paso
 
             TaximetroApp(
-                taximetro=taximetro or Taximetro(reloj=reloj, calendario=calendario),
+                servicio=ServicioTaximetro(
+                    taximetro or Taximetro(reloj=reloj, calendario=calendario)
+                ),
                 entrada=entrada,
                 salida=lineas.append,
             ).ejecutar()
