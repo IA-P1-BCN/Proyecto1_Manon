@@ -26,9 +26,20 @@ Companion docs: `docs/decisions-fase1-scaffold.md` (code structure), `docs/flujo
 
 **Gotcha — `Closes #NN` does not fire on merges into `dev`.** GitHub only auto-closes linked issues when a PR merges into the repository'''s *default* branch, which here is `main`. Since every story PR targets `dev`, the keywords are inert: issues have to be closed by hand after the merge, ideally with a comment naming the PR and the merge commit. Keep writing the `Closes #NN` lines anyway — they create the visible link between issue and PR, and they will close correctly on the `dev` → `main` merge at the end of the phase.
 
+## Parking Fase 1 while the client meeting is delayed (2026-09-23)
+
+**Decision:** the Fase 1 MVP is frozen in a `fase-1` branch, taken from `dev` exactly as it was, i.e. only Fase 1. Everything built since (the `fase-2` and `fase-3` integration branches) was merged into `dev`, which is the normal working branch again. `fase-2` and `fase-3` are kept, frozen, as reference points for those phases' demos.
+
+**Why:** the plan was to hold each phase on its own integration branch until the client approved the previous one (`decisions-fase2.md`, `decisions-fase3.md`). With the meeting delayed, stacking more phase branches on top of each other would keep growing the merge debt. Freezing what the client will see, and working normally on `dev`, keeps both needs apart.
+
+**Rules:**
+- **A fix to Fase 1** goes in a PR into `fase-1`, and then `fase-1` is merged into `dev` with a PR, so the fix is never lost from the working branch. The first such sync was done straight away (it brought `fase-1`'s CI trigger into `dev`), so later syncs start clean.
+- **`fase-1` → `main`** when the client approves Fase 1, as the original workflow intended. `main` still holds only the first commit.
+- **CI** runs on `fase-1` too, so a Fase 1 fix is tested like anything else.
+
 ## Continuous integration
 
-**Decision:** `.github/workflows/tests.yml` runs `pytest` on every push and PR to `main`/`dev`.
+**Decision:** `.github/workflows/tests.yml` runs `pytest` on every push and PR to `main`/`dev`, and to the phase branches `fase-1`, `fase-2` and `fase-3`.
 
 **Why:** `Claude.md` requires tests to pass before a task is considered done; until now that was enforced only by remembering. CI makes it a visible check on the PR, and it is concrete evidence of engineering practice for the evaluation.
 
