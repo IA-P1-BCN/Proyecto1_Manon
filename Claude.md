@@ -8,7 +8,7 @@ Context and instructions for Claude Code working in this repository. Read at the
 
 ## Current phase
 
-**Fase 3 — Arquitectura y Experiencia de Usuario** (US-09 GUI, US-08 password, structural refactor), on the `fase-3` integration branch (taken from `fase-2`, which still awaits merging). The **design stage is closed** (2026-09-23): every decision is in `docs/decisions-fase3.md`, the visual spec in `docs/diseno-interfaz-fase3.md`. Work order: the refactor first (T9.10 → T9.12, `ServicioTaximetro`), then US-08, then the rest of US-09. Fase 4 work (API, DB) stays out of scope.
+**Fases 1–3 are done and all live in `dev`** (2026-09-23). Fase 3 (US-08 password, US-09 GUI, the `ServicioTaximetro` refactor) is complete and manually tested; its decisions are in `docs/decisions-fase3.md`. The client meeting is delayed, so **Fase 1 is frozen in the `fase-1` branch** for the demo (see *Git workflow*). The next phase, Fase 4 (API, DB, one-command deploy), is not started: don't begin it until the user says so.
 
 ## Fare logic (do not guess — these are the real numbers)
 
@@ -33,7 +33,7 @@ Before changing behaviour, check whether it was already decided:
 - **`docs/decisions-proceso.md`** — how the project is run: language, git workflow, CI, coverage gate, board.
 - **`docs/future-implementation-ideas.md`** — ideas deliberately postponed; check before "improving" something that was dropped on purpose.
 - **`docs/demo-fase1.md`** / **`docs/demo-fase2.md`** — the scripts for each phase's client demo; keep them true to the real CLI output. `demo-fase2.md` also lists the open questions for the client.
-- **`docs/demo-fase3.md`** — the Fase 3 demo script (GUI, password, one logic for two interfaces); written from the code, still to be checked on screen (T9.4).
+- **`docs/demo-fase3.md`** — the Fase 3 demo script (GUI, password, one logic for two interfaces).
 
 ## Structure (Fase 1 + Fase 2, Fase 3 so far)
 
@@ -122,7 +122,9 @@ Run `pytest` after every change. Don't call a task done with failing tests.
 - Branch per user story off `dev`: `feature/US-01-iniciar-carrera`. Docs-only work: `docs/<tema>`.
 - PR into `dev`, CI green before merge. `dev` → `main` once per phase, so `main` always holds a demoable release.
 - Never commit straight to `main`.
-- **During Fase 2:** story branches come off `fase-2` and PR into `fase-2`. Fixes to the Fase 1 MVP still go to `dev` and are then merged into `fase-2`. `fase-2` → `dev` only after Fase 1 reaches `main`.
+- **Since 2026-09-23 (client meeting delayed):** `dev` holds Fases 1–3 and is the normal working branch again: story branches off `dev`, PR into `dev`.
+- **`fase-1`** freezes the Fase 1 MVP for the client demo. A fix to it goes in a PR **into `fase-1`**, and then `fase-1` is merged into `dev` (a PR `fase-1 → dev`), so no fix stays only in the frozen branch. When the client approves Fase 1, `fase-1` → `main`.
+- **`fase-2` and `fase-3`** are frozen too: already merged into `dev`, kept only as reference points for those phases' demos. No new work on them.
 
 ## Working style
 

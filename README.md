@@ -2,7 +2,10 @@
 
 Taxímetro software para **TaxiTech Solutions**, en sustitución de los equipos físicos Hale T200 sin soporte desde 2023. Prototipo en Python con programación orientada a objetos.
 
-**Estado:** Fase 1 (MVP en CLI) completa — US-01 a US-04 — y en validación por el cliente. Fase 2 (tarifas configurables, histórico y logs: US-05 a US-07) completa en la rama `fase-2`. Fase 3 (interfaz gráfica táctil, contraseña de Administrador y refactorización: US-08, US-09) completa en la rama `fase-3`, a falta de la prueba en pantalla táctil. Cada fase espera la validación de la anterior. Contexto completo del encargo en [`docs/project-brief.md`](docs/project-brief.md); tareas en [`Backlog.md`](Backlog.md) y en el [tablero del proyecto](https://github.com/orgs/IA-P1-BCN/projects/2).
+**Estado:** Fases 1, 2 y 3 completas, en la rama `dev`:
+- **Fase 1:** MVP en CLI (US-01 a US-04). Pendiente de validar por el cliente; para la demo, está **congelada en la rama `fase-1`**.
+- **Fase 2:** tarifas configurables, histórico y logs (US-05 a US-07).
+- **Fase 3:** interfaz gráfica táctil, contraseña de Administrador y refactorización (US-08, US-09). Contexto completo del encargo en [`docs/project-brief.md`](docs/project-brief.md); tareas en [`Backlog.md`](Backlog.md) y en el [tablero del proyecto](https://github.com/orgs/IA-P1-BCN/projects/2).
 
 ## Tarifas vigentes
 
@@ -302,6 +305,6 @@ docs/                        # briefing, flujos, diseño, decisiones, demos
 
 | Fase | Contenido |
 |---|---|
-| 🟡 Fase 2 | Histórico de carreras, logs de operación y tarifas configurables (US-05 a US-07) — hecha, en `fase-2` |
-| 🟠 Fase 3 | Contraseña e interfaz gráfica táctil (US-08, US-09) — hecha, en `fase-3` |
+| 🟡 Fase 2 | Histórico de carreras, logs de operación y tarifas configurables (US-05 a US-07) — hecha |
+| 🟠 Fase 3 | Contraseña e interfaz gráfica táctil (US-08, US-09) — hecha |
 | 🔴 Fase 4 | Base de datos, API REST y despliegue con un comando |
