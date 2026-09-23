@@ -32,7 +32,7 @@ Before changing behaviour, check whether it was already decided:
 - **`docs/flujo-fase3.md`** — how the GUI screens connect, and how each Fase 2 CLI rule maps onto them.
 - **`docs/decisions-proceso.md`** — how the project is run: language, git workflow, CI, coverage gate, board.
 - **`docs/future-implementation-ideas.md`** — ideas deliberately postponed; check before "improving" something that was dropped on purpose.
-- **`docs/demo-fase1.md`** — the script for the client demo; keep it true to the real CLI output.
+- **`docs/demo-fase1.md`** / **`docs/demo-fase2.md`** — the scripts for each phase's client demo; keep them true to the real CLI output. `demo-fase2.md` also lists the open questions for the client.
 - **`docs/demo-fase3.md`** — the Fase 3 demo script (GUI, password, one logic for two interfaces); written from the code, still to be checked on screen (T9.4).
 
 ## Structure (Fase 1 + Fase 2, Fase 3 so far)
