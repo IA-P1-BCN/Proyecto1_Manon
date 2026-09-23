@@ -7,6 +7,7 @@ ADMINISTRADOR (con candado: pide contraseña). Salir, en el lateral.
 
 from __future__ import annotations
 
+import logging
 import tkinter as tk
 from typing import TYPE_CHECKING
 
@@ -14,9 +15,12 @@ from taximetro.gui import estilo
 from taximetro.gui.franja import Franja
 from taximetro.gui.pantalla import Pantalla
 from taximetro.gui.tecla import Tecla
+from taximetro.logs import campos
 
 if TYPE_CHECKING:
     from taximetro.gui.app import App
+
+logger = logging.getLogger("taximetro.gui")
 
 
 class Inicio(Pantalla):
@@ -55,10 +59,12 @@ class Inicio(Pantalla):
         """CONDUCTOR: el taxímetro, sin contraseña."""
         from taximetro.gui.taximetro import PantallaTaximetro
 
+        logger.info("perfil_elegido %s", campos(perfil="conductor"))
         self.app.mostrar(PantallaTaximetro)
 
     def pedir_contrasena(self) -> None:
         """ADMINISTRADOR: primero la contraseña (US-08)."""
         from taximetro.gui.contrasena import Contrasena
 
+        logger.info("perfil_elegido %s", campos(perfil="administrador"))
         self.app.mostrar(Contrasena)

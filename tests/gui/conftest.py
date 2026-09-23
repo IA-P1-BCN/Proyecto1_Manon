@@ -48,7 +48,11 @@ def raiz(interprete):
     """Una ventana oculta, nueva en cada test y destruida al terminar."""
     ventana = tk.Toplevel(interprete)
     ventana.withdraw()
+    # La App instala su gestor de errores en el intérprete, que es de toda la
+    # sesión: se deja como estaba para que ningún test herede el de otro.
+    gestor = interprete.report_callback_exception
     yield ventana
+    interprete.report_callback_exception = gestor
     if ventana.winfo_exists():  # el propio test puede haberla cerrado (Salir, ✕)
         ventana.destroy()
 

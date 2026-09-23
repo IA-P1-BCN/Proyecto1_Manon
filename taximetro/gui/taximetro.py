@@ -8,6 +8,7 @@ dominio.
 
 from __future__ import annotations
 
+import logging
 import tkinter as tk
 from typing import TYPE_CHECKING
 
@@ -16,11 +17,14 @@ from taximetro.gui.confirmacion import Confirmacion
 from taximetro.gui.pantalla import Pantalla
 from taximetro.gui.tecla import Tecla
 from taximetro.gui.visor import Visor
+from taximetro.logs import campos
 from taximetro.servicio_taximetro import CarreraCerrada, Estado, InstantaneaCarrera
 from taximetro.utils import formato_euros
 
 if TYPE_CHECKING:
     from taximetro.gui.app import App
+
+logger = logging.getLogger("taximetro.gui")
 
 REFRESCO_MS = 200  # un céntimo a 0,05 €/s: el visor nunca se salta uno
 SIN_DATO = "—"
@@ -42,6 +46,7 @@ class PantallaTaximetro(Pantalla):
         self._cerrada: CarreraCerrada | None = None  # la última, mientras se cobra
         self._refrescando = False
         self._saliendo = False  # «SÍ, FINALIZAR Y SALIR»: solo queda la tecla CERRAR
+        self._salida_pedida: int | None = None  # nº de carrera mientras se pregunta por el ✕
 
         principal, lateral = self.columnas()
         self._montar_visor(principal)
@@ -88,6 +93,9 @@ class PantallaTaximetro(Pantalla):
 
     def seguir(self) -> None:
         """NO, SEGUIR: la carrera sigue como si nada (también se cobra la pregunta)."""
+        if self._salida_pedida is not None:
+            logger.info("salida_cancelada %s", campos(carrera=self._salida_pedida))
+            self._salida_pedida = None
         self.servicio.seguir_carrera()
         self.confirmacion.cerrar()
         self._pintar()
@@ -112,6 +120,9 @@ class PantallaTaximetro(Pantalla):
         if self.servicio.estado_actual() is None:
             return False
         congelada = self.servicio.congelar_importe()
+        # Los mismos eventos que el Ctrl+C del CLI: un grep sirve para los dos.
+        logger.info("salida_solicitada %s", campos(carrera=congelada.id))
+        self._salida_pedida = congelada.id
         self.confirmacion.abrir(
             pregunta=f"Vas a salir del programa con la carrera nº {congelada.id} en curso.",
             importe=formato_euros(congelada.importe),
@@ -132,6 +143,8 @@ class PantallaTaximetro(Pantalla):
         Cerrar la ventana en el acto escondería el total antes de que el
         pasajero lo vea; el programa termina al pulsar CERRAR.
         """
+        logger.info("salida_confirmada %s", campos(carrera=self._salida_pedida))
+        self._salida_pedida = None
         self.confirmacion.cerrar()
         self._saliendo = True
         self.finalizar()
@@ -306,7 +319,8 @@ class PantallaTaximetro(Pantalla):
         )
         self.tecla_iniciar = Tecla(teclas, "INICIAR CARRERA", self.iniciar, variante=estilo.VERDE, alto=alto)
         self.tecla_cerrar = Tecla(
-            teclas, "CERRAR", self.app.cerrar, variante=estilo.GRIS, alto=alto,
+            teclas, "CERRAR", lambda: self.app.cerrar("ventana_con_carrera"),
+            variante=estilo.GRIS, alto=alto,
             subtitulo="Sale del programa",
         )
 
