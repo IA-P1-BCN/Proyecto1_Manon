@@ -79,7 +79,8 @@ DESCRIPCIONES = {
 
 OPCION_NO_VALIDA = "Opción no válida. Elige un número del menú."
 NADA_GUARDADO = "No se ha guardado nada."
-# Mismos textos que la pantalla de contraseña (`docs/diseno-interfaz-fase3.md`).
+# Los mensajes son los de la pantalla de contraseña (`docs/diseno-interfaz-fase3.md`);
+# la pregunta es propia del CLI, que no tiene tecla Cancelar.
 PREGUNTA_CONTRASENA = "Contraseña (Intro vacío para volver): "
 CONTRASENA_INCORRECTA = "Contraseña incorrecta. Inténtalo de nuevo."
 CREDENCIALES_NO_DISPONIBLES = (
