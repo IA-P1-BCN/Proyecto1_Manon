@@ -82,25 +82,41 @@ class Carrera:
         """True si la carrera ya está cerrada y no admite más cambios."""
         return self.hora_fin is not None
 
-    def duracion(self) -> float:
+    def duracion(self, hasta: datetime | None = None) -> float:
         """Segundos desde `hora_inicio` hasta `hora_fin`, o hasta ahora si sigue en curso.
+
+        `hasta` fija el final para una carrera en curso (el instante congelado
+        al pedir el cierre); una carrera cerrada se mide siempre hasta su fin.
 
         Se mide con el calendario, igual que la `duracion_s` del log de
         `carrera_finalizada`: es un dato para mostrar, no para cobrar (el
         importe se acumula con el reloj monótono).
         """
-        fin = self.hora_fin if self.hora_fin is not None else self._calendario()
+        if self.hora_fin is not None:
+            fin = self.hora_fin
+        else:
+            fin = hasta if hasta is not None else self._calendario()
         return (fin - self.hora_inicio).total_seconds()
 
-    def _segundos_en_curso(self) -> float:
-        """Segundos transcurridos en el tramo actual, sin cerrarlo."""
-        return self._reloj() - self._inicio_tramo
+    def _instante(self, en: float | None) -> float:
+        """`en` (una lectura anterior del reloj) o el instante actual.
 
-    def _cerrar_tramo(self) -> None:
-        """Acumula el tramo en curso en el importe y reinicia la marca."""
+        Nunca antes del último cambio de estado: ese tramo ya está cobrado a
+        otra tarifa, y cerrar antes restaría importe.
+        """
+        if en is None:
+            return self._reloj()
+        if en < self._inicio_tramo:
+            raise ValueError(
+                f"La carrera nº {self.id} cambió de estado después de ese instante."
+            )
+        return en
+
+    def _cerrar_tramo(self, en: float | None = None) -> None:
+        """Acumula el tramo en curso (hasta `en`, o hasta ahora) y reinicia la marca."""
         # El reloj se lee una sola vez a propósito: con dos lecturas, los
         # microsegundos que pasan entre una y otra se perderían sin cobrar.
-        ahora = self._reloj()
+        ahora = self._instante(en)
         segundos = ahora - self._inicio_tramo
         self.importe += self._tarifa.calcular_importe(self.estado, segundos)
         self._inicio_tramo = ahora
@@ -133,19 +149,25 @@ class Carrera:
             ),
         )
 
-    def importe_actual(self) -> float:
+    def importe_actual(self, en: float | None = None) -> float:
         """Devuelve el importe acumulado más el tramo en curso, sin mutar nada.
 
-        Sobre una carrera ya finalizada devuelve el total congelado.
+        `en` es una lectura anterior del reloj: el importe que había en ese
+        instante (el congelado al pedir el cierre). Sobre una carrera ya
+        finalizada devuelve el total cobrado.
         """
         if self.finalizada:
             return self.importe
-        return self.importe + self._tarifa.calcular_importe(
-            self.estado, self._segundos_en_curso()
-        )
+        segundos = self._instante(en) - self._inicio_tramo
+        return self.importe + self._tarifa.calcular_importe(self.estado, segundos)
 
-    def finalizar(self) -> float:
+    def finalizar(self, en: float | None = None, hora_fin: datetime | None = None) -> float:
         """Cierra la carrera, acumula el último tramo y devuelve el importe total.
+
+        Por defecto cierra ahora. Con `en` (lectura del reloj) y `hora_fin`
+        (del calendario) cierra en ese instante anterior: el de la pulsación de
+        FINALIZAR, para no cobrar al pasajero lo que se tarda en confirmar.
+        `en` no puede ser anterior al último cambio de estado (`ValueError`).
 
         Sobre una carrera ya finalizada lanza `CarreraFinalizadaError`: el
         total ya se cobró y no puede recalcularse.
@@ -158,8 +180,8 @@ class Carrera:
                 f"La carrera nº {self.id} ya está finalizada."
             )
 
-        self._cerrar_tramo()
-        self.hora_fin = self._calendario()
+        self._cerrar_tramo(en)
+        self.hora_fin = hora_fin if hora_fin is not None else self._calendario()
         logger.info(
             "carrera_finalizada %s",
             campos(
