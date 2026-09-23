@@ -143,7 +143,8 @@ Aprobada el 2026-09-22. Solo protege al Administrador (ver `decisions-fase3.md`)
 - **Cancelar** abajo en el lateral: vuelve a Inicio.
 - Mensajes bajo el campo, en rojo y con el borde del campo en rojo:
   - vacío → «Escribe la contraseña.»
-  - incorrecta → «Contraseña incorrecta. Inténtalo de nuevo.» (el campo se vacía)
+  - incorrecta → «Contraseña incorrecta. Inténtalo de nuevo.» (el campo se vacía). No hay límite de intentos.
+  - falta `config/credenciales.json` o no se puede leer → «No se puede comprobar la contraseña. Avisa al equipo técnico.» No se entra nunca por defecto.
 - Correcta → menú de Administrador.
 
 ### 3. Conductor — sin carrera (y total a cobrar)

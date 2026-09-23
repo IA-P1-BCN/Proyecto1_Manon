@@ -108,11 +108,41 @@ The Fase 2 requirement still holds: *"registrar en todo momento qué está ocurr
 
 **Known limit:** tkinter does not reliably bring up a tablet's on-screen keyboard. On a touch-only tablet an on-screen keypad would have to be added. Considered and not taken for now: a numeric PIN with an on-screen keypad (works everywhere, weaker secret), and both at once (more to build and test).
 
-## Pendiente — US-08: how the password works
+## US-08: password hashed with `hashlib.scrypt` (T8.2)
 
-- Hashing: stdlib `hashlib.pbkdf2_hmac` / `hashlib.scrypt` with a salt, or `bcrypt` (a new dependency)?
-- Where the hash lives (a file under `config/`?), how the first password is set, how it is changed or reset.
-- Failed attempts: limit, delay, log event?
+**Decision (2026-09-23):** the Admin password is hashed with `hashlib.scrypt` (standard library), with a random 16-byte salt from `secrets.token_bytes`. Checking a typed password recomputes the hash with the stored salt and parameters and compares with `hmac.compare_digest`. The scrypt parameters (`n`, `r`, `p`) are stored next to the hash, so they can be raised later without invalidating the existing password.
+
+**Why:** no new dependency. scrypt is deliberately memory-hungry, so a stolen hash is expensive to brute-force even on GPUs. One check takes roughly 50–100 ms, which is imperceptible after pressing ENTRAR and costly to an attacker. `compare_digest` takes the same time whether the first byte or the last one differs, so the comparison leaks nothing through timing.
+
+**Alternatives considered:** `hashlib.pbkdf2_hmac` (also stdlib and better known, but not memory-hard, so weaker against GPUs); `bcrypt` (the industry default, but a new dependency to justify, with nothing to add over scrypt for one local password).
+
+## US-08: the hash lives in `config/credenciales.json`
+
+**Decision (2026-09-23):** a file of its own, `config/credenciales.json`, **committed to the repo** (unlike `config/tarifas.json`; see the next section for why). It holds the algorithm name, the scrypt parameters, the salt and the hash (both hex), e.g. `{"algoritmo": "scrypt", "n": 16384, "r": 8, "p": 1, "sal": "…", "hash": "…"}`. Only `Auth` reads and writes it.
+
+**Why:** one file per responsibility, as with fares and history. `ConfigTarifas` rewrites `tarifas.json` whole on every GUARDAR, and a technician edits it by hand, so a hash stored there could be dropped or broken by either. Keeping it apart also means `ConfigTarifas` never has to preserve a field it doesn't own.
+
+**Alternatives considered:** a field inside `tarifas.json` (see above); an environment variable (no file, but the password could never be changed from the app, and setting one on Windows is awkward for the demo).
+
+## US-08: the password is supplied by the technical team (simulated)
+
+**Decision (2026-09-23):** the Admin password is **`taxi`**. The project treats it as supplied, set and changed by the client's technical team. The app has no code to create, change or reset it. Its hash (never the word itself) ships in the committed `config/credenciales.json`, generated once when `Auth` is built.
+
+**Why:** this is a school project and no technical team exists. Setting and rotating passwords would add a setup command or a screen to a *Could* story without touching an acceptance criterion. The Fase 3 requirement ("almacenada de forma segura", "ningún valor sensible en texto plano") is about how the password is **stored**, and scrypt covers that in full.
+
+**Consequences:**
+- `config/credenciales.json` is committed rather than git-ignored, since nothing would create it otherwise. It contains only a salt and a hash, so committing it doesn't expose the password.
+- `taxi` appears only where a human needs it to run the demo (README, demo script), presented as "provided by the technical team". It never appears in code, tests or config. Tests use their own password and a `tmp_path` credentials file.
+- **Missing or unreadable file** (assumption): Admin access is denied with a message, the event is logged as ERROR, and Conductor keeps working. Access is never granted by default.
+- A real mechanism for setting and changing the password is recorded in `future-implementation-ideas.md`.
+
+## US-08: failed attempts are logged, not limited
+
+**Decision (2026-09-23):** a wrong password shows «Contraseña incorrecta. Inténtalo de nuevo.» and logs `acceso_admin_denegado` (WARNING, without the typed text). There's no attempt counter, lockout or delay, in either the GUI or the CLI.
+
+**Why:** the only way to guess is by hand, on the touch screen or at the CLI prompt, at human speed. An attack on the stolen file is already slowed by scrypt. A run of failures shows up in the log with a `grep`, which is where the technical team looks. `Auth` stays stateless: no counter, no clock, no extra message.
+
+**Alternatives considered:** a 30 s in-memory lockout after 3 failures (needs state and an injected clock in `Auth`, plus a new message and tests); a fixed 1–2 s delay per failure (must use `after()`, not `sleep()`, or the screen freezes, and it adds little against a human).
 
 ## Pendiente — Structural refactor
 

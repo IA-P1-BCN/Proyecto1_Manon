@@ -55,3 +55,13 @@ That is a substantial amount of display-layer and platform machinery for a phase
 - **Tests:** a ride confirmed N seconds after pressing FINALIZAR is charged the amount at the press; a cancelled one is charged continuously.
 
 **When:** when the GUI's ride screen is implemented (US-09), or earlier if the client asks for it.
+
+## Setting and changing the Admin password (Fase 3 — simulated, not built)
+
+**Context:** US-08 needs a first password and, in real life, a way to change and reset it. While designing the hash storage (`docs/decisions-fase3.md`, *US-08*), we considered a technician command (`python -m taximetro.auth`, typed twice with `getpass`, which would also cover reset), a default password with a forced change on first login, and a *CAMBIAR CONTRASEÑA* screen in the Admin menu.
+
+**Why not now:** it's a school project with no real technical team. The password (`taxi`) is treated as supplied by that team, and only its scrypt hash ships, in the committed `config/credenciales.json`. The acceptance criteria are about asking for the password and not storing it in plain text, and both are met without any of this.
+
+**Pitfall to avoid if built:** never let the app create the password itself when the file is missing ("no password yet, choose one"). The first person to press ADMINISTRADOR, possibly a passenger, would pick it.
+
+**When to reconsider:** a real deployment, or a client request to change the password without a technician. The technician command is the cheapest option: no new screen, and it writes the same file with the same `Auth` code.
