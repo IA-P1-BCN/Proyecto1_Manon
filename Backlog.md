@@ -183,7 +183,7 @@ Tareas:
 - [x] **T9.1** Spike técnico: elegir framework de UI — `tech-task`, `could` — [#48](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/48) ✅ *(se elige `tkinter`; alternativas y razones en `docs/decisions-fase3.md`)*
 - [x] **T9.2** Diseñar pantalla principal (botones grandes, tipografía táctil) — `tech-task`, `could` — [#49](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/49) ✅ *(y el resto de pantallas, en `docs/diseno-interfaz-fase3.md`)*
 - [x] **T9.3** Conectar la interfaz gráfica a `ServicioTaximetro` — `tech-task`, `could` — [#50](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/50) ✅
-- [ ] **T9.4** Tests manuales/UX en dispositivo táctil — `test`, `could` — [#51](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/51)
+- [x] **T9.4** Tests manuales/UX en dispositivo táctil — `test`, `could` — [#51](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/51) ✅ *(prueba manual superada el 2026-09-23)*
 - [x] **T9.5** Tema visual de tkinter (colores, fuentes y tamaños táctiles) — `tech-task`, `could` — [#93](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/93) ✅
 - [x] **T9.6** Visor del importe con dígitos de 7 segmentos en un `Canvas` — `tech-task`, `could` — [#94](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/94) ✅
 - [x] **T9.7** Pantallas de Inicio y de Administrador (menú, tarifas, histórico) — `feature`, `could` — [#95](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/95) ✅
