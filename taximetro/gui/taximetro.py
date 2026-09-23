@@ -43,15 +43,7 @@ class PantallaTaximetro(Pantalla):
         self._refrescando = False
         self._saliendo = False  # «SÍ, FINALIZAR Y SALIR»: solo queda la tecla CERRAR
 
-        self.columnconfigure(0, weight=1)
-        self.columnconfigure(1, minsize=estilo.LATERAL)
-        self.rowconfigure(0, weight=1)
-        principal = tk.Frame(self, bg=estilo.FONDO)
-        principal.grid(row=0, column=0, sticky="nsew", padx=(estilo.MARGEN, 0), pady=estilo.MARGEN)
-        lateral = tk.Frame(self, bg=estilo.FONDO, width=estilo.LATERAL)
-        lateral.grid(row=0, column=1, sticky="ns", padx=estilo.MARGEN, pady=estilo.MARGEN)
-        lateral.pack_propagate(False)
-
+        principal, lateral = self.columnas()
         self._montar_visor(principal)
         self._montar_teclas(principal)
         self._montar_lateral(lateral)
@@ -123,7 +115,7 @@ class PantallaTaximetro(Pantalla):
         self.confirmacion.abrir(
             pregunta=f"Vas a salir del programa con la carrera nº {congelada.id} en curso.",
             importe=formato_euros(congelada.importe),
-            si="SÍ, FINALIZAR Y SALIR",
+            si="SÍ, FINALIZAR\nY SALIR",
             al_si=self._finalizar_y_salir,
             al_no=self.seguir,
         )
@@ -151,7 +143,7 @@ class PantallaTaximetro(Pantalla):
 
     def abrir_ayuda(self) -> None:
         """Muestra el panel de ayuda encima de la pantalla."""
-        self._tarifas_ayuda.configure(text=f"Tarifas: {self._resumen_tarifas()}")
+        self._tarifas_ayuda.configure(text=f"Tarifas: {self.resumen_tarifas()}")
         self._ayuda.place(relx=0, rely=0, relwidth=1, relheight=1)
         self._ayuda.lift()
 
@@ -254,12 +246,6 @@ class PantallaTaximetro(Pantalla):
         tarifas = self.servicio.tarifas()
         return formato_euros(tarifas.parado if estado is Estado.PARADO else tarifas.en_movimiento)
 
-    def _resumen_tarifas(self) -> str:
-        return (
-            f"parado {self._tarifa_de(Estado.PARADO)}/s · "
-            f"en movimiento {self._tarifa_de(Estado.EN_MOVIMIENTO)}/s"
-        )
-
     # ------------------------------------------------------------------
     # Montaje
     # ------------------------------------------------------------------
@@ -328,11 +314,9 @@ class PantallaTaximetro(Pantalla):
         self.dato_carrera = self._dato(padre, "Carrera")
         self.dato_tiempo = self._dato(padre, "Tiempo")
         self.dato_inicio = self._dato(padre, "Inicio")
-        lateral = {"variante": estilo.LATERAL_TECLA, "alto": estilo.TECLA_LATERAL,
-                   "fuente": estilo.FUENTE_TECLA_LATERAL}
-        self.tecla_ayuda = Tecla(padre, "Ayuda", self.abrir_ayuda, **lateral)
+        self.tecla_ayuda = self.tecla_lateral(padre, "Ayuda", self.abrir_ayuda)
         self.tecla_ayuda.pack(side=tk.BOTTOM, fill=tk.X)
-        self.tecla_volver = Tecla(padre, "Volver", self.volver, **lateral)
+        self.tecla_volver = self.tecla_lateral(padre, "Volver", self.volver)
 
     def _dato(self, padre: tk.Frame, etiqueta: str) -> tk.Label:
         caja = tk.Frame(padre, bg=estilo.PANEL, highlightthickness=2, highlightbackground=estilo.PANEL_BORDE)

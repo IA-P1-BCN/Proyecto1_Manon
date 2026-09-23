@@ -5,7 +5,7 @@ from __future__ import annotations
 import tkinter as tk
 from typing import Callable
 
-from taximetro.gui import estilo
+from taximetro.gui import estilo, iconos
 from taximetro.gui.estilo import Variante
 
 
@@ -30,8 +30,14 @@ class Tecla(tk.Frame):
         alto: int = estilo.TECLA_PRINCIPAL_MIN,
         subtitulo: str = "",
         fuente: estilo.Fuente = estilo.FUENTE_TECLA,
+        icono: str | None = None,
+        tamano_icono: int = 96,
     ) -> None:
-        """Crea la tecla; `alto` en píxeles, nunca por debajo de la zona táctil mínima."""
+        """Crea la tecla; `alto` en píxeles, nunca por debajo de la zona táctil mínima.
+
+        Con `icono` (un nombre de `iconos.NOMBRES`) es una teja: icono encima
+        del título, como CONDUCTOR y ADMINISTRADOR en la pantalla de inicio.
+        """
         if alto < estilo.ZONA_TACTIL_MIN:
             raise ValueError(
                 f"Tecla de {alto} px: la zona táctil mínima es {estilo.ZONA_TACTIL_MIN} px."
@@ -44,11 +50,23 @@ class Tecla(tk.Frame):
         # Un marco interior centra título y subtítulo en vertical.
         self._centro = tk.Frame(self)
         self._centro.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-        self._titulo = tk.Label(self._centro, font=fuente)
+        self._icono: tk.Canvas | None = None
+        if icono is not None:
+            self._icono = tk.Canvas(
+                self._centro, width=tamano_icono, height=tamano_icono, highlightthickness=0
+            )
+            iconos.dibujar(self._icono, icono, tamano_icono, "#ffffff")
+            self._icono.pack(pady=(0, 16))
+        self._titulo = tk.Label(self._centro, font=fuente, justify=tk.CENTER)
         self._titulo.pack()
-        self._subtitulo = tk.Label(self._centro, font=estilo.FUENTE_TECLA_SUBTITULO)
+        self._subtitulo = tk.Label(
+            self._centro, font=estilo.FUENTE_TECLA_SUBTITULO, justify=tk.CENTER
+        )
 
-        for widget in (self, self._centro, self._titulo, self._subtitulo):
+        widgets = [self, self._centro, self._titulo, self._subtitulo]
+        if self._icono is not None:
+            widgets.append(self._icono)
+        for widget in widgets:
             widget.bind("<ButtonPress-1>", self._al_pulsar)
             widget.bind("<ButtonRelease-1>", self._al_soltar)
 
@@ -93,6 +111,8 @@ class Tecla(tk.Frame):
         fondo = variante.pulsada if self._pulsada else variante.fondo
         self.configure(bg=fondo, highlightbackground=variante.borde, highlightcolor=variante.borde)
         self._centro.configure(bg=fondo)
+        if self._icono is not None:
+            self._icono.configure(bg=fondo)
         self._titulo.configure(bg=fondo, fg="#ffffff")
         self._subtitulo.configure(bg=fondo, fg=variante.subtitulo)
 

@@ -36,6 +36,10 @@ TECLA_TAXIMETRO = ALTO - 2 * MARGEN - VISOR - SEPARACION  # lo que queda bajo el
 LAMPARA = 72  # alto de las lámparas OCUPADO / LIBRE
 AYUDA_ANCHO = 780  # panel de ayuda
 CONFIRMACION_ANCHO = 1040  # panel SÍ / NO
+FRANJA = 108  # franja superior de Inicio y Administrador
+TEJA = ALTO - 2 * MARGEN - FRANJA - SEPARACION  # las tejas bajo la franja: 620
+FILA = 64  # filas del histórico
+FILAS_HISTORICO = 6  # las que caben a la vez; ▲ ▼ para el resto
 
 TEXTO_MIN = 24  # nada más pequeño en ninguna pantalla, ni siquiera la ayuda
 
@@ -164,3 +168,12 @@ FUENTE_MARCA = fuente(40, negrita=True)  # «TTX-247» en la franja superior
 FUENTE_TECLA_CONFIRMAR = fuente(48, negrita=True)  # SÍ, FINALIZAR / NO, SEGUIR
 FUENTE_DETALLE = fuente(30)  # «Importe a cobrar:» en el panel de confirmación
 FUENTE_DETALLE_IMPORTE = fuente(30, negrita=True)
+FUENTE_TEJA_PRINCIPAL = fuente(64, negrita=True)  # CONDUCTOR
+FUENTE_TEJA = fuente(48, negrita=True)  # CAMBIAR TARIFAS, VER HISTÓRICO
+# ADMINISTRADOR, en una teja de un tercio: a 40 px (la maqueta) mide 339 px y
+# solo caben 309; el navegador lo ajustaba, tkinter lo cortaría.
+FUENTE_TEJA_ESTRECHA = fuente(34, negrita=True)
+FUENTE_CONTRASENA = fuente(40)  # el campo enmascarado
+FUENTE_ETIQUETA_CAMPO = fuente(30)  # «Parado o < 20 km/h», «€/s»
+FUENTE_TITULO_HISTORICO = fuente(44, negrita=True)
+FUENTE_TOTAL = fuente(56, negrita=True)  # total del día, en rojo LED
