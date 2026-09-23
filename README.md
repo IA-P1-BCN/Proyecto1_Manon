@@ -294,6 +294,7 @@ docs/                        # briefing, flujos, diseño, decisiones, demos
 | [`docs/diseno-interfaz-fase3.md`](docs/diseno-interfaz-fase3.md) | Diseño de cada pantalla: medidas, colores y textos |
 | [`docs/decisions-fase3.md`](docs/decisions-fase3.md) | Decisiones de la Fase 3 |
 | [`docs/demo-fase1.md`](docs/demo-fase1.md) | Guion de la demo de Fase 1 |
+| [`docs/demo-fase2.md`](docs/demo-fase2.md) | Guion de la demo de Fase 2 y preguntas para el cliente |
 | [`docs/demo-fase3.md`](docs/demo-fase3.md) | Guion de la demo de Fase 3 |
 | [`docs/future-implementation-ideas.md`](docs/future-implementation-ideas.md) | Ideas aplazadas y por qué |
 
