@@ -6,7 +6,7 @@ Secuencia exacta para la demo en directo del MVP ante TaxiTech Solutions. Cada p
 
 ## Antes de empezar
 
-- [ ] `git checkout main && git pull` — se demuestra lo que está en `main`, no el portátil de nadie.
+- [ ] `git checkout fase-1 && git pull` — se demuestra la Fase 1 congelada en su rama, no el portátil de nadie. (`main` recibirá la Fase 1 cuando el cliente la apruebe.)
 - [ ] Entorno activado y `pytest` en verde delante del cliente (30 segundos, y respalda el resto de la demo).
 - [ ] Terminal a pantalla completa, fuente grande, ventana limpia.
 - [ ] Reloj a la vista: los importes dependen de los segundos que se dejen pasar.
