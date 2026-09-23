@@ -278,7 +278,7 @@ class TestCerrarLaVentana:
         assert pantalla.confirmacion.pregunta.cget("text") == (
             "Vas a salir del programa con la carrera nº 1 en curso."
         )
-        assert pantalla.confirmacion.si.titulo == "SÍ, FINALIZAR Y SALIR"
+        assert pantalla.confirmacion.si.titulo == "SÍ, FINALIZAR\nY SALIR"
         assert pantalla.confirmacion.importe.cget("text") == "0,50 €"
 
     def test_un_segundo_aspa_cuenta_como_no(self, app: App, pantalla, cerrada) -> None:

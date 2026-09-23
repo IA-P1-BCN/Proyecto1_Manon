@@ -320,6 +320,27 @@ config/
 
 **Not checked visually.** The desktop screenshot used for earlier screens captured whatever window was on top (another application was covering the meter). Those captures were deleted, and no more are taken without asking. The panels are covered by tests only; look at them by running `python -m taximetro`.
 
+## Inicio, password and Admin screens (T9.7)
+
+**As built (2026-09-23):** screens 1, 2, 6, 7 and 8 (`gui/inicio.py`, `contrasena.py`, `administrador.py`, `tarifas.py`, `historico.py`). The placeholder Inicio is gone. The password screen (US-08's screen 2) had no task of its own and was built here, because Inicio leads to it.
+
+- **The culprit field without repeating the rules.** Screen 7 turns the failing field's border red. `TarifaInvalidaError` now carries `campos` (`("parado",)`, `("en_movimiento",)`, or both when parado > en movimiento), so the screen reads it instead of re-validating. The rules stay in `Tarifa` only. The messages are the CLI's, word for word.
+- **Shared pieces:**
+  - `Pantalla.columnas()`, the main column plus the 240 px sidebar, which every screen now uses, the meter included;
+  - `tecla_lateral()` and `resumen_tarifas()`;
+  - `gui/franja.py` for the top strip;
+  - `gui/iconos.py`, the mockup's four icons drawn as Canvas strokes, since tkinter can't draw SVG;
+  - `Tecla(icono=...)` for the tiles.
+- **Screens reach each other through imports inside their methods,** because they link in a circle (Inicio → Contraseña → Administrador → Inicio).
+- **Text that doesn't fit, and fonts that differ.** A tkinter label cuts its text silently, while the mockup's browser wrapped it, and behaviour tests can't see a cut. The system font also differs from machine to machine: DejaVu Sans on the Linux CI is much wider than Segoe UI on Windows. A first version with sizes hand-tuned on Windows failed in CI.
+  - **`Tecla` now fits its own text.** It measures the title and subtitle with the real font and steps the size down until they fit, never below 24 px. The mockup's sizes stay in the theme and shrink only where needed (e.g. «ADMINISTRADOR» in its one-third tile).
+  - **The strip's rates** wrap into whatever width the title leaves.
+  - **Long messages** wrap.
+  - The long tile subtitles and «SÍ, FINALIZAR / Y SALIR» go on two lines. The latter was a bug already merged in T9.8: 507 px in a 457 px key.
+- **`tests/gui/test_cabe.py`** shows every screen and state at 1280 × 800 and checks Tk's geometry: no label narrower than its text, no widget outside its parent. It runs twice, once with the system font and once with the **widest available font** (Verdana on Windows, DejaVu Sans on Linux), so a layout that passes on one machine can't break on another. A test proves the detector catches a too-long label. It found the T9.8 bug and the Linux-only cuts. It replaces screenshots, which are no longer taken without asking (see *Confirmations*).
+- **History:** 6 rows fit with the title and the total; ▲ ▼ page through, and the last page is filled to the end.
+- Tests that press Enter show their window and focus the field first, because Tk only delivers keys to a visible, focused window.
+
 ## Two GUI test problems found and fixed during T9.6
 
 - **One Tk interpreter for the whole test session.** Creating and destroying a `Tk()` per test made Tk 9.0.4 on Windows (Python 3.14) abort now and then when creating the next one: `Windows fatal exception: code 0x80000003`, sometimes killing the pytest process. The test that created a second `Tk()` while the fixture's was alive made it much more likely (4/25 runs of `test_app.py`). It never showed on Linux CI. Now `tests/gui/conftest.py` has a session-scoped `Tk` and each test gets a fresh `Toplevel` as its window: 20/20 clean full runs, and the suite is twice as fast. For this, **`App.ejecutar()` uses `wait_window()` instead of `mainloop()`**. With the main window they behave the same, but `wait_window()` also returns when a `Toplevel` closes. The real program was checked: the window opens and `ejecutar()` returns on close.

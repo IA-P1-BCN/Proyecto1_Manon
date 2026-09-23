@@ -100,7 +100,7 @@ Cada menú y cada regla del CLI de la Fase 2, y cómo se traduce a la interfaz. 
 
 **Decidido (2026-09-22):** la misma confirmación que el Ctrl+C de la Fase 2.
 
-- Panel encima de la pantalla: «Vas a salir del programa con la carrera nº N en curso.», con **SÍ, FINALIZAR Y SALIR** a la izquierda y **NO, SEGUIR** a la derecha (misma disposición que el panel de FINALIZAR).
+- Panel encima de la pantalla: «Vas a salir del programa con la carrera nº N en curso.», con **SÍ, FINALIZAR Y SALIR** a la izquierda y **NO, SEGUIR** a la derecha (misma disposición que el panel de FINALIZAR). En la tecla va en dos líneas («SÍ, FINALIZAR / Y SALIR»): en una no cabe.
 - **NO, SEGUIR**, o un segundo ✕: vuelve a la carrera como si nada. Un doble clic nervioso nunca termina una carrera.
 - **SÍ, FINALIZAR Y SALIR:** se finaliza la carrera y se guarda en el histórico.
 - El importe se congela al pulsar ✕ (misma regla que FINALIZAR): **SÍ** cobra el de ese instante; **NO** sigue como si nada, cobrando también el tiempo de la pregunta.

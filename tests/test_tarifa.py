@@ -113,3 +113,22 @@ class TestTarifasConfigurables:
 
     def test_el_error_es_un_value_error(self) -> None:
         assert issubclass(TarifaInvalidaError, ValueError)
+
+
+class TestCampoCulpable:
+    """El error dice qué tarifa falla, para marcarla en pantalla (Fase 3, T9.7)."""
+
+    @pytest.mark.parametrize(
+        "parado, en_movimiento, campos",
+        [
+            (0, 0.05, ("parado",)),
+            (0.02, 2, ("en_movimiento",)),
+            (0.021, 0.05, ("parado",)),
+            (0.02, "x", ("en_movimiento",)),
+            (0.06, 0.05, ("parado", "en_movimiento")),
+        ],
+    )
+    def test_nombra_el_campo(self, parado, en_movimiento, campos) -> None:
+        with pytest.raises(TarifaInvalidaError) as error:
+            Tarifa(parado=parado, en_movimiento=en_movimiento)
+        assert error.value.campos == campos

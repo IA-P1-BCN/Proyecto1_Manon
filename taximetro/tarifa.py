@@ -10,7 +10,15 @@ TARIFA_MAXIMA = 1.0
 
 
 class TarifaInvalidaError(ValueError):
-    """Se lanza al construir una `Tarifa` con valores que no se pueden cobrar."""
+    """Se lanza al construir una `Tarifa` con valores que no se pueden cobrar.
+
+    `campos` dice cuál falla ("parado", "en_movimiento" o los dos), para que
+    una pantalla pueda marcar el campo culpable sin repetir las reglas.
+    """
+
+    def __init__(self, mensaje: str, campos: tuple[str, ...] = ()) -> None:
+        super().__init__(mensaje)
+        self.campos = campos
 
 
 class Tarifa:
@@ -46,22 +54,25 @@ class Tarifa:
     @staticmethod
     def _validar(parado: float, en_movimiento: float) -> None:
         """Comprueba las reglas de `docs/decisions-fase2.md` (US-07, Validation)."""
-        for valor in (parado, en_movimiento):
+        for campo, valor in (("parado", parado), ("en_movimiento", en_movimiento)):
             # `bool` es subclase de `int`: un `true` en el JSON no es una tarifa.
             if isinstance(valor, bool) or not isinstance(valor, (int, float)):
-                raise TarifaInvalidaError("La tarifa debe ser un número.")
+                raise TarifaInvalidaError("La tarifa debe ser un número.", (campo,))
             # También descarta NaN, que no es ni mayor ni menor que nada.
             if not 0 < valor <= TARIFA_MAXIMA:
                 raise TarifaInvalidaError(
-                    "Cada tarifa debe ser mayor que 0 y como máximo 1,00 €/s."
+                    "Cada tarifa debe ser mayor que 0 y como máximo 1,00 €/s.", (campo,)
                 )
             # La tarifa se anuncia con dos decimales: con más, lo que se ve en
             # pantalla no sería lo que se cobra.
             if round(valor, 2) != valor:
-                raise TarifaInvalidaError("Cada tarifa admite como máximo 2 decimales.")
+                raise TarifaInvalidaError(
+                    "Cada tarifa admite como máximo 2 decimales.", (campo,)
+                )
         if parado > en_movimiento:
             raise TarifaInvalidaError(
-                "La tarifa parado no puede ser mayor que la de en movimiento."
+                "La tarifa parado no puede ser mayor que la de en movimiento.",
+                ("parado", "en_movimiento"),
             )
 
     @property
