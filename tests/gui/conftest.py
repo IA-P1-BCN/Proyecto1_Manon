@@ -1,8 +1,14 @@
 """Fixtures de la interfaz gráfica: una ventana oculta y la App sobre ella.
 
-Los tests no entran en `mainloop()`: llaman a los métodos y procesan los
-eventos pendientes con `update()`. tkinter necesita una pantalla; en el CI
+Los tests no entran en el bucle de eventos: llaman a los métodos y procesan
+los eventos pendientes con `update()`. tkinter necesita una pantalla; en el CI
 (Linux sin pantalla) la pone `xvfb-run` (T9.14).
+
+**Un solo intérprete Tk para toda la sesión.** Crear y destruir un `Tk()` por
+test hacía que Tk 9.0 en Windows abortara de vez en cuando al crear el
+siguiente (`Windows fatal exception: code 0x80000003`, a veces matando el
+proceso). Cada test recibe en su lugar una ventana `Toplevel` nueva de ese
+intérprete, que se destruye al terminar.
 """
 
 from __future__ import annotations
@@ -19,25 +25,32 @@ from taximetro.servicio_taximetro import ServicioTaximetro
 from taximetro.taximetro import Taximetro
 
 
-@pytest.fixture
-def raiz():
-    """Una ventana de tkinter oculta, destruida al terminar el test.
+@pytest.fixture(scope="session")
+def interprete():
+    """El único `Tk` de la sesión, oculto: nunca se muestra ni se cierra en un test.
 
-    Sin pantalla, el test se salta en local, pero en el CI falla: allí tiene
-    que haberla, y un salto escondería que los tests de la interfaz no corren.
+    Sin pantalla, los tests de la interfaz se saltan en local, pero en el CI
+    fallan: allí tiene que haberla, y un salto escondería que no corren.
     """
     try:
-        ventana = tk.Tk()
+        tk_raiz = tk.Tk()
     except tk.TclError as error:
         if os.environ.get("CI"):
             raise
         pytest.skip(f"tkinter no tiene pantalla: {error}")
+    tk_raiz.withdraw()
+    yield tk_raiz
+    tk_raiz.destroy()
+
+
+@pytest.fixture
+def raiz(interprete):
+    """Una ventana oculta, nueva en cada test y destruida al terminar."""
+    ventana = tk.Toplevel(interprete)
     ventana.withdraw()
     yield ventana
-    try:
+    if ventana.winfo_exists():  # el propio test puede haberla cerrado (Salir, ✕)
         ventana.destroy()
-    except tk.TclError:
-        pass  # el propio test ya la cerró (Salir, ✕)
 
 
 @pytest.fixture
@@ -47,28 +60,24 @@ def app(raiz, reloj, calendario) -> App:
 
 
 @pytest.fixture
-def procesar(raiz) -> Callable[[float], None]:
+def procesar(interprete) -> Callable[[float], None]:
     """Deja pasar `segundos` de tiempo real atendiendo los eventos de la ventana."""
 
     def _procesar(segundos: float = 0.0) -> None:
         limite = time.monotonic() + segundos
-        raiz.update()
+        interprete.update()
         while time.monotonic() < limite:
             time.sleep(0.005)
-            raiz.update()
+            interprete.update()
 
     return _procesar
 
 
 @pytest.fixture
-def cerrada() -> Callable[[tk.Tk], bool]:
+def cerrada() -> Callable[[tk.Misc], bool]:
     """Pregunta si una ventana ya se destruyó (Salir, ✕)."""
 
-    def _cerrada(ventana: tk.Tk) -> bool:
-        try:
-            ventana.winfo_exists()
-        except tk.TclError:
-            return True
-        return False
+    def _cerrada(ventana: tk.Misc) -> bool:
+        return not ventana.winfo_exists()
 
     return _cerrada

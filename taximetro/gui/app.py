@@ -18,11 +18,15 @@ class App:
     otras con `mostrar()`, y todas hablan con el mismo `servicio`, el que
     también usa el CLI (`docs/decisions-fase3.md`, *Structural refactor*).
 
-    `raiz` se inyecta para los tests: crean una ventana oculta y procesan los
-    eventos con `update()`, sin entrar en `mainloop()`.
+    `raiz` se inyecta para los tests: le dan una ventana `Toplevel` oculta de
+    un único intérprete Tk para toda la sesión, y procesan los eventos con
+    `update()`. Crear un `Tk()` por test hacía que Tk 9 en Windows abortara
+    de vez en cuando (ver `tests/gui/conftest.py`).
     """
 
-    def __init__(self, servicio: ServicioTaximetro, raiz: tk.Tk | None = None) -> None:
+    def __init__(
+        self, servicio: ServicioTaximetro, raiz: tk.Tk | tk.Toplevel | None = None
+    ) -> None:
         """Prepara la ventana con el tamaño de la tablet y abre la pantalla de inicio."""
         self.servicio = servicio
         self.raiz = raiz if raiz is not None else tk.Tk()
@@ -62,5 +66,10 @@ class App:
         self.raiz.destroy()
 
     def ejecutar(self) -> None:
-        """Muestra la ventana y atiende eventos hasta que se cierra."""
-        self.raiz.mainloop()
+        """Muestra la ventana y atiende eventos hasta que se cierra.
+
+        `wait_window()` y no `mainloop()`: con la ventana principal hacen lo
+        mismo, pero `wait_window()` también vuelve al cerrar un `Toplevel`,
+        que es lo que usan los tests.
+        """
+        self.raiz.wait_window()

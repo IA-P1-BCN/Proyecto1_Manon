@@ -73,14 +73,28 @@ class TestCerrar:
 
 
 class TestSinRaizInyectada:
-    def test_crea_su_propia_ventana(self, raiz, reloj, calendario) -> None:
-        # El programa real no inyecta la ventana: la crea la App.
+    def test_crea_su_propia_ventana(
+        self, interprete, monkeypatch: pytest.MonkeyPatch, reloj, calendario
+    ) -> None:
+        # El programa real no inyecta la ventana: la crea la App con `tk.Tk()`.
+        # Aquí `tk.Tk` da una ventana del intérprete de la sesión, porque un
+        # segundo intérprete Tk vivo a la vez es lo que hacía abortar a Tk 9
+        # en Windows (ver tests/gui/conftest.py).
+        import tkinter as tk
+
         from taximetro.servicio_taximetro import ServicioTaximetro
         from taximetro.taximetro import Taximetro
 
+        creadas: list[tk.Toplevel] = []
+
+        def tk_falso() -> tk.Toplevel:
+            creadas.append(tk.Toplevel(interprete))
+            return creadas[-1]
+
+        monkeypatch.setattr(tk, "Tk", tk_falso)
         app = App(ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario)))
         try:
-            assert app.raiz is not raiz
+            assert creadas == [app.raiz]
             assert app.raiz.title() == estilo.TITULO
         finally:
             app.cerrar()
