@@ -49,7 +49,8 @@ taximetro/
     servicio_taximetro.py  # ServicioTaximetro: the façade the interfaces use (Fase 3, T9.10)
     __main__.py         # python -m taximetro → the GUI
     gui/                # tkinter GUI (Fase 3, US-09): app.py (App: window + screen switching),
-                        # pantalla.py (Pantalla base: timers cancelled on leave), estilo.py (theme),
+                        # pantalla.py (Pantalla base: timers cancelled on leave), estilo.py (theme:
+                        # sizes, colours, px fonts ≥ 24), tecla.py (Tecla: touch key ≥ 88 px),
                         # one module per screen (inicio.py is a placeholder until T9.7)
     taximetro_app.py    # TaximetroApp: CLI loop, prints usage on startup, no docs required to use it
     utils.py            # formato_euros()
