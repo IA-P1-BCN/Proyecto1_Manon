@@ -64,7 +64,7 @@ Cada menú y cada regla del CLI de la Fase 2, y cómo se traduce a la interfaz. 
 | CLI (Fase 2) | Interfaz gráfica (Fase 3) |
 |---|---|
 | Menú de inicio: Conductor · Administrador · Salir | Pantalla 1, Inicio: tejas CONDUCTOR y ADMINISTRADOR; Salir en el lateral |
-| (no existía) | Pantalla 2, contraseña antes del Administrador (US-08). También se añade al CLI |
+| (no existía) | Pantalla 2, contraseña antes del Administrador (US-08). También se añade al CLI (ver *Contraseña en el CLI*) |
 | Conductor sin carrera: Iniciar · Ayuda · Volver | Pantalla del taxímetro en estado **LIBRE**: tecla INICIAR CARRERA; Volver y Ayuda en el lateral |
 | Carrera activa: Parar/Arrancar · Ver importe · Finalizar · Ayuda | Misma pantalla en estado **OCUPADO**: teclas PARAR/ARRANCAR y FINALIZAR; Ayuda en el lateral. *Ver importe* desaparece: el importe está siempre en pantalla |
 | Finalizar → "TOTAL A COBRAR: X,XX €" | FINALIZAR pide confirmación (SÍ, FINALIZAR / NO, SEGUIR); al confirmar, el total se queda congelado en el visor y la pantalla pasa a LIBRE |
@@ -75,6 +75,17 @@ Cada menú y cada regla del CLI de la Fase 2, y cómo se traduce a la interfaz. 
 | Cambiar tarifas: se teclean las dos | Pantalla 7: campos rellenos con las tarifas vigentes; mismas reglas y mensajes |
 | Ver histórico: tabla + total del día | Pantalla 8: tabla con filas grandes, ▲ ▼ para desplazarse, total en estilo visor |
 | Opción no válida | Desaparece: con teclas no se puede elegir una opción que no existe |
+
+## Contraseña en el CLI (T8.5)
+
+**Decidido (2026-09-23):** las mismas reglas que la pantalla 2, adaptadas a la terminal.
+
+- Al elegir **2) Administrador** en el menú de inicio: `Contraseña (Intro vacío para volver): `. Lo tecleado no se ve.
+- **Correcta:** menú de Administrador. Al volver al inicio y entrar otra vez, se pide de nuevo.
+- **Incorrecta:** «Contraseña incorrecta. Inténtalo de nuevo.» y se vuelve a pedir, sin límite de intentos.
+- **Línea vacía o Ctrl+C:** hace de *Cancelar* y vuelve al menú de inicio. (En la interfaz gráfica, vacía muestra «Escribe la contraseña.», porque allí existe la tecla Cancelar.)
+- **Credenciales ilegibles:** «No se puede comprobar la contraseña. Avisa al equipo técnico.» y vuelta al menú de inicio. No se vuelve a pedir, porque reintentar no arregla un fichero.
+- **EOF (Ctrl+D / fin de la entrada):** cierra el programa, igual que en el resto de menús fuera de una carrera.
 
 ## Cerrar la ventana con una carrera en curso
 

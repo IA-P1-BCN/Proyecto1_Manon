@@ -7,6 +7,7 @@ siguientes.
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 from logging.handlers import RotatingFileHandler
@@ -14,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from taximetro.auth import Auth
 from taximetro.logs import (
     COPIAS,
     LOGGER_RAIZ,
@@ -120,9 +122,16 @@ class TestLoggersDelPaquete:
 
         raiz = Path(__file__).parent.parent
         entorno = {**os.environ, "PYTHONPATH": str(raiz), "PYTHONIOENCODING": "utf-8"}
+        # Desde la Fase 3 el Administrador pide contraseña (US-08): unas
+        # credenciales de prueba en la carpeta temporal, con scrypt barato.
+        (tmp_path / "config").mkdir()
+        (tmp_path / "config" / "credenciales.json").write_text(
+            json.dumps(Auth.generar_credenciales("clave-de-prueba", n=2**4)),
+            encoding="utf-8",
+        )
         resultado = subprocess.run(
             [sys.executable, "-m", "taximetro.taximetro_app"],
-            input="2\n1\nabc\n3\n3\n",
+            input="2\nclave-de-prueba\n1\nabc\n3\n3\n",
             capture_output=True,
             text=True,
             encoding="utf-8",

@@ -160,6 +160,14 @@ The typed text is never logged. The events are logged in the service, so the CLI
 
 **Without `auth`, access is always denied** (`AlmacenamientoError`); `config/credenciales.json` is not read by default. This mirrors `Taximetro`, which without `config` never touches the disk, and it means no test depends on the real credentials file. Fail closed: the Admin menu never opens because something wasn't configured.
 
+## US-08: the CLI asks too (T8.5)
+
+**Decided (2026-09-23):** the CLI's rules follow the password screen, adapted to a terminal. See `flujo-fase3.md`, *Contraseña en el CLI*. Wrong: retry. Empty line or Ctrl+C: back to the start menu. Unreadable credentials: warn and go back, no retry.
+
+**Hidden typing, and the Windows pitfall.** The password is read through an injected `entrada_oculta` (tests script it like `entrada`). Its default, `leer_contrasena`, uses `getpass` when stdin is a terminal and plain `input` when input is redirected. With redirected input nobody is typing, so there's nothing to hide. The fallback is also *needed*: on Windows `getpass` reads straight from the console keyboard and ignores redirected stdin, so a scripted run (like `test_logs.py`'s real `python -m` subprocess) hung until its timeout. On Linux, `getpass` already falls back to stdin with a warning, so the helper makes both platforms behave the same.
+
+**Tests:** CLI tests use an `AuthFalso` (a duck-typed `comprobar` accepting a test password) instead of `Auth`: no files, no scrypt, and `Auth` already has its own tests. Every `TaximetroApp` in the tests passes an `entrada_oculta`, so none can reach the real `getpass` and wait on the keyboard.
+
 ## US-08: failed attempts are logged, not limited
 
 **Decision (2026-09-23):** a wrong password shows «Contraseña incorrecta. Inténtalo de nuevo.» and logs `acceso_admin_denegado` (WARNING, without the typed text). There's no attempt counter, lockout or delay, in either the GUI or the CLI.
