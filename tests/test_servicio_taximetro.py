@@ -9,11 +9,14 @@ vivos del dominio, y los fallos de disco salen como excepciones del contrato.
 from __future__ import annotations
 
 import dataclasses
+import json
+import logging
 from datetime import date
 from pathlib import Path
 
 import pytest
 
+from taximetro.auth import Auth, CredencialesError
 from taximetro.config_tarifas import ConfigTarifas
 from taximetro.historial import Historial
 from taximetro.servicio_taximetro import (
@@ -204,6 +207,70 @@ class TestResumenDelDia:
             servicio.resumen_del_dia()
 
 
+CONTRASENA = "clave-de-prueba"
+
+
+@pytest.fixture
+def con_contrasena(tmp_path: Path, reloj, calendario) -> ServicioTaximetro:
+    """Un servicio cuyo Administrador se abre con CONTRASENA (scrypt barato)."""
+    ruta = tmp_path / "credenciales.json"
+    ruta.write_text(
+        json.dumps(Auth.generar_credenciales(CONTRASENA, n=2**4)), encoding="utf-8"
+    )
+    return ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario), Auth(ruta))
+
+
+class TestComprobarContrasena:
+    """US-08 a través del servicio (T8.3)."""
+
+    def test_la_correcta_abre_el_administrador(self, con_contrasena) -> None:
+        assert con_contrasena.comprobar_contrasena(CONTRASENA) is True
+
+    def test_una_incorrecta_no(self, con_contrasena) -> None:
+        assert con_contrasena.comprobar_contrasena("otra") is False
+
+    def test_sin_fichero_de_credenciales_lanza_almacenamiento_error(
+        self, tmp_path: Path
+    ) -> None:
+        # «No se puede comprobar» no es «incorrecta»: la pantalla lo dice distinto.
+        servicio = ServicioTaximetro(Taximetro(), Auth(tmp_path / "no-existe.json"))
+        with pytest.raises(AlmacenamientoError) as error:
+            servicio.comprobar_contrasena(CONTRASENA)
+        assert isinstance(error.value.__cause__, CredencialesError)
+
+    def test_sin_auth_se_deniega_siempre(self, servicio) -> None:
+        # Nunca se abre por defecto, y no se lee ningún fichero que no se haya pedido.
+        with pytest.raises(AlmacenamientoError):
+            servicio.comprobar_contrasena(CONTRASENA)
+
+
+class TestLogsDeAcceso:
+    """Los eventos de US-08, iguales para el CLI y la interfaz gráfica."""
+
+    def test_acceso_concedido(self, eventos, con_contrasena) -> None:
+        con_contrasena.comprobar_contrasena(CONTRASENA)
+        assert eventos(logging.INFO) == ["acceso_admin_concedido"]
+
+    def test_acceso_denegado_es_warning(self, eventos, con_contrasena) -> None:
+        con_contrasena.comprobar_contrasena("otra")
+        assert eventos(logging.WARNING) == [
+            "acceso_admin_denegado motivo=contrasena_incorrecta"
+        ]
+
+    def test_credenciales_ilegibles(self, eventos, servicio) -> None:
+        with pytest.raises(AlmacenamientoError):
+            servicio.comprobar_contrasena(CONTRASENA)
+        assert eventos(logging.WARNING) == [
+            "acceso_admin_denegado motivo=credenciales_ilegibles"
+        ]
+
+    def test_nunca_registra_lo_tecleado(self, eventos, caplog, con_contrasena) -> None:
+        con_contrasena.comprobar_contrasena(CONTRASENA)
+        con_contrasena.comprobar_contrasena("una-errata-de-la-buena")
+        assert CONTRASENA not in caplog.text
+        assert "una-errata-de-la-buena" not in caplog.text
+
+
 class TestPorDefecto:
     """El montaje del programa real, compartido por el CLI y la interfaz gráfica."""
 
@@ -219,6 +286,16 @@ class TestPorDefecto:
 
         assert (tmp_path / "config" / "tarifas.json").exists()
         assert (tmp_path / "data" / "historial.csv").exists()
+
+    def test_comprueba_contra_config_credenciales_json(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "config").mkdir()
+        (tmp_path / "config" / "credenciales.json").write_text(
+            json.dumps(Auth.generar_credenciales(CONTRASENA, n=2**4)), encoding="utf-8"
+        )
+        assert ServicioTaximetro.por_defecto().comprobar_contrasena(CONTRASENA) is True
 
 
 class TestSoloDatos:

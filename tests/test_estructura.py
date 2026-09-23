@@ -106,6 +106,12 @@ class TestServicioTaximetro:
     def test_envuelve_un_taximetro(self) -> None:
         assert "taximetro" in parametros(ServicioTaximetro.__init__)
 
+    def test_recibe_el_auth_inyectado(self) -> None:
+        # US-08: la contraseña entra por el servicio, que la comparten las dos
+        # interfaces; sin `auth` el acceso se deniega.
+        auth = parametros(ServicioTaximetro.__init__)["auth"]
+        assert auth.default is None
+
     @pytest.mark.parametrize(
         "metodo",
         [
@@ -116,6 +122,7 @@ class TestServicioTaximetro:
             "tarifas",
             "cambiar_tarifas",
             "resumen_del_dia",
+            "comprobar_contrasena",
         ],
     )
     def test_expone_la_api_acordada(self, metodo: str) -> None:

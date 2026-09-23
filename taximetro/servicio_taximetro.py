@@ -12,13 +12,18 @@ importan desde aquí, igual que `Estado`, `ResumenDia` y `RegistroCarrera`.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
+from taximetro.auth import Auth, CredencialesError
 from taximetro.carrera import Carrera, Estado
 from taximetro.config_tarifas import ConfigTarifas
 from taximetro.historial import Historial, RegistroCarrera, ResumenDia
+from taximetro.logs import campos
 from taximetro.tarifa import Tarifa, TarifaInvalidaError
 from taximetro.taximetro import CarreraActivaError, SinCarreraError, Taximetro
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "AlmacenamientoError",
@@ -36,7 +41,7 @@ __all__ = [
 
 
 class AlmacenamientoError(Exception):
-    """No se pudo leer o escribir un fichero (tarifas o histórico).
+    """No se pudo leer o escribir un fichero (tarifas, histórico o credenciales).
 
     Envuelve el `OSError` original (disponible en `__cause__`), que ya quedó
     registrado en el log por el módulo que hizo la E/S.
@@ -77,12 +82,19 @@ class ServicioTaximetro:
     """Fachada del taxímetro para la interfaz gráfica y el CLI.
 
     No tiene lógica de tarifas ni de carreras: traduce cada intención de la
-    interfaz a una llamada a `Taximetro` y devuelve el resultado como datos.
+    interfaz a una llamada a `Taximetro` (o a `Auth`, para la contraseña) y
+    devuelve el resultado como datos.
     """
 
-    def __init__(self, taximetro: Taximetro) -> None:
-        """Envuelve un `Taximetro` ya construido (con sus relojes y ficheros)."""
+    def __init__(self, taximetro: Taximetro, auth: Auth | None = None) -> None:
+        """Envuelve un `Taximetro` ya construido (con sus relojes y ficheros).
+
+        Sin `auth` no hay credenciales que comprobar y el acceso de
+        Administrador se deniega siempre: nunca se lee un fichero que no se ha
+        pedido, y ante la duda la puerta queda cerrada.
+        """
         self._taximetro = taximetro
+        self._auth = auth
 
     @classmethod
     def por_defecto(cls) -> ServicioTaximetro:
@@ -90,9 +102,38 @@ class ServicioTaximetro:
 
         Lo usan los dos puntos de entrada (CLI e interfaz gráfica), así que el
         montaje del dominio está en un solo sitio y ninguna interfaz lo conoce.
-        Lee `config/tarifas.json` y `data/historial.csv` al crearse.
+        Lee `config/tarifas.json` y `data/historial.csv` al crearse, y
+        `config/credenciales.json` en cada comprobación de contraseña.
         """
-        return cls(Taximetro(config=ConfigTarifas(), historial=Historial()))
+        return cls(Taximetro(config=ConfigTarifas(), historial=Historial()), Auth())
+
+    def comprobar_contrasena(self, contrasena: str) -> bool:
+        """True si `contrasena` abre el Administrador (US-08).
+
+        La interfaz decide qué hacer con la respuesta; aquí se registra el
+        intento, para que las dos interfaces usen los mismos eventos. Lanza
+        `AlmacenamientoError` si las credenciales no se pueden leer: no es una
+        contraseña incorrecta y la pantalla lo dice de otra forma. La
+        contraseña tecleada no se registra nunca, ni siquiera si es incorrecta.
+        """
+        try:
+            if self._auth is None:
+                raise CredencialesError("No hay credenciales configuradas.")
+            correcta = self._auth.comprobar(contrasena)
+        except CredencialesError as error:
+            logger.warning(
+                "acceso_admin_denegado %s", campos(motivo="credenciales_ilegibles")
+            )
+            raise AlmacenamientoError(
+                "No se pudieron leer las credenciales."
+            ) from error
+        if correcta:
+            logger.info("acceso_admin_concedido")
+        else:
+            logger.warning(
+                "acceso_admin_denegado %s", campos(motivo="contrasena_incorrecta")
+            )
+        return correcta
 
     def iniciar_carrera(self) -> InstantaneaCarrera:
         """Inicia una carrera. Lanza `CarreraActivaError` si ya hay una."""

@@ -146,6 +146,20 @@ The Fase 2 requirement still holds: *"registrar en todo momento qué está ocurr
 - **`Auth.generar_credenciales(contrasena)`** builds the file's content. No screen uses it: it produced the committed file once, and tests use it to build their own files with a cheap `n` (the cost is stored in the file, so that's the same code path).
 - **The committed file is tested without its password:** a test checks that it can be read, rejects an arbitrary password and uses the real cost (`n=2**14, r=8, p=1`).
 
+## US-08: `comprobar_contrasena` in the service (T8.3)
+
+**As built (2026-09-23):** `ServicioTaximetro(taximetro, auth=None)`, and `por_defecto()` passes the real `Auth()`. `comprobar_contrasena(texto)` has three outcomes:
+
+| Case | Returns / raises | Log |
+|---|---|---|
+| Right password | `True` | `acceso_admin_concedido` (INFO) |
+| Wrong password | `False` | `acceso_admin_denegado motivo=contrasena_incorrecta` (WARNING) |
+| Credentials file missing or broken | `AlmacenamientoError` (cause: `CredencialesError`) | `acceso_admin_denegado motivo=credenciales_ilegibles` (WARNING), plus `Auth`'s `credenciales_ilegibles` (ERROR) with the detail |
+
+The typed text is never logged. The events are logged in the service, so the CLI and the GUI can't name them differently.
+
+**Without `auth`, access is always denied** (`AlmacenamientoError`); `config/credenciales.json` is not read by default. This mirrors `Taximetro`, which without `config` never touches the disk, and it means no test depends on the real credentials file. Fail closed: the Admin menu never opens because something wasn't configured.
+
 ## US-08: failed attempts are logged, not limited
 
 **Decision (2026-09-23):** a wrong password shows «Contraseña incorrecta. Inténtalo de nuevo.» and logs `acceso_admin_denegado` (WARNING, without the typed text). There's no attempt counter, lockout or delay, in either the GUI or the CLI.
@@ -186,7 +200,7 @@ The Fase 2 requirement still holds: *"registrar en todo momento qué está ocurr
 
 **Why:** closing and charging always succeed. By the time the save is attempted the ride is already closed and its total frozen (`decisions-fase2.md`). If this failure were an exception carrying the total inside it, an interface that forgot the `except` would never show the passenger the amount. As a return value it can't be skipped. Same behaviour as the Fase 2 CLI, which shows the total and then the warning.
 
-**Also settled while building it:** the snapshot is `InstantaneaCarrera(id, estado, importe)` (nothing else is on screen). The rates come back as `TarifasVigentes(parado, en_movimiento)`, not as a `Tarifa`. `cambiar_estado(estado)` takes the target state, so each interface maps its single PARAR/ARRANCAR key to the opposite state. The service adds no log lines of its own, because the domain already logs each event where it happens.
+**Also settled while building it:** the snapshot is `InstantaneaCarrera(id, estado, importe)` (nothing else is on screen). The rates come back as `TarifasVigentes(parado, en_movimiento)`, not as a `Tarifa`. `cambiar_estado(estado)` takes the target state, so each interface maps its single PARAR/ARRANCAR key to the opposite state. The service adds no log lines of its own for rides and fares, because the domain already logs each event where it happens. The one exception is US-08 access (see *`comprobar_contrasena` in the service* below).
 
 **Wiring in one place (T9.11):** `ServicioTaximetro.por_defecto()` builds the real program: `Taximetro` with `config/tarifas.json` and `data/historial.csv`. Both entry points (the CLI's `__main__` and, later, `python -m taximetro`) call it, so neither interface imports `Taximetro`, `ConfigTarifas` or `Historial`, and they can't wire the domain differently. `TaximetroApp` now requires a `servicio`; there is no hidden in-memory default any more.
 
