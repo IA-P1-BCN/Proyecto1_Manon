@@ -145,7 +145,21 @@ class TestLogs:
         assert "una-errata-de-la-buena" not in caplog.text
 
 
-class TestRuta:
+class TestFicheroVersionado:
+    """T8.2: el `config/credenciales.json` que va en el repositorio."""
+
+    RUTA = Path(__file__).resolve().parent.parent / RUTA_POR_DEFECTO
+
     def test_por_defecto_es_config_credenciales_json(self) -> None:
         assert RUTA_POR_DEFECTO == Path("config") / "credenciales.json"
         assert Auth().ruta == RUTA_POR_DEFECTO
+
+    def test_es_legible_y_rechaza_una_contrasena_cualquiera(self) -> None:
+        # La contraseña de la demo no se escribe en los tests
+        # (`docs/decisions-fase3.md`): basta con que el fichero se pueda
+        # comprobar sin CredencialesError, y que no deje entrar a cualquiera.
+        assert Auth(self.RUTA).comprobar("no-es-la-contrasena") is False
+
+    def test_usa_el_coste_real(self) -> None:
+        datos = json.loads(self.RUTA.read_text(encoding="utf-8"))
+        assert (datos["algoritmo"], datos["n"], datos["r"], datos["p"]) == ("scrypt", 2**14, 8, 1)
