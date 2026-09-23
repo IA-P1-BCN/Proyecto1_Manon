@@ -152,7 +152,7 @@ Equivale al *menú de inicio* de la Fase 2. Aprobada el 2026-09-22.
 - **ADMINISTRADOR**: teja gris, un tercio, con candado. Lleva a la pantalla de contraseña.
 - Franja superior en estilo visor, con las tarifas vigentes (como el banner del CLI).
 - **Salir** abajo en el lateral: las acciones secundarias siempre en el mismo sitio.
-- **Ajustes al programarla (T9.7):** «ADMINISTRADOR» va a 34 px y no a 40: a 40 mide 339 px y la teja de un tercio solo tiene 309 (el navegador de la maqueta lo ajustaba solo; tkinter lo cortaría). Su subtítulo va en dos líneas: «Tarifas e histórico / con contraseña».
+- **Ajustes al programarla (T9.7):** los tamaños son los de la maqueta, pero **el texto de una tecla se reduce solo si no cabe** en su ancho, nunca por debajo de 24 px. La fuente del sistema cambia de una máquina a otra (DejaVu Sans, en Linux, es bastante más ancha que Segoe UI), y el navegador de la maqueta ajustaba el texto solo, mientras que tkinter lo cortaría. «ADMINISTRADOR», a 40 px, no cabe en su teja de un tercio y se reduce. Su subtítulo va en dos líneas: «Tarifas e histórico / con contraseña».
 
 ### 2. Pantalla de contraseña (US-08)
 
@@ -232,7 +232,7 @@ Equivale al menú de Administrador de la Fase 2. Aprobada el 2026-09-22.
   - **CAMBIAR TARIFAS**: «Los €/s de cada estado, desde la próxima carrera».
   - **VER HISTÓRICO**: «Carreras terminadas hoy y total de caja».
 - **Volver** abajo en el lateral: vuelve a Inicio. Para volver a entrar hay que teclear otra vez la contraseña.
-- **Ajustes al programarla (T9.7):** los subtítulos de las tejas y la línea de tarifas de la franja van en dos líneas, porque en una no caben en su ancho.
+- **Ajustes al programarla (T9.7):** los subtítulos de las tejas van en dos líneas, y la línea de tarifas de la franja se parte en lo que deja el título.
 
 ### 7. Administrador — cambiar tarifas
 
