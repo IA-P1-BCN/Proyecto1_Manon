@@ -29,12 +29,16 @@ from taximetro.config_tarifas import ConfigTarifas
 from taximetro.historial import Historial
 from taximetro.servicio_taximetro import ServicioTaximetro
 from taximetro.taximetro import Taximetro
+from taximetro.auth import CredencialesError
 from taximetro.taximetro_app import (
+    CONTRASENA_INCORRECTA,
+    CREDENCIALES_NO_DISPONIBLES,
     DESCRIPCIONES,
     HISTORICO_NO_GUARDADO,
     NADA_GUARDADO,
     OPCION_NO_VALIDA,
     TaximetroApp,
+    leer_contrasena,
 )
 
 
@@ -54,6 +58,24 @@ class EntradaGuionizada:
 CONDUCTOR = "1"  # opción del menú de inicio
 ADMIN_VOLVER = "3"  # Volver en el menú de Administrador
 ADMINISTRADOR = "\nAdministrador"  # cómo empieza el menú de Administrador
+CONTRASENA = "clave-de-prueba"  # la de AuthFalso; la real nunca va en los tests
+
+
+class AuthFalso:
+    """Acepta solo CONTRASENA, sin fichero ni scrypt: `Auth` tiene sus propios tests."""
+
+    def comprobar(self, contrasena: str) -> bool:
+        return contrasena == CONTRASENA
+
+
+def servicio_de_prueba(taximetro: Taximetro) -> ServicioTaximetro:
+    """El servicio de los tests: el taxímetro dado y la contraseña de AuthFalso."""
+    return ServicioTaximetro(taximetro, AuthFalso())
+
+
+def teclea_la_buena(prompt: str = "") -> str:
+    """`entrada_oculta` por defecto en los tests: nunca el `getpass` real."""
+    return CONTRASENA
 
 
 @pytest.fixture
@@ -63,9 +85,10 @@ def sesion_libre(reloj, calendario):
     def _ejecutar(*opciones: str) -> list[str]:
         lineas: list[str] = []
         app = TaximetroApp(
-            servicio=ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario)),
+            servicio=servicio_de_prueba(Taximetro(reloj=reloj, calendario=calendario)),
             entrada=EntradaGuionizada(opciones),
             salida=lineas.append,
+            entrada_oculta=teclea_la_buena,
         )
         app.ejecutar()
         return lineas
@@ -207,9 +230,10 @@ class TestCambiarEstado:
             return opcion
 
         TaximetroApp(
-            servicio=ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario)),
+            servicio=servicio_de_prueba(Taximetro(reloj=reloj, calendario=calendario)),
             entrada=entrada,
             salida=lineas.append,
+            entrada_oculta=teclea_la_buena,
         ).ejecutar()
 
         assert "PARADO · 5,00 € acumulado" in lineas
@@ -239,9 +263,10 @@ class TestOpcionImporte:
             return opcion
 
         TaximetroApp(
-            servicio=ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario)),
+            servicio=servicio_de_prueba(Taximetro(reloj=reloj, calendario=calendario)),
             entrada=entrada,
             salida=lineas.append,
+            entrada_oculta=teclea_la_buena,
         ).ejecutar()
 
         assert "Carrera nº 1 · EN MOVIMIENTO · 0,50 € acumulado" in texto(lineas)
@@ -266,9 +291,10 @@ class TestOpcionImporte:
             return opcion
 
         TaximetroApp(
-            servicio=ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario)),
+            servicio=servicio_de_prueba(Taximetro(reloj=reloj, calendario=calendario)),
             entrada=entrada,
             salida=lineas.append,
+            entrada_oculta=teclea_la_buena,
         ).ejecutar()
 
         # 75 s en movimiento desde iniciar hasta finalizar, a 0,05 €/s.
@@ -418,9 +444,10 @@ class TestInterrupciones:
             return paso
 
         TaximetroApp(
-            servicio=ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario)),
+            servicio=servicio_de_prueba(Taximetro(reloj=reloj, calendario=calendario)),
             entrada=entrada,
             salida=lineas.append,
+            entrada_oculta=teclea_la_buena,
         ).ejecutar()
         return lineas
 
@@ -509,9 +536,10 @@ class TestInterrupciones:
             return paso
 
         TaximetroApp(
-            servicio=ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario)),
+            servicio=servicio_de_prueba(Taximetro(reloj=reloj, calendario=calendario)),
             entrada=entrada,
             salida=lineas.append,
+            entrada_oculta=teclea_la_buena,
         ).ejecutar()
         # 60 s en movimiento a 0,05 €/s.
         assert "TOTAL A COBRAR: 3,00 €" in lineas
@@ -527,6 +555,115 @@ class TestInterrupciones:
         # del pasajero (y soltaría un traceback).
         lineas = self._sesion_conductor(reloj, calendario, ["1"])
         assert any(linea.startswith("TOTAL A COBRAR") for linea in lineas)
+
+
+class AuthIlegible:
+    """Unas credenciales que no se pueden leer (fichero ausente o roto)."""
+
+    def comprobar(self, contrasena: str) -> bool:
+        raise CredencialesError("sin fichero")
+
+
+class TestContrasenaDelAdministrador:
+    """US-08 en el CLI (T8.5): mismas reglas que la pantalla de contraseña."""
+
+    @pytest.fixture
+    def ejecutar(self):
+        """Corre una sesión; `claves` es lo que se teclea en la contraseña, en orden.
+
+        Un elemento que sea una excepción (KeyboardInterrupt, EOFError) se lanza
+        en vez de teclearse. Devuelve las líneas impresas.
+        """
+
+        def _ejecutar(opciones, claves, auth=None) -> list[str]:
+            pendientes = iter(claves)
+
+            def entrada_oculta(prompt: str = "") -> str:
+                clave = next(pendientes)
+                if isinstance(clave, type) and issubclass(clave, BaseException):
+                    raise clave
+                return clave
+
+            lineas: list[str] = []
+            TaximetroApp(
+                servicio=ServicioTaximetro(Taximetro(), auth or AuthFalso()),
+                entrada=EntradaGuionizada(opciones),
+                salida=lineas.append,
+                entrada_oculta=entrada_oculta,
+            ).ejecutar()
+            return lineas
+
+        return _ejecutar
+
+    def test_la_correcta_abre_el_administrador(self, ejecutar) -> None:
+        lineas = ejecutar(["2", ADMIN_VOLVER, "3"], [CONTRASENA])
+        assert menus(lineas, ADMINISTRADOR + "\n")
+
+    def test_tras_un_fallo_se_vuelve_a_pedir(self, ejecutar) -> None:
+        lineas = ejecutar(["2", ADMIN_VOLVER, "3"], ["otra", CONTRASENA])
+        assert lineas.count(CONTRASENA_INCORRECTA) == 1
+        assert menus(lineas, ADMINISTRADOR + "\n")
+
+    def test_vacia_vuelve_al_menu_de_inicio(self, ejecutar) -> None:
+        lineas = ejecutar(["2", "3"], [""])
+        assert not menus(lineas, ADMINISTRADOR + "\n")
+        assert CONTRASENA_INCORRECTA not in lineas
+
+    def test_ctrl_c_vuelve_al_menu_de_inicio(self, ejecutar) -> None:
+        # Como en Cambiar tarifas: Ctrl+C cancela, no cierra el programa.
+        lineas = ejecutar(["2", "3"], [KeyboardInterrupt])
+        assert not menus(lineas, ADMINISTRADOR + "\n")
+        assert len(menus(lineas, "\nMenú de inicio")) == 2
+
+    def test_eof_cierra_el_programa(self, eventos, ejecutar) -> None:
+        ejecutar(["2"], [EOFError])
+        assert "aplicacion_cerrada motivo=eof" in eventos()
+
+    def test_sin_credenciales_avisa_y_no_insiste(self, ejecutar) -> None:
+        # Reintentar no arregla un fichero que falta: se avisa y se vuelve.
+        lineas = ejecutar(["2", "3"], [CONTRASENA], auth=AuthIlegible())
+        assert CREDENCIALES_NO_DISPONIBLES in lineas
+        assert not menus(lineas, ADMINISTRADOR + "\n")
+
+    def test_cada_entrada_la_vuelve_a_pedir(self, ejecutar) -> None:
+        # Volver y entrar otra vez pide otra vez la contraseña.
+        lineas = ejecutar(["2", ADMIN_VOLVER, "2", ADMIN_VOLVER, "3"], [CONTRASENA, CONTRASENA])
+        assert len(menus(lineas, ADMINISTRADOR + "\n")) == 2
+
+    def test_la_contrasena_no_se_imprime(self, ejecutar) -> None:
+        lineas = ejecutar(["2", ADMIN_VOLVER, "3"], ["una-errata", CONTRASENA])
+        assert "una-errata" not in texto(lineas)
+        assert CONTRASENA not in texto(lineas)
+
+
+class TestLeerContrasena:
+    """La entrada oculta por defecto del CLI."""
+
+    def test_en_una_terminal_usa_getpass(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        class Terminal:
+            def isatty(self) -> bool:
+                return True
+
+        monkeypatch.setattr("sys.stdin", Terminal())
+        monkeypatch.setattr("getpass.getpass", lambda pregunta: "oculta")
+        assert leer_contrasena("Contraseña: ") == "oculta"
+
+    def test_con_la_entrada_redirigida_lee_una_linea(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # En Windows `getpass` ignoraría la entrada redirigida y se quedaría
+        # esperando al teclado.
+        class Tuberia:
+            def isatty(self) -> bool:
+                return False
+
+        monkeypatch.setattr("sys.stdin", Tuberia())
+        monkeypatch.setattr("builtins.input", lambda pregunta: "de-la-tuberia")
+        assert leer_contrasena("Contraseña: ") == "de-la-tuberia"
+
+    def test_es_la_entrada_oculta_por_defecto(self) -> None:
+        app = TaximetroApp(servicio_de_prueba(Taximetro()))
+        assert app._entrada_oculta is leer_contrasena
 
 
 class TestCambiarTarifas:
@@ -612,7 +749,12 @@ class TestCambiarTarifasEnFichero:
                 raise paso
             return paso
 
-        TaximetroApp(ServicioTaximetro(taximetro), entrada=entrada, salida=lineas.append).ejecutar()
+        TaximetroApp(
+            servicio=servicio_de_prueba(taximetro),
+            entrada=entrada,
+            salida=lineas.append,
+            entrada_oculta=teclea_la_buena,
+        ).ejecutar()
         return lineas
 
     def test_la_siguiente_sesion_arranca_con_las_tarifas_guardadas(
@@ -685,7 +827,12 @@ class TestVerHistorico:
                     return paso
 
             taximetro = Taximetro(historial=historial, reloj=reloj, calendario=calendario)
-            TaximetroApp(ServicioTaximetro(taximetro), entrada=entrada, salida=lineas.append).ejecutar()
+            TaximetroApp(
+                servicio=servicio_de_prueba(taximetro),
+                entrada=entrada,
+                salida=lineas.append,
+                entrada_oculta=teclea_la_buena,
+            ).ejecutar()
             return lineas
 
         return _ejecutar
@@ -792,11 +939,12 @@ class TestLogs:
                 return paso
 
             TaximetroApp(
-                servicio=ServicioTaximetro(
+                servicio=servicio_de_prueba(
                     taximetro or Taximetro(reloj=reloj, calendario=calendario)
                 ),
                 entrada=entrada,
                 salida=lineas.append,
+                entrada_oculta=teclea_la_buena,
             ).ejecutar()
             return lineas
 

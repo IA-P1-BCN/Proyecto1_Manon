@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import getpass
 import logging
 import sys
 from typing import Callable
@@ -78,9 +79,29 @@ DESCRIPCIONES = {
 
 OPCION_NO_VALIDA = "Opción no válida. Elige un número del menú."
 NADA_GUARDADO = "No se ha guardado nada."
+# Mismos textos que la pantalla de contraseña (`docs/diseno-interfaz-fase3.md`).
+PREGUNTA_CONTRASENA = "Contraseña (Intro vacío para volver): "
+CONTRASENA_INCORRECTA = "Contraseña incorrecta. Inténtalo de nuevo."
+CREDENCIALES_NO_DISPONIBLES = (
+    "No se puede comprobar la contraseña. Avisa al equipo técnico."
+)
 HISTORICO_NO_GUARDADO = (
     "Aviso: no se pudo guardar la carrera en el histórico. Anota el total."
 )
+
+
+def leer_contrasena(pregunta: str) -> str:
+    """Lee la contraseña sin mostrarla en pantalla, si hay alguien tecleando.
+
+    En una terminal usa `getpass`. Con la entrada redirigida (un guion, una
+    tubería) no hay nadie tecleando ni nada que ocultar, así que se lee como
+    cualquier otra línea. Además es necesario: en Windows `getpass` lee del
+    teclado de la consola e ignora la entrada redirigida, así que se quedaría
+    esperando una tecla que no llega.
+    """
+    if sys.stdin is not None and sys.stdin.isatty():
+        return getpass.getpass(pregunta)
+    return input(pregunta)
 
 
 class TaximetroApp:
@@ -96,7 +117,8 @@ class TaximetroApp:
 
     `entrada` y `salida` se inyectan para que los tests puedan guionizar una
     sesión completa (lista de opciones dentro, lista de líneas fuera) sin
-    parchear `input`/`print` ni leer de stdout.
+    parchear `input`/`print` ni leer de stdout. `entrada_oculta` es la de la
+    contraseña (US-08); por defecto, `leer_contrasena`.
     """
 
     def __init__(
@@ -104,11 +126,13 @@ class TaximetroApp:
         servicio: ServicioTaximetro,
         entrada: Callable[[str], str] = input,
         salida: Callable[[str], None] = print,
+        entrada_oculta: Callable[[str], str] | None = None,
     ) -> None:
         """Inicializa la app con el servicio y los canales de E/S."""
         self._servicio = servicio
         self._entrada = entrada
         self._salida = salida
+        self._entrada_oculta = entrada_oculta or leer_contrasena
 
     # ------------------------------------------------------------------
     # Bucle principal
@@ -143,7 +167,8 @@ class TaximetroApp:
                     return "salir"
                 logger.info("perfil_elegido %s", campos(perfil=opcion))
                 if opcion == "administrador":
-                    self._administrador()
+                    if self._acceso_administrador():
+                        self._administrador()
                 else:
                     motivo = self._conductor()
                     if motivo is not None:
@@ -296,11 +321,35 @@ class TaximetroApp:
     # Administrador
     # ------------------------------------------------------------------
 
+    def _acceso_administrador(self) -> bool:
+        """Pide la contraseña hasta acertarla (True) o hasta que se vuelve (False).
+
+        Igual que la pantalla de contraseña de la interfaz gráfica: tras un
+        fallo se vuelve a pedir. Una línea vacía o Ctrl+C hacen de Cancelar y
+        vuelven al menú de inicio. Si las credenciales no se pueden leer,
+        reintentar no sirve, así que se avisa y se vuelve. EOF sube hasta
+        `ejecutar` y cierra el programa, como en el resto de menús. Los
+        intentos los registra el servicio, nunca lo tecleado.
+        """
+        while True:
+            try:
+                contrasena = self._entrada_oculta(PREGUNTA_CONTRASENA)
+            except KeyboardInterrupt:
+                return False
+            if contrasena == "":
+                return False
+            try:
+                if self._servicio.comprobar_contrasena(contrasena):
+                    return True
+            except AlmacenamientoError:
+                self._salida(CREDENCIALES_NO_DISPONIBLES)
+                return False
+            self._salida(CONTRASENA_INCORRECTA)
+
     def _administrador(self) -> None:
         """El menú de Administrador, hasta que se elige `Volver`.
 
-        Sin contraseña en la Fase 2: la protección llega con US-08 (Fase 3),
-        que solo tendrá que ponerse delante de este método.
+        Solo se llega tras `_acceso_administrador` (US-08).
         """
         while True:
             opcion = self._leer("Administrador", OPCIONES_ADMINISTRADOR)
@@ -448,6 +497,7 @@ class TaximetroApp:
                 "",
                 "Escribe el número de la opción que quieras y pulsa Intro.",
                 "Al empezar, elige tu perfil: Conductor o Administrador.",
+                "El perfil Administrador pide contraseña.",
                 "Salir, en el menú de inicio, cierra el programa.",
                 *perfiles,
                 "",
