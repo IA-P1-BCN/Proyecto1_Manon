@@ -187,7 +187,7 @@ Tareas:
 - [x] **T9.5** Tema visual de tkinter (colores, fuentes y tamaños táctiles) — `tech-task`, `could` — [#93](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/93) ✅
 - [x] **T9.6** Visor del importe con dígitos de 7 segmentos en un `Canvas` — `tech-task`, `could` — [#94](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/94) ✅
 - [ ] **T9.7** Pantallas de Inicio y de Administrador (menú, tarifas, histórico) — `feature`, `could` — [#95](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/95)
-- [ ] **T9.8** Confirmaciones: FINALIZAR y cerrar la ventana con una carrera en curso — `feature`, `could` — [#96](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/96)
+- [x] **T9.8** Confirmaciones: FINALIZAR y cerrar la ventana con una carrera en curso — `feature`, `could` — [#96](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/96) ✅
 - [ ] **T9.9** Logs de la interfaz gráfica y errores de los callbacks de tkinter — `tech-task`, `could` — [#97](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/97)
 - [x] **T9.10** Refactorización: `ServicioTaximetro` (métodos, instantánea de la carrera, excepciones del contrato) — `tech-task`, `could` — [#100](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/100) ✅
 - [x] **T9.11** Refactorización: el CLI pasa a usar `ServicioTaximetro` sin cambiar su comportamiento — `tech-task`, `could` — [#101](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/101) ✅
