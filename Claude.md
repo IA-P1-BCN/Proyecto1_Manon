@@ -8,7 +8,7 @@ Context and instructions for Claude Code working in this repository. Read at the
 
 ## Current phase
 
-**Fase 3 — Arquitectura y Experiencia de Usuario** (US-09 GUI, US-08 password, structural refactor), on the `fase-3` integration branch (taken from `fase-2`, which still awaits merging). Currently in the **design stage**: decisions are taken one question at a time and recorded in `docs/decisions-fase3.md`; the visual design is iterated on an HTML mockup, then written into `docs/diseno-interfaz-fase3.md`. Don't write GUI or auth code until the relevant *Pendiente* sections are decided. Fase 4 work (API, DB) stays out of scope.
+**Fase 3 — Arquitectura y Experiencia de Usuario** (US-09 GUI, US-08 password, structural refactor), on the `fase-3` integration branch (taken from `fase-2`, which still awaits merging). The **design stage is closed** (2026-09-23): every decision is in `docs/decisions-fase3.md`, the visual spec in `docs/diseno-interfaz-fase3.md`. Work order: the refactor first (T9.10 → T9.12, `ServicioTaximetro`), then US-08, then the rest of US-09. Fase 4 work (API, DB) stays out of scope.
 
 ## Fare logic (do not guess — these are the real numbers)
 
@@ -27,7 +27,7 @@ Before changing behaviour, check whether it was already decided:
 - **`docs/flujo-fase1.md`** — authority on CLI behaviour: the command loop, menus per mode, error messages, Ctrl+C / EOF.
 - **`docs/flujo-fase2.md`** — what Fase 2 changes in the CLI: role menu, Admin fare change and history, Ctrl+C confirmation mid-ride (supersedes Fase 1's Ctrl+C rule).
 - **`docs/decisions-fase2.md`** — Fase 2 decisions: roles, fare config, history, logs, the `fase-2` branch.
-- **`docs/decisions-fase3.md`** — Fase 3 decisions: the `fase-3` branch, UI technology, real-time counter, password, refactor. Sections marked *Pendiente* are still open.
+- **`docs/decisions-fase3.md`** — Fase 3 decisions: the `fase-3` branch, UI technology, real-time counter, password, refactor. Includes the work order and the Fase 4 replacement points.
 - **`docs/diseno-interfaz-fase3.md`** — authority on the GUI: device, touch rules, colours per state, every screen and its texts.
 - **`docs/flujo-fase3.md`** — how the GUI screens connect, and how each Fase 2 CLI rule maps onto them.
 - **`docs/decisions-proceso.md`** — how the project is run: language, git workflow, CI, coverage gate, board.
@@ -74,6 +74,7 @@ One test file per module. Later phases add `auth.py`, a GUI module, then `api/` 
 - `Tarifa` — state → rate lookup and `calcular_importe(estado, segundos)`. Owned by `Taximetro`, injected into each `Carrera`, so Fase 2's `ConfigTarifas` only touches `Taximetro`.
 - `Taximetro` — owns the active `Carrera`, the `Tarifa` and the injected clocks. Raises `CarreraActivaError` on a double `iniciar_carrera()`.
 - `TaximetroApp` — CLI only. Knows which mode it is in and produces the driver-facing messages itself; no fare logic.
+- `ServicioTaximetro` (Fase 3, not built yet) — the only object the CLI and the GUI talk to. Wraps `Taximetro` and `Auth`, returns data (snapshots, numbers), never a live `Carrera`; Fase 4 swaps it for an HTTP client with the same methods.
 
 **Two clocks, injected, never called globally:** `reloj: Callable[[], float] = time.monotonic` measures elapsed time for fare accrual (a wall clock can jump backwards and undercharge); `calendario: Callable[[], datetime] = datetime.now` stamps `hora_inicio` / `hora_fin`. `TaximetroApp` takes `entrada=input` and `salida=print` for the same reason — tests script commands in and read printed lines out.
 

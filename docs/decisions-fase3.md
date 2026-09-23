@@ -4,7 +4,7 @@ Decisions for **Fase 3 — Arquitectura y Experiencia de Usuario** (US-09 graphi
 
 Companion docs: `docs/project-brief.md` (client requirements, Fase 3 section), `docs/diseno-interfaz-fase3.md` (the visual spec: screens, sizes, colours, texts), `docs/flujo-fase3.md` (how the screens connect), `docs/decisions-fase2.md` (roles, fares, history, logs — the behaviour the GUI must keep).
 
-**How this doc is filled:** decisions are taken in a grilling session, one question at a time, and recorded here as they are answered. Visual choices are tried on an HTML mockup first and only written into `diseno-interfaz-fase3.md` once agreed. A section marked **Pendiente** has not been decided yet; the questions under it are the agenda.
+**How this doc is filled:** decisions are taken in a grilling session, one question at a time, and recorded here as they are answered. Visual choices are tried on an HTML mockup first and only written into `diseno-interfaz-fase3.md` once agreed. A section marked **Pendiente** has not been decided yet; the questions under it are the agenda. All of them were closed on 2026-09-23.
 
 ## Decided at kickoff (2026-09-22)
 
@@ -55,14 +55,15 @@ Companion docs: `docs/project-brief.md` (client requirements, Fase 3 section), `
 
 ## Real-time counter and "never freezes"
 
-**Decision (mechanism):** the amount is refreshed by a `tkinter` timer (`widget.after(ms, callback)`) on the main thread. It reads `Carrera.importe_actual()` and formats it with `formato_euros()`. No background thread.
+**Decision (mechanism):** the amount is refreshed by a `tkinter` timer (`widget.after(ms, callback)`) on the main thread. It reads the snapshot from `ServicioTaximetro.estado_actual()` (which in turn uses `Carrera.importe_actual()`; see *Structural refactor*) and formats the amount with `formato_euros()`. No background thread.
 
 **Why:** tkinter runs one event loop on one thread, as JavaScript does in a browser. A timer callback that only reads a timestamp delta returns in microseconds, so the screen never freezes. This is the path `future-implementation-ideas.md` anticipated; there's no domain change. Only the main thread may touch widgets, which is one more reason to avoid threads.
 
 **Rule for every callback:** return quickly. The only I/O is a CSV line or a small JSON file (milliseconds). Anything slower would need a thread that hands its result back through `after()`.
 
-Pendiente:
-- Refresh interval (e.g. 500 ms, so the displayed cents never lag a whole second).
+**Decision (interval, 2026-09-23):** the timer fires every **200 ms**. At the highest rate (0,05 €/s) one cent takes 200 ms, so the display never skips a visible cent and the counter looks continuous. Locally each call costs microseconds. *Assumption:* after any key press (PARAR/ARRANCAR, FINALIZAR…) the screen repaints at once, without waiting for the next tick.
+
+**Fase 4 note:** once the service is an HTTP client, this means 5 requests per second per taxi. Revisit then, e.g. poll less often, or have the snapshot carry the current rate and its timestamp so the screen can extrapolate between polls. That would move a sliver of fare arithmetic into the interface, which is why it isn't done now. Considered: 500 ms (jumps 2–3 cents at a time while moving) and 1 s (classic-meter feel, but up to a second's lag after PARAR/ARRANCAR).
 
 ## Operation logs (US-06) carry over to the GUI
 
@@ -144,13 +145,83 @@ The Fase 2 requirement still holds: *"registrar en todo momento qué está ocurr
 
 **Alternatives considered:** a 30 s in-memory lockout after 3 failures (needs state and an injected clock in `Auth`, plus a new message and tests); a fixed 1–2 s delay per failure (must use `after()`, not `sleep()`, or the screen freezes, and it adds little against a human).
 
-## Pendiente — Structural refactor
+## Structural refactor: a `ServicioTaximetro` façade between the interfaces and the domain
 
-- Which boundaries change so that the CLI and the GUI both sit on the same domain without duplicating it (US-09's acceptance criterion)? E.g. a layer between `Taximetro` and the interfaces holding what `TaximetroApp` does today beyond parsing input.
-- Constraint already set by the tkinter decision: the screens talk to a single intermediate object, so Fase 4 can replace it with an HTTP client exposing the same methods.
-- What must stay replaceable for Fase 4 (history → database, logic → API).
+**Starting point (`fase-2`):** `Taximetro` already offers `iniciar_carrera`, `finalizar_carrera`, `cambiar_tarifa` and `resumen_del_dia`. But the CLI also holds **live `Carrera` objects** (it calls `carrera.cambiar_estado()` and reads `carrera.estado` and `importe_actual()`), and it builds `Tarifa(...)` itself and catches `TarifaInvalidaError`. An HTTP client can't hand back a live object, so this shape can't be swapped in Fase 4.
 
-## Pendiente — Tracking and order
+**Decision (2026-09-23):** a new class, `ServicioTaximetro` (`taximetro/servicio_taximetro.py`), is the **only** object the GUI and the CLI talk to. It wraps `Taximetro` and `Auth` and exposes intent-level methods: `iniciar_carrera`, `cambiar_estado`, `finalizar_carrera`, `estado_actual`, `tarifas`, `cambiar_tarifas(parado, en_movimiento)`, `resumen_del_dia`, `comprobar_contrasena`. It returns **data only**: an immutable snapshot of the ride, plain numbers and `ResumenDia`, never a `Carrera` or `Tarifa`. The interfaces import this module and nothing else from the domain (apart from `formato_euros`).
 
-- Order of US-08 / US-09 / refactor, and whether the refactor gets its own epic.
-- New Fase 3 tasks in `Backlog.md` and on the board.
+**Why:** it meets the brief's "cada componente […] poder modificarse o sustituirse sin afectar al resto" and US-09's "sin duplicarla" at the one boundary where they matter. In Fase 4 an HTTP client with the same methods and the same return types replaces it, and neither interface changes. Returning data instead of live objects is what makes that swap possible. `Taximetro` stays a pure domain object (state and rules); access control stays out of it.
+
+**Alternatives considered:** growing `Taximetro` into the façade (one class fewer, but it would mix domain and access, and Fase 4 would have to imitate a stateful domain class); a new façade that still returns `Carrera` objects (fewer CLI changes, but it breaks the Fase 4 swap, the reason the façade exists).
+
+## Refactor: the password gates the screen, not the service
+
+**Decision (2026-09-23):** `ServicioTaximetro.comprobar_contrasena(texto) -> bool` delegates to `Auth` and logs `acceso_admin_concedido` / `acceso_admin_denegado`. On `True`, the interface shows the Admin menu. `cambiar_tarifas` and `resumen_del_dia` don't check anything themselves.
+
+**Why:** simplest. It meets US-08's criterion ("solicita contraseña antes de permitir operaciones sensibles"), and in Fase 3 the interfaces are the only callers of the service. Logging inside the service means the GUI and the CLI can't disagree about the event names.
+
+**Known limit, Fase 4:** once the service's methods are HTTP endpoints, anyone can call `cambiar_tarifas` directly, so the API needs its own authentication (e.g. a token issued on login). Decide it then. Considered and not taken now: an admin session in the service (`entrar_admin` / `salir_admin`, with `AccesoDenegadoError` otherwise), which adds session state and a close on every Volver; and passing the password on every call, which would keep it in memory for the whole Admin menu.
+
+## Refactor: errors cross the boundary as the contract's own exceptions
+
+**Decision (2026-09-23):** `servicio_taximetro.py` publishes the exceptions its methods can raise (e.g. `TarifaInvalidaError`, `CarreraActivaError`, `SinCarreraError`, and one error for a failed save to disk), and the interfaces import them from there, never from the domain modules. They are part of the contract, like the methods and return types. Each interface still writes its own driver-facing messages.
+
+**Why:** it's what the CLI already does, so the refactor changes where the exceptions are imported from, not how errors are handled. In Fase 4 the HTTP client maps error responses back onto the same exceptions, and the interfaces don't notice. Wording stays in the interfaces, as `CLAUDE.md` requires.
+
+**Alternatives considered:** result objects (`Resultado(ok, datos, error)`, fits HTTP well but is unidiomatic Python and rewrites all the CLI's error handling); the service returning final Spanish messages (no duplication, but it moves wording out of the interface layer).
+
+## Refactor: Fase 4 replacement points are already in place
+
+**Decision (2026-09-23):** no extra code for Fase 4. The replacement points are written down:
+
+| Replaced in Fase 4 | By | Seam that already exists |
+|---|---|---|
+| `Historial` (CSV) | a database-backed class | injected into `Taximetro`'s constructor |
+| `ConfigTarifas` (JSON) | a database-backed class | injected into `Taximetro`'s constructor |
+| `ServicioTaximetro` (in-process) | an HTTP client with the same methods | the only object the interfaces use (see above) |
+
+A replacement only has to offer the same methods with the same return types (duck typing). `test_estructura.py` already pins those names.
+
+**Why:** YAGNI. The seams exist because of Fase 2's dependency injection. Formal `typing.Protocol` classes would be code nobody uses until Fase 4, and Fase 4 can add them when a second implementation actually exists.
+
+## Module layout and entry points
+
+**Decision (2026-09-23):**
+
+```
+taximetro/
+    __main__.py              # python -m taximetro → the GUI (main interface)
+    auth.py                  # Auth: scrypt hash check against config/credenciales.json
+    servicio_taximetro.py    # ServicioTaximetro + its snapshot dataclass and contract exceptions
+    taximetro_app.py         # CLI, unchanged location: python -m taximetro.taximetro_app
+    gui/
+        __init__.py
+        app.py               # window, screen switching, report_callback_exception, configurar_logs()
+        estilo.py            # the ttk.Style theme (colours, fonts, sizes from diseno-interfaz-fase3.md)
+        inicio.py  contrasena.py  taximetro.py  administrador.py  tarifas.py  historico.py
+config/
+    credenciales.json        # committed: salt + hash of the Admin password
+```
+
+**Why:** one screen per file follows "una clase por fichero" and the phase's own "responsabilidades claramente delimitadas". `python -m taximetro` is the shortest command, so it goes to the main interface. The CLI stays where it is, which keeps the Fase 1/2 demo commands, the README and the test imports valid.
+
+**Assumptions:** the snapshot dataclass and the contract exceptions live in `servicio_taximetro.py`, next to the class whose contract they are (as `ResumenDia` lives in `historial.py`). GUI tests mirror the package (`tests/gui/test_<pantalla>.py`), one test file per module as before.
+
+**Alternatives considered:** one `interfaz_grafica.py` module (600–800 lines, against both conventions); moving the CLI to `taximetro/cli/` too (more symmetrical, but it changes the CLI's command and breaks the Fase 1/2 demo scripts).
+
+## Order of work: refactor → US-08 → US-09
+
+**Decision (2026-09-23):**
+
+1. **Refactor.** Build `ServicioTaximetro` and move the CLI onto it **without changing its behaviour**. The existing CLI tests staying green prove the refactor broke nothing.
+2. **US-08.** `Auth`, `comprobar_contrasena` on the service, and the password in front of the CLI's Admin. It's small, and it can be tested from the CLI before any GUI exists.
+3. **US-09.** The GUI, built straight on the final contract, so nothing is rewired later.
+
+**Why:** each step sits on a finished, tested base. Starting with US-08 would have meant wiring the CLI's password into `TaximetroApp` and then rewiring it into the service. Starting with the GUI would have left the password screen unconnected until the end.
+
+## Tracking: the refactor lives inside US-09
+
+**Decision (2026-09-23):** no separate epic. The refactor is tasks **T9.10–T9.12** of US-09 ([#100](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/100)–[#102](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/102)), whose acceptance criterion ("se apoya en la lógica de backend ya existente sin duplicarla") is what it delivers. Also added: T9.13, the meter screen with its 200 ms refresh ([#103](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/103)), which had no task, and T9.14, `xvfb` in CI ([#104](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/104)). T8.2, T8.3 and T9.3 (#45, #46, #50) were reworded to match today's decisions. The work order above still applies: T9.10–T9.12 first, even though they're numbered inside US-09.
+
+**Consequence:** at the demo, point to T9.10–T9.12 when the brief's "refactorización estructural" comes up, since the board has no column or epic named after it.
