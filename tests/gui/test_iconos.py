@@ -30,7 +30,13 @@ def test_una_tecla_con_icono_lo_pinta_del_color_de_su_fondo(raiz) -> None:
     assert tecla._icono.cget("bg") == estilo.VERDE.fondo
 
 
-def test_la_franja_ajusta_el_texto_a_su_ancho(raiz) -> None:
-    franja = Franja(raiz, "ADMINISTRADOR", icono="candado", ancho_texto=460)
-    assert int(franja.texto.cget("wraplength")) == 460
+def test_la_franja_parte_el_texto_en_lo_que_deja_el_titulo(raiz) -> None:
+    raiz.geometry("968x200+0+0")
+    raiz.deiconify()
+    franja = Franja(raiz, "ADMINISTRADOR", icono="candado")
+    franja.texto.configure(text="Tarifas vigentes: parado 0,02 €/s · en movimiento 0,05 €/s")
+    franja.pack(fill=tk.X)
+    raiz.update()
+    libre = int(franja.texto.cget("wraplength"))
+    assert 0 < libre < 968 - franja.titulo.winfo_width()
     assert int(franja.cget("height")) == estilo.FRANJA

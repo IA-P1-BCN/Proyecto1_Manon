@@ -10,6 +10,7 @@ widget más ancho que su texto pide, y ninguno fuera de su padre. Encontró
 from __future__ import annotations
 
 import tkinter as tk
+import tkinter.font as tkfont
 from pathlib import Path
 
 import pytest
@@ -27,8 +28,31 @@ from taximetro.servicio_taximetro import ServicioTaximetro
 from taximetro.taximetro import Taximetro
 
 
+ANCHAS = ("Verdana", "DejaVu Sans")  # más anchas que Segoe UI: lo que cabe con ellas, cabe
+
+
+@pytest.fixture(params=["sistema", "ancha"])
+def fuente(request, interprete, monkeypatch: pytest.MonkeyPatch) -> str:
+    """Cada test corre con la fuente del sistema y con la más ancha disponible.
+
+    La fuente cambia de una máquina a otra (en el CI, DejaVu Sans; en Windows,
+    Segoe UI): el diseño tiene que caber con cualquiera.
+    """
+    if request.param == "sistema":
+        return estilo.FAMILIA
+    disponibles = set(tkfont.families(interprete))
+    ancha = next((familia for familia in ANCHAS if familia in disponibles), None)
+    if ancha is None:
+        pytest.skip("no hay ninguna fuente ancha instalada")
+    monkeypatch.setattr(estilo, "FAMILIA", ancha)
+    for nombre, valor in list(vars(estilo).items()):
+        if nombre.startswith("FUENTE_"):
+            monkeypatch.setattr(estilo, nombre, (ancha, *valor[1:]))
+    return ancha
+
+
 @pytest.fixture
-def app(raiz, tmp_path: Path, reloj, calendario) -> App:
+def app(raiz, fuente, tmp_path: Path, reloj, calendario) -> App:
     """Una App visible, a tamaño de tablet, con 9 carreras en el histórico."""
     taximetro = Taximetro(historial=Historial(tmp_path / "h.csv"), reloj=reloj, calendario=calendario)
     servicio = ServicioTaximetro(taximetro)
@@ -120,8 +144,10 @@ def test_taximetro_en_todos_sus_estados(app: App) -> None:
     assert desbordes(app) == [], "confirmar salir"
 
 
-def test_el_detector_ve_un_titulo_que_no_cabe(app: App, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_el_detector_ve_un_texto_que_no_cabe(app: App) -> None:
     # Sin esto, un detector roto daría todas las pantallas por buenas.
-    monkeypatch.setattr(estilo, "FUENTE_TEJA_ESTRECHA", estilo.fuente(40, negrita=True))
-    app.mostrar(Inicio)  # «ADMINISTRADOR» a 40 px: 339 px en una teja de 309
-    assert desbordes(app) != []
+    hueco = tk.Frame(app.mostrar(Inicio), width=100, height=100)
+    hueco.place(x=0, y=0)
+    hueco.pack_propagate(False)
+    tk.Label(hueco, text="un texto demasiado largo para su sitio").pack()
+    assert any(problema.startswith("recortado") for problema in desbordes(app))

@@ -10,13 +10,12 @@ from taximetro.gui import estilo, iconos
 class Franja(tk.Frame):
     """Franja negra con el título en rojo LED a la izquierda y un texto a la derecha.
 
-    El texto (las tarifas vigentes) se ajusta a `ancho_texto` px, partiéndose
-    en líneas si no cabe: una etiqueta de tkinter no se ajusta sola.
+    El texto (las tarifas vigentes) se parte en líneas para caber en lo que
+    deja el título, que depende de la fuente del sistema: una etiqueta de
+    tkinter no se ajusta sola, cortaría el texto.
     """
 
-    def __init__(
-        self, padre: tk.Misc, titulo: str, icono: str | None = None, ancho_texto: int = 700
-    ) -> None:
+    def __init__(self, padre: tk.Misc, titulo: str, icono: str | None = None) -> None:
         """Crea la franja; `icono` es un nombre de `iconos.NOMBRES`."""
         super().__init__(
             padre, bg=estilo.VISOR_FONDO, height=estilo.FRANJA,
@@ -33,6 +32,17 @@ class Franja(tk.Frame):
         self.titulo.pack(side=tk.LEFT, padx=(16 if icono else 32, 0))
         self.texto = tk.Label(
             self, font=estilo.FUENTE_ETIQUETA, bg=estilo.VISOR_FONDO, fg=estilo.TEXTO_SECUNDARIO,
-            justify=tk.RIGHT, wraplength=ancho_texto,
+            justify=tk.RIGHT,
         )
         self.texto.pack(side=tk.RIGHT, padx=32)
+        self._izquierda = (32 + 44 + 16) if icono is not None else 32
+        self.bind("<Configure>", lambda _evento: self._ajustar(), add="+")
+
+    def _ajustar(self) -> None:
+        """El ancho del texto: lo que queda a la derecha del título."""
+        libre = (
+            self.winfo_width() - 2 * int(self.cget("highlightthickness"))
+            - self._izquierda - self.titulo.winfo_reqwidth() - 2 * 32 - estilo.SEPARACION
+        )
+        if libre > 0:
+            self.texto.configure(wraplength=libre)

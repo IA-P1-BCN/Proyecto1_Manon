@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import tkinter as tk
 from types import SimpleNamespace
 
@@ -112,3 +113,40 @@ class TestPulsar:
     def test_invoke_ejecuta_el_comando(self, tecla: Tecla, pulsaciones) -> None:
         tecla.invoke()
         assert pulsaciones == ["finalizar"]
+
+
+class TestAjustarTexto:
+    """Si el texto no cabe con su fuente, baja de tamaño; nunca por debajo de 24 px."""
+
+    @staticmethod
+    def px(etiqueta: tk.Label) -> int:
+        """El tamaño en píxeles de la fuente de `etiqueta` ('{Segoe UI} -40 bold' → 40)."""
+        return -int(re.search(r"-\d+", str(etiqueta.cget("font"))).group())
+
+    @staticmethod
+    def colocar(raiz, ancho: int, titulo: str, **opciones) -> Tecla:
+        raiz.geometry(f"{ancho}x300+0+0")
+        raiz.deiconify()
+        tecla = Tecla(raiz, titulo, lambda: None, **opciones)
+        tecla.pack(fill=tk.X)
+        raiz.update()
+        return tecla
+
+    def test_si_cabe_no_cambia(self, raiz) -> None:
+        tecla = self.colocar(raiz, 900, "PARAR")
+        assert self.px(tecla._titulo) == -estilo.FUENTE_TECLA[1]
+
+    def test_si_no_cabe_baja_lo_justo(self, raiz) -> None:
+        tecla = self.colocar(raiz, 300, "ADMINISTRADOR", fuente=estilo.fuente(40, negrita=True))
+        assert estilo.TEXTO_MIN <= self.px(tecla._titulo) < 40
+        assert tecla._titulo.winfo_reqwidth() <= tecla.winfo_width()
+
+    def test_nunca_por_debajo_del_minimo(self, raiz) -> None:
+        tecla = self.colocar(raiz, 120, "UN TÍTULO LARGUÍSIMO QUE NO CABE")
+        assert self.px(tecla._titulo) == estilo.TEXTO_MIN
+
+    def test_se_reajusta_al_cambiar_el_texto(self, raiz) -> None:
+        tecla = self.colocar(raiz, 300, "PARAR")
+        tecla.configurar(titulo="ARRANCAR DE NUEVO")  # a 56 px no cabe; a menos, sí
+        raiz.update()
+        assert tecla._titulo.winfo_reqwidth() <= tecla.winfo_width()

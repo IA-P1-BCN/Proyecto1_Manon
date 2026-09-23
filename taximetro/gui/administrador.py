@@ -27,8 +27,7 @@ class Administrador(Pantalla):
         super().__init__(app)
         principal, lateral = self.columnas()
 
-        # Con candado y título, a las tarifas les queda menos sitio: dos líneas.
-        self.franja = Franja(principal, "ADMINISTRADOR", icono="candado", ancho_texto=460)
+        self.franja = Franja(principal, "ADMINISTRADOR", icono="candado")
         self.franja.texto.configure(text=f"Tarifas vigentes: {self.resumen_tarifas()}")
         self.franja.pack(fill=tk.X)
 

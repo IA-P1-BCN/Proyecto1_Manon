@@ -170,9 +170,9 @@ FUENTE_DETALLE = fuente(30)  # «Importe a cobrar:» en el panel de confirmació
 FUENTE_DETALLE_IMPORTE = fuente(30, negrita=True)
 FUENTE_TEJA_PRINCIPAL = fuente(64, negrita=True)  # CONDUCTOR
 FUENTE_TEJA = fuente(48, negrita=True)  # CAMBIAR TARIFAS, VER HISTÓRICO
-# ADMINISTRADOR, en una teja de un tercio: a 40 px (la maqueta) mide 339 px y
-# solo caben 309; el navegador lo ajustaba, tkinter lo cortaría.
-FUENTE_TEJA_ESTRECHA = fuente(34, negrita=True)
+# ADMINISTRADOR, en una teja de un tercio. El tamaño de la maqueta: si no cabe
+# (a 40 px mide 339 px con Segoe UI y la teja tiene 309), `Tecla` lo reduce.
+FUENTE_TEJA_ESTRECHA = fuente(40, negrita=True)
 FUENTE_CONTRASENA = fuente(40)  # el campo enmascarado
 FUENTE_ETIQUETA_CAMPO = fuente(30)  # «Parado o < 20 km/h», «€/s»
 FUENTE_TITULO_HISTORICO = fuente(44, negrita=True)

@@ -63,9 +63,10 @@ class Contrasena(Pantalla):
         self.campo.pack(fill=tk.BOTH, expand=True, padx=24)
         self.campo.bind("<Return>", lambda _evento: self.entrar())
         self.campo.bind("<Key>", self._al_teclear)
+        # Con ajuste de línea: el mensaje más largo no cabe en una con todas las fuentes.
         self.mensaje = tk.Label(
             interior, font=estilo.FUENTE_MENSAJE, bg=estilo.PANEL,
-            fg=estilo.MENSAJE_ERROR, anchor=tk.W,
+            fg=estilo.MENSAJE_ERROR, anchor=tk.W, justify=tk.LEFT, wraplength=820,
         )
         self.mensaje.pack(fill=tk.X, pady=(12, 0))
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import tkinter as tk
+import tkinter.font as tkfont
 from typing import Callable
 
 from taximetro.gui import estilo, iconos
@@ -19,7 +20,15 @@ class Tecla(tk.Frame):
     Actúa al **soltar** encima, como un botón real: quien pone el dedo y se
     arrepiente puede deslizarlo fuera. Mientras se pulsa se aclara. Nunca mide
     menos de `estilo.ZONA_TACTIL_MIN` de alto.
+
+    **El texto se ajusta a su ancho.** Si con la fuente pedida el título o el
+    subtítulo no caben (la fuente del sistema cambia: DejaVu Sans, en Linux,
+    es bastante más ancha que Segoe UI), bajan de tamaño lo justo, nunca por
+    debajo de `estilo.TEXTO_MIN`. Una etiqueta de tkinter no se ajusta sola:
+    cortaría el texto sin avisar.
     """
+
+    MARGEN_TEXTO = 24  # a cada lado del texto, dentro de la tecla
 
     def __init__(
         self,
@@ -57,11 +66,13 @@ class Tecla(tk.Frame):
             )
             iconos.dibujar(self._icono, icono, tamano_icono, "#ffffff")
             self._icono.pack(pady=(0, 16))
+        self._fuentes = {"titulo": fuente, "subtitulo": estilo.FUENTE_TECLA_SUBTITULO}
         self._titulo = tk.Label(self._centro, font=fuente, justify=tk.CENTER)
         self._titulo.pack()
         self._subtitulo = tk.Label(
             self._centro, font=estilo.FUENTE_TECLA_SUBTITULO, justify=tk.CENTER
         )
+        self.bind("<Configure>", lambda _evento: self._ajustar(), add="+")
 
         widgets = [self, self._centro, self._titulo, self._subtitulo]
         if self._icono is not None:
@@ -100,10 +111,20 @@ class Tecla(tk.Frame):
             else:
                 self._subtitulo.pack_forget()
         self._pintar()
+        self._ajustar()
 
     def invoke(self) -> None:
         """Ejecuta el comando, como una pulsación completa (lo usan Enter y los tests)."""
         self.comando()
+
+    def _ajustar(self) -> None:
+        """Baja el tamaño del título y del subtítulo hasta que quepan en la tecla."""
+        ancho = self.winfo_width() - 2 * int(self.cget("highlightthickness")) - 2 * self.MARGEN_TEXTO
+        if ancho <= 0:
+            return  # aún sin colocar: se ajusta en cuanto tenga tamaño (<Configure>)
+        for etiqueta, clave in ((self._titulo, "titulo"), (self._subtitulo, "subtitulo")):
+            familia, tamano, peso = self._fuentes[clave]
+            etiqueta.configure(font=cabe(etiqueta, etiqueta.cget("text"), familia, -tamano, peso, ancho))
 
     def _pintar(self) -> None:
         """Aplica los colores de la variante, más claros mientras se pulsa."""
@@ -140,3 +161,16 @@ class Tecla(tk.Frame):
             izquierda <= x < izquierda + self.winfo_width()
             and arriba <= y < arriba + self.winfo_height()
         )
+
+
+def cabe(widget: tk.Misc, texto: str, familia: str, px: int, peso: str, ancho: int) -> estilo.Fuente:
+    """La fuente más grande, desde `px` hasta `estilo.TEXTO_MIN`, en la que `texto` cabe en `ancho`.
+
+    Mide cada línea con la fuente real del sistema. Si ni al mínimo cabe, se
+    queda en el mínimo: el texto nunca baja de 24 px.
+    """
+    for tamano in range(px, estilo.TEXTO_MIN - 1, -1):
+        medida = tkfont.Font(root=widget, family=familia, size=-tamano, weight=peso)
+        if max((medida.measure(linea) for linea in texto.splitlines()), default=0) <= ancho:
+            return (familia, -tamano, peso)
+    return (familia, -estilo.TEXTO_MIN, peso)
