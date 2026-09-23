@@ -75,7 +75,7 @@ One test file per module. Later phases add `auth.py`, a GUI module, then `api/` 
 - `Carrera` — one ride. Accrues its own importe via timestamp deltas; raises `CarreraFinalizadaError` on any change after `finalizar()`. Reads on a closed ride return the frozen total, they never raise and never accrue.
 - `Tarifa` — state → rate lookup and `calcular_importe(estado, segundos)`. Owned by `Taximetro`, injected into each `Carrera`, so Fase 2's `ConfigTarifas` only touches `Taximetro`.
 - `Taximetro` — owns the active `Carrera`, the `Tarifa` and the injected clocks. Raises `CarreraActivaError` on a double `iniciar_carrera()`.
-- `TaximetroApp` — CLI only. Knows which mode it is in and produces the driver-facing messages itself; no fare logic.
+- `TaximetroApp` — CLI only. Knows which mode it is in and produces the driver-facing messages itself; no fare logic. Talks only to `ServicioTaximetro` (since T9.11).
 - `ServicioTaximetro` (Fase 3) — the only object the CLI and the GUI talk to. Wraps `Taximetro` and `Auth`, returns data (snapshots, numbers), never a live `Carrera`; Fase 4 swaps it for an HTTP client with the same methods.
 
 **Two clocks, injected, never called globally:** `reloj: Callable[[], float] = time.monotonic` measures elapsed time for fare accrual (a wall clock can jump backwards and undercharge); `calendario: Callable[[], datetime] = datetime.now` stamps `hora_inicio` / `hora_fin`. `TaximetroApp` takes `entrada=input` and `salida=print` for the same reason — tests script commands in and read printed lines out.
