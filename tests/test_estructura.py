@@ -13,7 +13,10 @@ import inspect
 import time
 from datetime import datetime
 
+import pytest
+
 from taximetro.carrera import Carrera, CarreraFinalizadaError, Estado
+from taximetro.servicio_taximetro import ServicioTaximetro
 from taximetro.tarifa import Tarifa
 from taximetro.taximetro import CarreraActivaError, Taximetro
 from taximetro.taximetro_app import TaximetroApp
@@ -85,6 +88,32 @@ class TestTaximetro:
         assert "historial" in parametros(Taximetro.__init__)
         assert callable(Taximetro.finalizar_carrera)
         assert callable(Taximetro.resumen_del_dia)
+
+
+class TestServicioTaximetro:
+    """Contrato de la fachada que comparten las interfaces (Fase 3, T9.10).
+
+    En la Fase 4 un cliente HTTP la sustituye con estos mismos métodos: si uno
+    cambia de nombre, cambia el contrato de la futura API.
+    """
+
+    def test_envuelve_un_taximetro(self) -> None:
+        assert "taximetro" in parametros(ServicioTaximetro.__init__)
+
+    @pytest.mark.parametrize(
+        "metodo",
+        [
+            "iniciar_carrera",
+            "cambiar_estado",
+            "estado_actual",
+            "finalizar_carrera",
+            "tarifas",
+            "cambiar_tarifas",
+            "resumen_del_dia",
+        ],
+    )
+    def test_expone_la_api_acordada(self, metodo: str) -> None:
+        assert callable(getattr(ServicioTaximetro, metodo))
 
 
 class TestTaximetroApp:
