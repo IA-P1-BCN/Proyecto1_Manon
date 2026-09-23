@@ -115,6 +115,7 @@ class PantallaTaximetro(Pantalla):
         self.confirmacion.abrir(
             pregunta=f"Vas a salir del programa con la carrera nº {congelada.id} en curso.",
             importe=formato_euros(congelada.importe),
+            # En dos líneas: en una, a 48 px, no cabe en media tecla (507 px de 457).
             si="SÍ, FINALIZAR\nY SALIR",
             al_si=self._finalizar_y_salir,
             al_no=self.seguir,
