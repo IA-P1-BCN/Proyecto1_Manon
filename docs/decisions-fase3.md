@@ -304,6 +304,22 @@ config/
 - The placeholder Inicio got a CONDUCTOR key so the screen can be reached before T9.7.
 - **Screenshots of every state** (LIBRE at start, OCUPADO, PARADO, ride finished, Ayuda) were compared with the mockup. They caught two layout bugs that the behaviour tests missed: «CARRERA FINALIZADA» was cut off, and Volver sat under Ayuda instead of above it. Both are now covered by tests, checked by putting each bug back on purpose.
 
+## Confirmations and freezing the amount (T9.8)
+
+**Decided with the user (2026-09-23):** the amount **freezes when a close is requested**, in both interfaces: FINALIZAR and ✕ in the GUI, Ctrl+C in the CLI. **Yes** charges the frozen amount, with `hora_fin` stamped at the press. **No** resumes as if nothing happened, and the question's time is charged, since the taxi was still occupied. This supersedes Fase 2's "the meter keeps running while asking". The CLI's menu option *Finalizar carrera* has no question and still closes at once.
+
+**Where it lives: the domain, not the screens.** It is a charging rule, and both interfaces must charge the same.
+- `Carrera.importe_actual(en=)`, `finalizar(en=, hora_fin=)` and `duracion(hasta=)` can read and close at an earlier instant. They refuse an instant before the last state change, because that segment was already charged at another rate.
+- `Taximetro.congelar()` records both clock readings and logs `cierre_solicitado`. `descongelar()` drops them and logs `cierre_cancelado`. `finalizar_carrera()` closes at the recorded instant if there is one, and only for the ride it belongs to.
+- The service adds `congelar_importe()`, which returns the frozen snapshot shown in the question, and `seguir_carrera()`. `cambiar_estado()` drops a pending close, because after a state change it can no longer be honoured.
+
+**GUI:**
+- `gui/confirmacion.py` → `Confirmacion`, a full-screen YES/NO panel with the question, «Importe a cobrar» and two 220 px keys. **SÍ on the left, NO on the right**, where FINALIZAR was, so a double tap lands on NO.
+- The ✕ now asks the current screen first (`Pantalla.al_cerrar_ventana()`, which returns True to keep the window open). The meter screen uses it to ask while a ride is running. A second ✕, or ✕ over the FINALIZAR panel, counts as NO.
+- After «SÍ, FINALIZAR Y SALIR» the total stays on screen with a single key, **CERRAR**, as decided in `flujo-fase3.md`.
+
+**Not checked visually.** The desktop screenshot used for earlier screens captured whatever window was on top (another application was covering the meter). Those captures were deleted, and no more are taken without asking. The panels are covered by tests only; look at them by running `python -m taximetro`.
+
 ## Two GUI test problems found and fixed during T9.6
 
 - **One Tk interpreter for the whole test session.** Creating and destroying a `Tk()` per test made Tk 9.0.4 on Windows (Python 3.14) abort now and then when creating the next one: `Windows fatal exception: code 0x80000003`, sometimes killing the pytest process. The test that created a second `Tk()` while the fixture's was alive made it much more likely (4/25 runs of `test_app.py`). It never showed on Linux CI. Now `tests/gui/conftest.py` has a session-scoped `Tk` and each test gets a fresh `Toplevel` as its window: 20/20 clean full runs, and the suite is twice as fast. For this, **`App.ejecutar()` uses `wait_window()` instead of `mainloop()`**. With the main window they behave the same, but `wait_window()` also returns when a `Toplevel` closes. The real program was checked: the window opens and `ejecutar()` returns on close.

@@ -68,13 +68,22 @@ Cada menú y cada regla del CLI de la Fase 2, y cómo se traduce a la interfaz. 
 | Conductor sin carrera: Iniciar · Ayuda · Volver | Pantalla del taxímetro en estado **LIBRE**: tecla INICIAR CARRERA; Volver y Ayuda en el lateral |
 | Carrera activa: Parar/Arrancar · Ver importe · Finalizar · Ayuda | Misma pantalla en estado **OCUPADO**: teclas PARAR/ARRANCAR y FINALIZAR; Ayuda en el lateral. *Ver importe* desaparece: el importe está siempre en pantalla |
 | Finalizar → "TOTAL A COBRAR: X,XX €" | FINALIZAR pide confirmación (SÍ, FINALIZAR / NO, SEGUIR); al confirmar, el total se queda congelado en el visor y la pantalla pasa a LIBRE |
-| Ctrl+C con carrera: confirmación Sí/No | Cerrar la ventana (✕) con carrera: la misma confirmación, con teclas SÍ, FINALIZAR Y SALIR / NO, SEGUIR. Un segundo ✕ cuenta como NO |
+| Ctrl+C con carrera: confirmación Sí/No | Cerrar la ventana (✕) con carrera: la misma confirmación, con teclas SÍ, FINALIZAR Y SALIR / NO, SEGUIR. Un segundo ✕ cuenta como NO. En las dos interfaces el importe se congela al preguntar (ver abajo) |
 | Ctrl+C / EOF sin carrera: sale | Cerrar la ventana (✕) sin carrera: sale sin preguntar |
 | EOF con carrera: finaliza y sale | No existe en la interfaz gráfica (no hay entrada estándar que se cierre) |
 | Administrador: Cambiar tarifas · Ver histórico · Volver | Pantalla 6: tejas CAMBIAR TARIFAS y VER HISTÓRICO; Volver en el lateral |
 | Cambiar tarifas: se teclean las dos | Pantalla 7: campos rellenos con las tarifas vigentes; mismas reglas y mensajes |
 | Ver histórico: tabla + total del día | Pantalla 8: tabla con filas grandes, ▲ ▼ para desplazarse, total en estilo visor |
 | Opción no válida | Desaparece: con teclas no se puede elegir una opción que no existe |
+
+## Congelar el importe al pedir el cierre (T9.8)
+
+**Decidido (2026-09-23), para las dos interfaces:** al pedir cerrar una carrera (FINALIZAR o ✕ en la interfaz gráfica, Ctrl+C en el CLI) se congela el importe de ese instante, y la pregunta lo muestra.
+
+- **Sí:** se cobra el importe congelado, y la hora de fin es la de la pulsación. El pasajero no paga lo que se tarda en contestar.
+- **No:** la carrera sigue como si no se hubiera parado. El tiempo de la pregunta se cobra, porque el taxi seguía ocupado.
+- **Cambia la regla de la Fase 2** («el taxímetro sigue contando mientras se pregunta», `flujo-fase2.md`): el CLI añade la línea «Importe a cobrar: X,XX €» bajo la pregunta del Ctrl+C.
+- *Finalizar carrera* del menú del CLI no pregunta, así que cierra en el acto, como antes.
 
 ## Contraseña en el CLI (T8.5)
 
@@ -94,6 +103,7 @@ Cada menú y cada regla del CLI de la Fase 2, y cómo se traduce a la interfaz. 
 - Panel encima de la pantalla: «Vas a salir del programa con la carrera nº N en curso.», con **SÍ, FINALIZAR Y SALIR** a la izquierda y **NO, SEGUIR** a la derecha (misma disposición que el panel de FINALIZAR).
 - **NO, SEGUIR**, o un segundo ✕: vuelve a la carrera como si nada. Un doble clic nervioso nunca termina una carrera.
 - **SÍ, FINALIZAR Y SALIR:** se finaliza la carrera y se guarda en el histórico.
-- El taxímetro sigue contando mientras se pregunta (misma regla que FINALIZAR; ver el cambio previsto en `future-implementation-ideas.md`).
+- El importe se congela al pulsar ✕ (misma regla que FINALIZAR): **SÍ** cobra el de ese instante; **NO** sigue como si nada, cobrando también el tiempo de la pregunta.
+- ✕ con el panel de FINALIZAR abierto también cuenta como NO: cierra el panel y la carrera sigue.
 
 *Supuesto:* en el CLI, *Sí* imprime el total y termina. En una ventana, cerrarla en el acto escondería el total antes de que el pasajero lo vea. Por eso, tras *SÍ*, el visor muestra **TOTAL A COBRAR** y una sola tecla **CERRAR**; el programa termina al pulsarla.

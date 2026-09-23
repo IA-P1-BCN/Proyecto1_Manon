@@ -53,6 +53,7 @@ taximetro/
                         # sizes, colours, px fonts ≥ 24), tecla.py (Tecla: touch key ≥ 88 px),
                         # visor.py (Visor: 7-segment amount, digits from formato_euros),
                         # taximetro.py (PantallaTaximetro: the meter, LIBRE/OCUPADO, 200 ms refresh),
+                        # confirmacion.py (Confirmacion: full-screen YES/NO panel),
                         # one module per screen (inicio.py is a placeholder until T9.7)
     taximetro_app.py    # TaximetroApp: CLI loop, prints usage on startup, no docs required to use it
     utils.py            # formato_euros()
