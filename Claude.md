@@ -33,6 +33,7 @@ Before changing behaviour, check whether it was already decided:
 - **`docs/decisions-proceso.md`** — how the project is run: language, git workflow, CI, coverage gate, board.
 - **`docs/future-implementation-ideas.md`** — ideas deliberately postponed; check before "improving" something that was dropped on purpose.
 - **`docs/demo-fase1.md`** — the script for the client demo; keep it true to the real CLI output.
+- **`docs/demo-fase3.md`** — the Fase 3 demo script (GUI, password, one logic for two interfaces); written from the code, still to be checked on screen (T9.4).
 
 ## Structure (Fase 1 + Fase 2, Fase 3 so far)
 

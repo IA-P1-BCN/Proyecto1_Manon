@@ -2,7 +2,7 @@
 
 Taxímetro software para **TaxiTech Solutions**, en sustitución de los equipos físicos Hale T200 sin soporte desde 2023. Prototipo en Python con programación orientada a objetos.
 
-**Estado:** Fase 1 (MVP en CLI) completa — US-01 a US-04 — y en validación por el cliente. Fase 2 (tarifas configurables, histórico y logs: US-05 a US-07) completa en la rama `fase-2`, a la espera de que el cliente valide la Fase 1. Contexto completo del encargo en [`docs/project-brief.md`](docs/project-brief.md); tareas en [`Backlog.md`](Backlog.md) y en el [tablero del proyecto](https://github.com/orgs/IA-P1-BCN/projects/2).
+**Estado:** Fase 1 (MVP en CLI) completa — US-01 a US-04 — y en validación por el cliente. Fase 2 (tarifas configurables, histórico y logs: US-05 a US-07) completa en la rama `fase-2`. Fase 3 (interfaz gráfica táctil, contraseña de Administrador y refactorización: US-08, US-09) completa en la rama `fase-3`, a falta de la prueba en pantalla táctil. Cada fase espera la validación de la anterior. Contexto completo del encargo en [`docs/project-brief.md`](docs/project-brief.md); tareas en [`Backlog.md`](Backlog.md) y en el [tablero del proyecto](https://github.com/orgs/IA-P1-BCN/projects/2).
 
 ## Tarifas vigentes
 
@@ -19,6 +19,8 @@ Estas son las tarifas por defecto. Desde la Fase 2 se pueden cambiar desde el pe
 
 Python 3.10 o superior (desarrollado con 3.14, integración continua en 3.13). Solo librería estándar: el taxímetro no tiene dependencias de ejecución.
 
+La interfaz gráfica usa `tkinter`, que viene con Python en Windows y macOS. En Linux puede hacer falta instalarlo aparte (`sudo apt install python3-tk`).
+
 ## Instalación
 
 ```bash
@@ -30,6 +32,26 @@ pip install -r requirements-dev.txt   # solo para ejecutar los tests
 ```
 
 ## Uso
+
+Hay dos formas de usar el taxímetro, sobre la misma lógica: la **interfaz gráfica** (la principal desde la Fase 3) y el **CLI**. Las dos se lanzan desde la raíz del repositorio, porque las tarifas, el histórico y los logs se guardan en `config/`, `data/` y `logs/` a partir de ahí.
+
+### Interfaz gráfica (Fase 3)
+
+```bash
+python -m taximetro
+```
+
+Una ventana del tamaño de una tablet de 10" en horizontal (1280 × 800), pensada para el dedo: teclas grandes, el estado del taxi a la vista y el importe refrescándose solo.
+
+- **Inicio.** Se elige **CONDUCTOR** (el taxímetro) o **ADMINISTRADOR** (tarifas e histórico; pide contraseña).
+- **Taxímetro.** En **LIBRE**, una tecla: INICIAR CARRERA. En **OCUPADO**, el importe en dígitos de 7 segmentos, el estado en color y con su nombre (*EN MOVIMIENTO* en verde, *PARADO* en ámbar), y las teclas PARAR/ARRANCAR y FINALIZAR. A la derecha, el número de carrera, el tiempo y la hora de inicio.
+- **FINALIZAR pregunta antes de cerrar**, y **el importe se congela al pulsar**: si se confirma, se cobra lo que marcaba en ese momento, no lo que se tarda en contestar. Si no, la carrera sigue. El total se queda en el visor (**TOTAL A COBRAR**) hasta la siguiente carrera.
+- **Cerrar la ventana (✕) con una carrera en curso** hace la misma pregunta. Un segundo ✕ cuenta como *no*, para que un doble clic nervioso nunca termine una carrera.
+- **Administrador.** Tras la contraseña: *Cambiar tarifas* (los campos vienen con las vigentes; mismos mensajes que el CLI) y *Ver histórico* (las carreras de hoy y el total de caja).
+
+El detalle de cada pantalla está en [`docs/diseno-interfaz-fase3.md`](docs/diseno-interfaz-fase3.md), y cómo se enlazan, en [`docs/flujo-fase3.md`](docs/flujo-fase3.md).
+
+### CLI
 
 ```bash
 python -m taximetro.taximetro_app
@@ -188,16 +210,12 @@ Se guarda el importe cobrado, el mismo del ticket, así que el total del día cu
 
 ## Contraseña del Administrador
 
-Desde la Fase 3 (US-08), elegir **Administrador** pide una contraseña. El perfil Conductor no la pide.
+Desde la Fase 3 (US-08), elegir **Administrador** pide una contraseña. El perfil Conductor no la pide. La misma contraseña sirve en las dos interfaces:
 
-```
-Contraseña (Intro vacío para volver):
-```
+- **Interfaz gráfica:** una pantalla con un campo que muestra `•` en lugar de lo tecleado, la tecla ENTRAR (o Intro) y *Cancelar* en el lateral.
+- **CLI:** la pregunta `Contraseña (Intro vacío para volver):`, sin que se vea lo tecleado. Intro sin escribir nada, o `Ctrl+C`, vuelve al menú de inicio.
 
-- Lo que se teclea **no se ve en pantalla**.
-- Si es incorrecta: «Contraseña incorrecta. Inténtalo de nuevo.», y se vuelve a pedir.
-- **Intro** sin escribir nada, o `Ctrl+C`, vuelve al menú de inicio.
-- Cada vez que se entra en Administrador se pide de nuevo.
+En las dos, una contraseña incorrecta avisa con «Contraseña incorrecta. Inténtalo de nuevo.» y deja volver a probar, y cada vez que se entra en Administrador se pide de nuevo.
 
 **Contraseña de la demo: `taxi`.** Se da por facilitada por el equipo técnico del cliente, que es quien la pone y la cambia; la aplicación no tiene ninguna opción para cambiarla.
 
@@ -233,25 +251,34 @@ pytest                              # tests + cobertura (falla por debajo del 90
 pytest --cov-report=term-missing    # detalle de líneas sin cubrir
 ```
 
-276 tests, 99 % de cobertura. La lógica de tarifas se comprueba contra los valores del briefing, y los relojes se inyectan, así que la batería corre en décimas de segundo sin esperar tiempo real.
+Más de 600 tests, 99 % de cobertura. La lógica de tarifas se comprueba contra los valores del briefing, y los relojes se inyectan, así que la batería no espera tiempo real.
+
+Los tests de la interfaz gráfica abren ventanas de verdad, así que necesitan pantalla. En el CI (Linux, sin pantalla) la pone `xvfb-run`. Además de comprobar el comportamiento, verifican que en ninguna pantalla se corte un texto ni se salga nada de su sitio, con la fuente del sistema y con la más ancha disponible.
 
 ## Estructura
 
 ```
 taximetro/
-    carrera.py          # Carrera: una carrera, su estado y su importe
-    tarifa.py           # Tarifa: € por segundo según el estado, validadas
-    config_tarifas.py   # ConfigTarifas: lee y guarda config/tarifas.json
-    historial.py        # Historial: carreras terminadas en data/historial.csv
-    logs.py             # configurar_logs(): logs/taximetro.log con rotación
-    taximetro.py        # Taximetro: carrera activa, tarifa y numeración
-    taximetro_app.py    # TaximetroApp: menú de inicio y bucles de cada perfil
-    utils.py            # formato_euros()
+    __main__.py              # python -m taximetro: arranca la interfaz gráfica
+    carrera.py               # Carrera: una carrera, su estado y su importe
+    tarifa.py                # Tarifa: € por segundo según el estado, validadas
+    config_tarifas.py        # ConfigTarifas: lee y guarda config/tarifas.json
+    historial.py             # Historial: carreras terminadas en data/historial.csv
+    logs.py                  # configurar_logs(): logs/taximetro.log con rotación
+    auth.py                  # Auth: comprueba la contraseña contra su hash scrypt
+    taximetro.py             # Taximetro: carrera activa, tarifa y numeración
+    servicio_taximetro.py    # ServicioTaximetro: lo único que usan las dos interfaces
+    taximetro_app.py         # TaximetroApp: el CLI
+    gui/                     # la interfaz gráfica (tkinter): una pantalla por módulo
+    utils.py                 # formato_euros()
 config/
-    tarifas.example.json  # formato del fichero de tarifas
-tests/                  # un fichero por módulo + conftest con relojes falsos
-docs/                   # briefing, flujo, decisiones, demo
+    tarifas.example.json     # formato del fichero de tarifas
+    credenciales.json        # sal y hash de la contraseña (nunca la contraseña)
+tests/                       # un fichero por módulo; tests/gui/ para la interfaz gráfica
+docs/                        # briefing, flujos, diseño, decisiones, demos
 ```
+
+**Arquitectura (Fase 3).** Las dos interfaces hablan solo con `ServicioTaximetro`, que devuelve datos y nunca objetos vivos del dominio. Un test comprueba que ninguna interfaz importe nada más del dominio. En la Fase 4 ese servicio podrá sustituirse por un cliente de la API con los mismos métodos, sin tocar las pantallas.
 
 ## Documentación
 
@@ -263,13 +290,17 @@ docs/                   # briefing, flujo, decisiones, demo
 | [`docs/decisions-fase2.md`](docs/decisions-fase2.md) | Decisiones de la Fase 2 |
 | [`docs/decisions-fase1-scaffold.md`](docs/decisions-fase1-scaffold.md) | Decisiones de diseño del código |
 | [`docs/decisions-proceso.md`](docs/decisions-proceso.md) | Decisiones de proceso: idioma, ramas, CI, cobertura, tablero |
+| [`docs/flujo-fase3.md`](docs/flujo-fase3.md) | Pantallas de la interfaz gráfica y cómo se enlazan |
+| [`docs/diseno-interfaz-fase3.md`](docs/diseno-interfaz-fase3.md) | Diseño de cada pantalla: medidas, colores y textos |
+| [`docs/decisions-fase3.md`](docs/decisions-fase3.md) | Decisiones de la Fase 3 |
 | [`docs/demo-fase1.md`](docs/demo-fase1.md) | Guion de la demo de Fase 1 |
+| [`docs/demo-fase3.md`](docs/demo-fase3.md) | Guion de la demo de Fase 3 |
 | [`docs/future-implementation-ideas.md`](docs/future-implementation-ideas.md) | Ideas aplazadas y por qué |
 
 ## Siguientes fases
 
 | Fase | Contenido |
 |---|---|
-| 🟡 Fase 2 | Histórico de carreras, logs de operación y tarifas configurables (US-05 a US-07) |
-| 🟠 Fase 3 | Contraseña e interfaz gráfica táctil (US-08, US-09) |
+| 🟡 Fase 2 | Histórico de carreras, logs de operación y tarifas configurables (US-05 a US-07) — hecha, en `fase-2` |
+| 🟠 Fase 3 | Contraseña e interfaz gráfica táctil (US-08, US-09) — hecha, en `fase-3` |
 | 🔴 Fase 4 | Base de datos, API REST y despliegue con un comando |
