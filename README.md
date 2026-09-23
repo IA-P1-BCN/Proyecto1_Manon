@@ -222,6 +222,8 @@ El programa registra su actividad en `logs/taximetro.log`, sin mostrar nada en p
 | `WARNING` | Algo rechazado o ignorado: fichero de tarifas no válido, tarifa mal tecleada, fila ilegible en el histórico |
 | `ERROR` | Un fichero que no se pudo escribir, o un error inesperado (con su traza) |
 
+La interfaz gráfica escribe en el mismo fichero y con los mismos nombres de evento, bajo `taximetro.gui` en lugar de `taximetro.taximetro_app`. Un `grep salida_solicitada` encuentra tanto el ✕ de la ventana como el `Ctrl+C` del CLI. Un error dentro de la interfaz queda como `error_inesperado` con su traza completa; el conductor ve un aviso corto y el programa sigue.
+
 El fichero rota al llegar a 1 MB y se conservan 5 copias (`taximetro.log.1` … `.5`), así que nunca llena el disco. Si no se puede escribir, el taxímetro funciona igual, sin logs. No se versiona.
 
 ## Tests
