@@ -47,6 +47,10 @@ taximetro/
     logs.py             # configurar_logs(): rotating logs/taximetro.log, called only from __main__ (US-06)
     taximetro.py        # Taximetro: owns the Tarifa and the active Carrera
     servicio_taximetro.py  # ServicioTaximetro: the façade the interfaces use (Fase 3, T9.10)
+    __main__.py         # python -m taximetro → the GUI
+    gui/                # tkinter GUI (Fase 3, US-09): app.py (App: window + screen switching),
+                        # pantalla.py (Pantalla base: timers cancelled on leave), estilo.py (theme),
+                        # one module per screen (inicio.py is a placeholder until T9.7)
     taximetro_app.py    # TaximetroApp: CLI loop, prints usage on startup, no docs required to use it
     utils.py            # formato_euros()
 tests/
@@ -62,6 +66,7 @@ tests/
     test_servicio_taximetro.py
     test_taximetro_app.py
     test_utils.py
+    gui/                # GUI tests: a hidden Tk window, no mainloop(); conftest.py has the fixtures
 config/
     tarifas.example.json  # committed; the live tarifas.json is git-ignored
     credenciales.json   # committed: salt + scrypt hash of the Admin password, never the password
@@ -73,7 +78,7 @@ Claude.md
 README.md
 ```
 
-One test file per module. Fase 3 still adds the `gui/` package; Fase 4 adds `api/` and a DB layer — don't create these ahead of their phase.
+One test file per module (GUI ones under `tests/gui/`). Fase 4 adds `api/` and a DB layer — don't create these ahead of their phase.
 
 ## Object responsibilities
 
@@ -89,7 +94,8 @@ One test file per module. Fase 3 still adds the `gui/` package; Fase 4 adds `api
 
 - Tests: `pytest` (coverage and the 90% gate are in `pyproject.toml`'s `addopts`, so a bare `pytest` enforces them)
 - Coverage detail: `pytest --cov-report=term-missing`
-- Run: `python -m taximetro.taximetro_app`
+- Run the GUI: `python -m taximetro`
+- Run the CLI: `python -m taximetro.taximetro_app`
 
 Run `pytest` after every change. Don't call a task done with failing tests.
 
