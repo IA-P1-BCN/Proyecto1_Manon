@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from taximetro.auth import Auth
 from taximetro.carrera import Carrera, CarreraFinalizadaError, Estado
 from taximetro.servicio_taximetro import ServicioTaximetro
 from taximetro.tarifa import Tarifa
@@ -119,6 +120,14 @@ class TestServicioTaximetro:
     )
     def test_expone_la_api_acordada(self, metodo: str) -> None:
         assert callable(getattr(ServicioTaximetro, metodo))
+
+
+class TestAuth:
+    """Contrato de `Auth` (US-08, T8.1)."""
+
+    def test_comprueba_contra_un_fichero_inyectable(self) -> None:
+        assert "ruta" in parametros(Auth.__init__)
+        assert "contrasena" in parametros(Auth.comprobar)
 
 
 class TestTaximetroApp:
