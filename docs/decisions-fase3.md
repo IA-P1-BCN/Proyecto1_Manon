@@ -275,6 +275,15 @@ config/
 - **`inicio.py` is a placeholder** (title + Salir) so the window opens on something. T9.7 replaces it with the approved screen.
 - **Tests** (`tests/gui/`, a package so names don't clash with `tests/`) use a hidden `Tk()` window injected into `App`. They never enter `mainloop()`: they call methods and process events with `update()`. Without a display the GUI tests are **skipped locally but fail in CI** (`CI` is set there), so a missing display can't silently hide them. CI installs `xvfb` and runs `xvfb-run -a pytest`.
 
+## GUI theme and the touch key (T9.5)
+
+**As built (2026-09-23):**
+
+- **`gui/estilo.py` is the theme.** Every measure, colour and font comes from the approved mockup and lives there, so no screen carries loose values. Font sizes are in **pixels** (a negative size in tkinter), so they match the mockup's px on any screen. **`fuente(px)` raises below 24 px**, which enforces the minimum text rule in code rather than by review. Each vehicle state is defined as colour + text together (`ESTADOS`), so the state is never shown by colour alone.
+- **`gui/tecla.py` → `Tecla`**, the touch key used by every screen. A `tk.Button` measures its height in text lines and takes one font, while the design needs a fixed pixel height and a smaller subtitle («FINALIZAR» / «Termina y muestra el total»). `Tecla` is a `Frame` of fixed height (**it raises below 88 px**) with title and optional subtitle, in four variants (green, red, grey, sidebar). It acts **on release over the key**, like a real button, so a finger that slides off cancels. `configurar()` switches PARAR ↔ ARRANCAR without rebuilding the key.
+- **Assumption:** a pressed key turns slightly lighter (`aclarar`, 18 % towards white). The mockup has no pressed colour, and touch needs visible feedback.
+- A screenshot of a sample window built from the theme was checked against the mockup (visor, lamps, state colours, keys, sidebar).
+
 ## Tracking: the refactor lives inside US-09
 
 **Decision (2026-09-23):** no separate epic. The refactor is tasks **T9.10–T9.12** of US-09 ([#100](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/100)–[#102](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/102)), whose acceptance criterion ("se apoya en la lógica de backend ya existente sin duplicarla") is what it delivers. Also added: T9.13, the meter screen with its 200 ms refresh ([#103](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/103)), which had no task, and T9.14, `xvfb` in CI ([#104](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/104)). T8.2, T8.3 and T9.3 (#45, #46, #50) were reworded to match today's decisions. The work order above still applies: T9.10–T9.12 first, even though they're numbered inside US-09.

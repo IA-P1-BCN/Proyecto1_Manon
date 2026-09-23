@@ -96,13 +96,33 @@ Usados en la pantalla de carrera activa (aprobada):
 | Tecla FINALIZAR | `#8e1b17` | Rojo: acción que termina la carrera |
 | Tecla INICIAR CARRERA | `#1e6b37` | Verde |
 
+**Decidido (2026-09-23, T9.5): el estado nunca se comunica solo con el color.** Cada estado lleva siempre su nombre al lado (*EN MOVIMIENTO* en verde, *PARADO* en ámbar), y las lámparas llevan escrito OCUPADO / LIBRE. La pareja color + texto está definida junta en el tema (`estilo.ESTADOS`), así que una pantalla no puede usar una sin la otra.
+
+Los demás colores (paneles, bordes, mensajes, lámparas apagadas, teclas) salen de la maqueta aprobada y están todos en `taximetro/gui/estilo.py`.
+
 Pendiente:
 - Modo día / modo noche (se conduce de noche).
-- El estado no se comunica solo con el color (texto o icono también).
 
-## Tipografía y formato — Pendiente
+## Tipografía y formato
 
-- Fuente y tamaños.
+**Decidido (2026-09-23, T9.5)**, a partir de la maqueta aprobada:
+
+- **Fuente del sistema:** Segoe UI en Windows, DejaVu Sans en Linux. Todo en una sola familia; los dígitos del importe no son texto, sino segmentos dibujados (T9.6).
+- **Tamaños en píxeles**, no en puntos, para que coincidan con la maqueta en cualquier pantalla. **Mínimo 24 px**, y el tema rechaza cualquier tamaño menor.
+
+| Uso | Tamaño |
+|---|---|
+| Teclas principales (PARAR, FINALIZAR, INICIAR CARRERA, ENTRAR, GUARDAR) | 56 px negrita |
+| Títulos de pantalla (*Administrador*, *Cambiar tarifas*) | 48 px negrita |
+| Campos de texto (tarifas, contraseña) | 44 px negrita |
+| Marca *TTX-247* en la franja superior | 40 px negrita |
+| Estado (*EN MOVIMIENTO*) y datos del lateral (*Nº 7*, *00:04:12*) | 34 px negrita |
+| Lámparas OCUPADO / LIBRE | 30 px negrita |
+| Teclas del lateral (Ayuda, Volver, Salir) | 28 px negrita |
+| Tarifa del estado, texto de ayuda, tabla del histórico | 28 px |
+| Subtítulo de tecla, mensajes | 26 px |
+| Etiquetas (*Carrera*, *Tiempo*) y rótulo *IMPORTE* | 24 px |
+
 - Importe siempre en formato español, generado por `utils.formato_euros()`: `12,34 €`.
 
 ---

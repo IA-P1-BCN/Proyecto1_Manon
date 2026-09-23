@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from taximetro.gui import estilo
 from taximetro.gui.pantalla import Pantalla
+from taximetro.gui.tecla import Tecla
 
 if TYPE_CHECKING:
     from taximetro.gui.app import App
@@ -22,11 +23,22 @@ class Inicio(Pantalla):
     """Pantalla de inicio (provisional)."""
 
     def __init__(self, app: App) -> None:
-        """Construye el título y la tecla Salir."""
+        """Construye el título y la tecla Salir en el lateral."""
         super().__init__(app)
+        lateral = tk.Frame(self, bg=estilo.FONDO, width=estilo.LATERAL)
+        lateral.pack(side=tk.RIGHT, fill=tk.Y, padx=estilo.MARGEN, pady=estilo.MARGEN)
+        lateral.pack_propagate(False)
+        self.salir = Tecla(
+            lateral,
+            "Salir",
+            app.cerrar,
+            variante=estilo.LATERAL_TECLA,
+            alto=estilo.TECLA_LATERAL,
+            fuente=estilo.FUENTE_TECLA_LATERAL,
+        )
+        self.salir.pack(side=tk.BOTTOM, fill=tk.X)
         self.titulo = tk.Label(
-            self, text=estilo.TITULO, bg=estilo.FONDO, fg=estilo.TEXTO, font=("", 40)
+            self, text=estilo.TITULO, bg=estilo.FONDO, fg=estilo.LED_ROJO,
+            font=estilo.FUENTE_MARCA,
         )
         self.titulo.pack(expand=True)
-        self.salir = tk.Button(self, text="Salir", font=("", 24), command=app.cerrar)
-        self.salir.pack(pady=40)
