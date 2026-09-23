@@ -49,6 +49,7 @@ Tarifas vigentes:
 
 Escribe el número de la opción que quieras y pulsa Intro.
 Al empezar, elige tu perfil: Conductor o Administrador.
+El perfil Administrador pide contraseña.
 Salir, en el menú de inicio, cierra el programa.
 
 Conductor:
@@ -115,7 +116,7 @@ En cada momento solo se ofrecen las opciones válidas, y **los números son prop
 | Situación | Nº | Opción | Qué hace |
 |---|---:|---|---|
 | Menú de inicio | 1 | Conductor | Entra en el taxímetro |
-| | 2 | Administrador | Entra en la gestión: tarifas e histórico |
+| | 2 | Administrador | Pide la contraseña y entra en la gestión: tarifas e histórico |
 | | 3 | Salir | Cierra el programa |
 | Sin carrera | 1 | Iniciar carrera | Empieza una carrera nueva y cobra desde ese segundo |
 | | 2 | Ayuda | Reimprime las instrucciones |
@@ -184,7 +185,22 @@ Histórico de hoy · 21/09/2026
 
 Se guarda el importe cobrado, el mismo del ticket, así que el total del día cuadra con la caja. La numeración de carreras continúa de una sesión a otra. El fichero solo crece (una fila por carrera, nunca se reescribe), se puede abrir con una hoja de cálculo y no se versiona.
 
-> En la Fase 2 el perfil Administrador **no tiene contraseña**. La protección llega con la US-08 (Fase 3).
+## Contraseña del Administrador
+
+Desde la Fase 3 (US-08), elegir **Administrador** pide una contraseña. El perfil Conductor no la pide.
+
+```
+Contraseña (Intro vacío para volver):
+```
+
+- Lo que se teclea **no se ve en pantalla**.
+- Si es incorrecta: «Contraseña incorrecta. Inténtalo de nuevo.», y se vuelve a pedir.
+- **Intro** sin escribir nada, o `Ctrl+C`, vuelve al menú de inicio.
+- Cada vez que se entra en Administrador se pide de nuevo.
+
+**Contraseña de la demo: `taxi`.** Se da por facilitada por el equipo técnico del cliente, que es quien la pone y la cambia; la aplicación no tiene ninguna opción para cambiarla.
+
+La contraseña **no se guarda en ningún sitio**: `config/credenciales.json` solo contiene una sal aleatoria y el hash `scrypt` de la contraseña, del que no se puede recuperar. Por eso ese fichero sí está en el repositorio. Si falta o está dañado, el Administrador no se abre («No se puede comprobar la contraseña. Avisa al equipo técnico.») y el perfil Conductor sigue funcionando. Los intentos quedan en el log (`acceso_admin_concedido` / `acceso_admin_denegado`), nunca lo que se tecleó.
 
 ## Logs de operación
 
