@@ -158,10 +158,10 @@ Tareas:
 - La contraseña no se almacena en texto plano.
 
 Tareas:
-- [ ] **T8.1** Implementar clase `Auth` con verificación de contraseña — `tech-task`, `could` — [#44](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/44)
-- [ ] **T8.2** Hash con `hashlib.scrypt` en `config/credenciales.json` (contraseña de la demo: `taxi`, facilitada por el equipo técnico) — `tech-task`, `could` — [#45](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/45)
+- [x] **T8.1** Implementar clase `Auth` con verificación de contraseña — `tech-task`, `could` — [#44](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/44) ✅
+- [x] **T8.2** Hash con `hashlib.scrypt` en `config/credenciales.json` (contraseña de la demo: `taxi`, facilitada por el equipo técnico) — `tech-task`, `could` — [#45](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/45) ✅
 - [ ] **T8.3** `comprobar_contrasena` en `ServicioTaximetro`, con los logs de acceso concedido/denegado — `tech-task`, `could` — [#46](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/46)
-- [ ] **T8.4** Tests de autenticación (correcta/incorrecta) — `test`, `could` — [#47](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/47)
+- [x] **T8.4** Tests de autenticación (correcta/incorrecta) — `test`, `could` — [#47](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/47) ✅
 - [ ] **T8.5** El Administrador del CLI también pide contraseña — `tech-task`, `could` — [#98](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/98)
 
 *Contraseña, fallos y ubicación del hash: ver `docs/decisions-fase3.md`. No se programa cómo poner ni cambiar la contraseña; se simula que la gestiona el equipo técnico.*

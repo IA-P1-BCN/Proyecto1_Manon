@@ -32,6 +32,7 @@ desktop.ini
 
 # Ficheros que escribe el taxímetro al usarse (Fase 2): tarifas, histórico y logs.
 # Se versiona solo config/tarifas.example.json, que documenta el formato.
+# config/credenciales.json (Fase 3) sí se versiona: solo lleva sal y hash.
 config/tarifas.json
 data/
 logs/

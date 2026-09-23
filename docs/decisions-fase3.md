@@ -137,6 +137,15 @@ The Fase 2 requirement still holds: *"registrar en todo momento qué está ocurr
 - **Missing or unreadable file** (assumption): Admin access is denied with a message, the event is logged as ERROR, and Conductor keeps working. Access is never granted by default.
 - A real mechanism for setting and changing the password is recorded in `future-implementation-ideas.md`.
 
+## US-08: `Auth` as built (T8.1, T8.2)
+
+**Settled while building it (2026-09-23):**
+
+- **"Can't check" is not "wrong".** The password screen has two different messages («Contraseña incorrecta…» and «No se puede comprobar la contraseña. Avisa al equipo técnico.»), so a `bool` isn't enough. `Auth.comprobar(contrasena) -> bool` answers right/wrong and **raises `CredencialesError`** when the file is missing or broken. That includes a malformed JSON, broken hex, an unknown algorithm, and scrypt parameters it rejects or that exceed a 64 MB memory cap. It logs `credenciales_ilegibles` (ERROR) with the path and error type, never the password. In T8.3 the service turns this into `AlmacenamientoError`, the contract exception it already has for unreadable files. Access is denied either way.
+- **The file is re-read on every check**, so a change by the technical team applies without a restart. One scrypt check costs ~50 ms.
+- **`Auth.generar_credenciales(contrasena)`** builds the file's content. No screen uses it: it produced the committed file once, and tests use it to build their own files with a cheap `n` (the cost is stored in the file, so that's the same code path).
+- **The committed file is tested without its password:** a test checks that it can be read, rejects an arbitrary password and uses the real cost (`n=2**14, r=8, p=1`).
+
 ## US-08: failed attempts are logged, not limited
 
 **Decision (2026-09-23):** a wrong password shows «Contraseña incorrecta. Inténtalo de nuevo.» and logs `acceso_admin_denegado` (WARNING, without the typed text). There's no attempt counter, lockout or delay, in either the GUI or the CLI.

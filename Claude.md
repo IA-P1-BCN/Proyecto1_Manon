@@ -39,6 +39,7 @@ Before changing behaviour, check whether it was already decided:
 ```
 taximetro/
     __init__.py
+    auth.py             # Auth: scrypt check against config/credenciales.json (Fase 3, US-08)
     carrera.py          # Carrera: id, hora_inicio, hora_fin, estado, distancia, importe
     tarifa.py           # Tarifa: rate lookup + accrual calculation; validates its rates
     config_tarifas.py   # ConfigTarifas: load/save config/tarifas.json (Fase 2, US-07)
@@ -51,6 +52,7 @@ taximetro/
 tests/
     conftest.py         # shared fixtures: fake reloj / calendario
     test_estructura.py  # design contract: the agreed public API still exists
+    test_auth.py
     test_carrera.py
     test_tarifa.py
     test_config_tarifas.py
@@ -60,6 +62,9 @@ tests/
     test_servicio_taximetro.py
     test_taximetro_app.py
     test_utils.py
+config/
+    tarifas.example.json  # committed; the live tarifas.json is git-ignored
+    credenciales.json   # committed: salt + scrypt hash of the Admin password, never the password
 docs/                   # see "Design decisions" above
 .github/workflows/
     tests.yml           # pytest + coverage on push and PR
@@ -68,7 +73,7 @@ Claude.md
 README.md
 ```
 
-One test file per module. Later phases add `auth.py`, a GUI module, then `api/` and a DB layer — don't create these ahead of their phase.
+One test file per module. Fase 3 still adds the `gui/` package; Fase 4 adds `api/` and a DB layer — don't create these ahead of their phase.
 
 ## Object responsibilities
 
