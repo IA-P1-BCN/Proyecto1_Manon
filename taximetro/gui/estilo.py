@@ -35,6 +35,7 @@ VISOR = 420  # alto del visor del taxímetro
 TECLA_TAXIMETRO = ALTO - 2 * MARGEN - VISOR - SEPARACION  # lo que queda bajo el visor: 308
 LAMPARA = 72  # alto de las lámparas OCUPADO / LIBRE
 AYUDA_ANCHO = 780  # panel de ayuda
+CONFIRMACION_ANCHO = 1040  # panel SÍ / NO
 
 TEXTO_MIN = 24  # nada más pequeño en ninguna pantalla, ni siquiera la ayuda
 
@@ -160,3 +161,6 @@ FUENTE_TEXTO = fuente(28)  # ayuda, tabla del histórico
 FUENTE_MENSAJE = fuente(26, negrita=True)  # errores y confirmaciones
 FUENTE_CAMPO = fuente(44, negrita=True)  # campos de tarifas y contraseña
 FUENTE_MARCA = fuente(40, negrita=True)  # «TTX-247» en la franja superior
+FUENTE_TECLA_CONFIRMAR = fuente(48, negrita=True)  # SÍ, FINALIZAR / NO, SEGUIR
+FUENTE_DETALLE = fuente(30)  # «Importe a cobrar:» en el panel de confirmación
+FUENTE_DETALLE_IMPORTE = fuente(30, negrita=True)

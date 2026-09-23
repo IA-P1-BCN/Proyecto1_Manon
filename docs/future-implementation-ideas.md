@@ -37,7 +37,9 @@ That is a substantial amount of display-layer and platform machinery for a phase
 
 **If it changes:** round with `decimal.Decimal(...).quantize(Decimal("0.01"), ROUND_HALF_UP)` in **one** place, used by both `formato_euros` and `Historial.registrar`, so the ticket and the till can never disagree. Decide it with the client, since it changes what passengers pay.
 
-## Freeze the amount while FINALIZAR is being confirmed (Fase 3 — requested, not built yet)
+## Freeze the amount while FINALIZAR is being confirmed (Fase 3 — **built in T9.8**)
+
+**Status (2026-09-23):** built, in both interfaces (FINALIZAR and ✕ in the GUI, Ctrl+C in the CLI). See `decisions-fase3.md`, *Confirmations and freezing the amount*. The original notes follow for the record.
 
 **Context:** in the Fase 3 GUI, FINALIZAR opens a confirmation panel (`docs/diseno-interfaz-fase3.md`, *Confirmación al finalizar*), and as first designed the meter keeps running until the driver answers. The user pointed out, on 2026-09-22, that this is unfair to the passenger: the seconds spent answering the question are charged.
 

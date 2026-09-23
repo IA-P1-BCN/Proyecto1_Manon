@@ -236,12 +236,19 @@ class TaximetroApp:
     def _confirmar_salida(self, carrera: InstantaneaCarrera) -> bool:
         """Ctrl+C con carrera activa: pregunta antes de cerrar el programa (T7.7).
 
-        El taxímetro sigue contando mientras se pregunta: el importe se calcula
-        con marcas de tiempo, así que no hay nada que pausar. Un segundo Ctrl+C
-        cuenta como «No», para que un doble toque nervioso no termine la
-        carrera; EOF cuenta como «Sí», porque no es reintentable.
+        El importe se congela al preguntar (Fase 3, T9.8): «Sí» cobra lo que
+        había al pulsar Ctrl+C, no lo que se tarda en contestar. «No» sigue con
+        la carrera como si nada, y ese tiempo sí se cobra, porque el taxi
+        seguía ocupado. Es la misma regla que el FINALIZAR de la interfaz
+        gráfica. Un segundo Ctrl+C cuenta como «No», para que un doble toque
+        nervioso no termine la carrera; EOF cuenta como «Sí», porque no es
+        reintentable.
         """
-        cabecera = f"Vas a salir del programa con la carrera nº {carrera.id} en curso."
+        congelada = self._servicio.congelar_importe()
+        cabecera = (
+            f"Vas a salir del programa con la carrera nº {carrera.id} en curso.\n"
+            f"Importe a cobrar: {formato_euros(congelada.importe)}"
+        )
         logger.info("salida_solicitada %s", campos(carrera=carrera.id))
         try:
             confirmada = self._leer(cabecera, OPCIONES_CONFIRMAR_SALIDA) == "confirmar"
@@ -254,6 +261,8 @@ class TaximetroApp:
             "confirmada" if confirmada else "cancelada",
             campos(carrera=carrera.id),
         )
+        if not confirmada:
+            self._servicio.seguir_carrera()
         return confirmada
 
     def _opcion(self, eleccion: str, opciones: tuple[str, ...]) -> str | None:

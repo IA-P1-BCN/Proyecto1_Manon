@@ -50,7 +50,7 @@ Pendiente:
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  ¿Finalizar la carrera nº 7?                             │
-│  El taxímetro sigue contando: 12,34 €                    │
+│  Importe a cobrar: 12,34 €                               │
 │  ┌──────────────────────────┐ ┌────────────────────────┐ │
 │  │      SÍ, FINALIZAR       │ │       NO, SEGUIR       │ │
 │  └──────────────────────────┘ └────────────────────────┘ │
@@ -58,8 +58,7 @@ Pendiente:
 ```
 
 - **Por qué:** un toque accidental con el coche en marcha cerraría la carrera y la escribiría en el histórico, y no se puede reabrir. Cuesta un toque más por carrera. Se descartaron la pulsación larga (menos evidente para un conductor nuevo) y no confirmar.
-- **El taxímetro sigue contando** mientras se pregunta, y el panel muestra el importe en vivo. Es la misma regla que la confirmación de Ctrl+C en la Fase 2.
-  - **Cambio previsto:** congelar el importe al pulsar FINALIZAR y cobrar ese importe si se confirma; si se cancela, la carrera sigue como si no se hubiera parado. Detalle en `future-implementation-ideas.md`, *Freeze the amount while FINALIZAR is being confirmed*.
+- **El importe se congela al pulsar FINALIZAR** (decidido 2026-09-23, T9.8). El panel muestra «Importe a cobrar» con el importe de ese instante, y **SÍ** cobra ese importe, no lo que se tarda en contestar. **NO** devuelve a la carrera como si no se hubiera parado: ese tiempo sí se cobra, porque el taxi seguía ocupado. La misma regla vale para el ✕ con carrera y para el Ctrl+C del CLI (ver `flujo-fase3.md`).
 - **SÍ va a la izquierda y NO a la derecha**, justo donde estaba FINALIZAR. Así, un doble toque sin querer sobre FINALIZAR cae en *NO, SEGUIR* y no cierra nada.
 - Teclas de 220 px de alto.
 

@@ -135,15 +135,16 @@ La carrera nace **en movimiento**, porque se inicia cuando el taxi arranca con e
 
 Cualquier otra cosa que se teclee —un número que no esté en el menú, una letra o una línea vacía— responde `Opción no válida. Elige un número del menú.` y deja la carrera intacta.
 
-**Interrupciones.** `Ctrl+C` con una carrera abierta pregunta antes de salir, mientras el taxímetro sigue contando:
+**Interrupciones.** `Ctrl+C` con una carrera abierta pregunta antes de salir, y el importe se **congela** en ese momento:
 
 ```
 Vas a salir del programa con la carrera nº 1 en curso.
+Importe a cobrar: 0,50 €
   1) Sí, finalizar la carrera y salir
   2) No, seguir con la carrera
 ```
 
-*No* vuelve a la carrera como si nada. *Sí* la finaliza, la guarda en el histórico, muestra el total y cierra el programa. Un segundo `Ctrl+C` cuenta como *No*. Cerrar la entrada (`Ctrl+D`) durante una carrera la finaliza y muestra el total antes de salir, de modo que el importe nunca se pierde sin verse. Fuera de una carrera, `Ctrl+C` y `Ctrl+D` cierran el programa.
+*Sí* cobra el importe del momento del `Ctrl+C`, no lo que se tarda en contestar (Fase 3). *No* vuelve a la carrera como si nada, y ese tiempo sí se cobra, porque el taxi seguía ocupado. *Sí* la finaliza, la guarda en el histórico, muestra el total y cierra el programa. Un segundo `Ctrl+C` cuenta como *No*. Cerrar la entrada (`Ctrl+D`) durante una carrera la finaliza y muestra el total antes de salir, de modo que el importe nunca se pierde sin verse. Fuera de una carrera, `Ctrl+C` y `Ctrl+D` cierran el programa.
 
 El flujo completo, con todas sus ramas, está en [`docs/flujo-fase1.md`](docs/flujo-fase1.md) (bucle de carreras) y [`docs/flujo-fase2.md`](docs/flujo-fase2.md) (perfiles, tarifas, histórico y `Ctrl+C`).
 

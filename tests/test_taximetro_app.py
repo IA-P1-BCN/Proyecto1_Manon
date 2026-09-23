@@ -518,7 +518,31 @@ class TestInterrupciones:
         lineas = self._sesion_conductor(reloj, calendario, ["1", KeyboardInterrupt])
         assert lineas[-1] == "TOTAL A COBRAR: 0,00 €"
 
-    def test_el_taximetro_sigue_contando_durante_la_pregunta(
+    def test_si_cobra_el_importe_del_ctrl_c(self, reloj, calendario) -> None:
+        # Fase 3 (T9.8): el importe se congela al preguntar; el minuto que se
+        # tarda en contestar «Sí» no se cobra.
+        lineas: list[str] = []
+        pasos = iter([CONDUCTOR, "1", KeyboardInterrupt, "1"])
+
+        def entrada(prompt: str = "") -> str:
+            paso = next(pasos)
+            if paso == "1" and lineas and "Vas a salir" in lineas[-1]:
+                reloj.avanzar(60)  # un minuto con la pregunta en pantalla
+            if paso is KeyboardInterrupt:
+                reloj.avanzar(10)  # 10 s de carrera antes del Ctrl+C
+                raise paso
+            return paso
+
+        TaximetroApp(
+            servicio=servicio_de_prueba(Taximetro(reloj=reloj, calendario=calendario)),
+            entrada=entrada,
+            salida=lineas.append,
+            entrada_oculta=teclea_la_buena,
+        ).ejecutar()
+        assert "Importe a cobrar: 0,50 €" in menus(lineas, "Vas a salir")[0]
+        assert "TOTAL A COBRAR: 0,50 €" in lineas
+
+    def test_no_sigue_y_cobra_tambien_la_pregunta(
         self, reloj, calendario
     ) -> None:
         lineas: list[str] = []

@@ -41,6 +41,12 @@ def visible(widget) -> bool:
     return widget.winfo_manager() != ""
 
 
+def finalizar_confirmando(pantalla: PantallaTaximetro) -> None:
+    """FINALIZAR y luego SÍ, FINALIZAR: el cierre completo desde T9.8."""
+    pantalla.tecla_finalizar.invoke()
+    pantalla.confirmacion.si.invoke()
+
+
 def lampara_encendida(pantalla: PantallaTaximetro) -> str:
     if pantalla.lampara_ocupado.cget("bg") == estilo.OCUPADO_ENCENDIDA.fondo:
         assert pantalla.lampara_libre.cget("bg") == estilo.LIBRE_APAGADA.fondo
@@ -133,14 +139,14 @@ class TestRefresco:
         for _ in range(3):
             pantalla.tecla_iniciar.invoke()
             pantalla.tecla_cambiar.invoke()
-            pantalla.tecla_finalizar.invoke()
+            finalizar_confirmando(pantalla)
         pantalla.tecla_iniciar.invoke()
         procesar(0.05)
         assert len(pantalla._temporizadores) == 1
 
     def test_libre_no_refresca(self, pantalla: PantallaTaximetro, procesar) -> None:
         pantalla.tecla_iniciar.invoke()
-        pantalla.tecla_finalizar.invoke()
+        finalizar_confirmando(pantalla)
         procesar(REFRESCO_MS / 1000 * 2)
         assert pantalla._temporizadores == set()
 
@@ -151,13 +157,13 @@ class TestFinalizar:
     def test_carrera_finalizada_cabe_en_su_columna(self, pantalla: PantallaTaximetro) -> None:
         # Pasa a dos líneas en vez de cortarse contra el visor.
         pantalla.tecla_iniciar.invoke()
-        pantalla.tecla_finalizar.invoke()
+        finalizar_confirmando(pantalla)
         assert int(pantalla.estado.cget("wraplength")) == 300
 
     def test_deja_el_total_a_cobrar(self, pantalla: PantallaTaximetro, pasar) -> None:
         pantalla.tecla_iniciar.invoke()
         pasar(60)
-        pantalla.tecla_finalizar.invoke()
+        finalizar_confirmando(pantalla)
         assert lampara_encendida(pantalla) == "LIBRE"
         assert pantalla.visor.texto == "3,00 €"
         assert pantalla.rotulo.cget("text") == "TOTAL A COBRAR"
@@ -169,7 +175,7 @@ class TestFinalizar:
     ) -> None:
         pantalla.tecla_iniciar.invoke()
         pasar(252)
-        pantalla.tecla_finalizar.invoke()
+        finalizar_confirmando(pantalla)
         pasar(600)
         assert pantalla.dato_carrera.cget("text") == "Nº 1"
         assert pantalla.dato_tiempo.cget("text") == "00:04:12"
@@ -179,7 +185,7 @@ class TestFinalizar:
     ) -> None:
         pantalla.tecla_iniciar.invoke()
         pasar(60)
-        pantalla.tecla_finalizar.invoke()
+        finalizar_confirmando(pantalla)
         pasar(60)
         procesar(REFRESCO_MS / 1000 * 2)
         assert pantalla.visor.texto == "3,00 €"
@@ -187,7 +193,7 @@ class TestFinalizar:
     def test_vuelve_a_iniciar_carrera(self, pantalla: PantallaTaximetro, pasar) -> None:
         pantalla.tecla_iniciar.invoke()
         pasar(60)
-        pantalla.tecla_finalizar.invoke()
+        finalizar_confirmando(pantalla)
         assert visible(pantalla.tecla_iniciar) and visible(pantalla.tecla_volver)
         pantalla.tecla_iniciar.invoke()
         assert pantalla.dato_carrera.cget("text") == "Nº 2"
@@ -203,9 +209,110 @@ class TestFinalizar:
         pantalla = App(servicio, raiz=raiz).mostrar(PantallaTaximetro)
         pantalla.tecla_iniciar.invoke()
         pasar(60)
-        pantalla.tecla_finalizar.invoke()
+        finalizar_confirmando(pantalla)
         assert pantalla.visor.texto == "3,00 €"
         assert pantalla.tarifa.cget("text") == NO_GUARDADA
+
+
+class TestConfirmarFinalizar:
+    """FINALIZAR pregunta antes de cerrar, con el importe congelado (T9.8)."""
+
+    def test_finalizar_pregunta_y_no_cierra_todavia(
+        self, pantalla: PantallaTaximetro, pasar
+    ) -> None:
+        pantalla.tecla_iniciar.invoke()
+        pasar(10)
+        pantalla.tecla_finalizar.invoke()
+        assert pantalla.confirmacion.abierta
+        assert pantalla.confirmacion.pregunta.cget("text") == "¿Finalizar la carrera nº 1?"
+        assert pantalla.confirmacion.importe.cget("text") == "0,50 €"
+        assert pantalla.confirmacion.si.titulo == "SÍ, FINALIZAR"
+        assert pantalla.servicio.estado_actual() is not None
+
+    def test_si_cobra_el_importe_de_la_pulsacion(self, pantalla: PantallaTaximetro, pasar) -> None:
+        pantalla.tecla_iniciar.invoke()
+        pasar(10)
+        pantalla.tecla_finalizar.invoke()
+        pasar(60)  # un minuto con la pregunta en pantalla
+        pantalla.confirmacion.si.invoke()
+        assert not pantalla.confirmacion.abierta
+        assert pantalla.visor.texto == "0,50 €"
+        assert pantalla.rotulo.cget("text") == "TOTAL A COBRAR"
+
+    def test_no_sigue_y_cobra_tambien_la_pregunta(
+        self, pantalla: PantallaTaximetro, pasar
+    ) -> None:
+        pantalla.tecla_iniciar.invoke()
+        pasar(10)
+        pantalla.tecla_finalizar.invoke()
+        pasar(60)
+        pantalla.confirmacion.no.invoke()
+        assert not pantalla.confirmacion.abierta
+        assert lampara_encendida(pantalla) == "OCUPADO"
+        assert pantalla.visor.texto == "3,50 €"
+
+    def test_si_a_la_izquierda_no_a_la_derecha(self, pantalla: PantallaTaximetro) -> None:
+        # Un doble toque sobre FINALIZAR (a la derecha) cae en NO.
+        pantalla.tecla_iniciar.invoke()
+        pantalla.tecla_finalizar.invoke()
+        confirmacion = pantalla.confirmacion
+        assert confirmacion.si.pack_info()["side"] == "left"
+        assert confirmacion.si.master.pack_slaves() == [confirmacion.si, confirmacion.no]
+
+
+class TestCerrarLaVentana:
+    """El ✕ con una carrera en curso (`docs/flujo-fase3.md`)."""
+
+    def aspa(self, app: App) -> None:
+        app.raiz.tk.call(app.raiz.protocol("WM_DELETE_WINDOW"))
+
+    def test_sin_carrera_cierra(self, app: App, pantalla, cerrada) -> None:
+        self.aspa(app)
+        assert cerrada(app.raiz)
+
+    def test_con_carrera_pregunta(self, app: App, pantalla, pasar, cerrada) -> None:
+        pantalla.tecla_iniciar.invoke()
+        pasar(10)
+        self.aspa(app)
+        assert not cerrada(app.raiz)
+        assert pantalla.confirmacion.pregunta.cget("text") == (
+            "Vas a salir del programa con la carrera nº 1 en curso."
+        )
+        assert pantalla.confirmacion.si.titulo == "SÍ, FINALIZAR Y SALIR"
+        assert pantalla.confirmacion.importe.cget("text") == "0,50 €"
+
+    def test_un_segundo_aspa_cuenta_como_no(self, app: App, pantalla, cerrada) -> None:
+        pantalla.tecla_iniciar.invoke()
+        self.aspa(app)
+        self.aspa(app)  # doble clic nervioso
+        assert not cerrada(app.raiz)
+        assert not pantalla.confirmacion.abierta
+        assert pantalla.servicio.estado_actual() is not None
+
+    def test_si_deja_el_total_a_la_vista_y_solo_cerrar(
+        self, app: App, pantalla, pasar, cerrada
+    ) -> None:
+        pantalla.tecla_iniciar.invoke()
+        pasar(10)
+        self.aspa(app)
+        pasar(60)
+        pantalla.confirmacion.si.invoke()
+        assert not cerrada(app.raiz)  # el pasajero tiene que ver el total
+        assert pantalla.visor.texto == "0,50 €"
+        assert pantalla.rotulo.cget("text") == "TOTAL A COBRAR"
+        assert visible(pantalla.tecla_cerrar)
+        assert not visible(pantalla.tecla_iniciar) and not visible(pantalla.tecla_volver)
+        pantalla.tecla_cerrar.invoke()
+        assert cerrada(app.raiz)
+
+    def test_aspa_con_el_panel_de_finalizar_abierto_cuenta_como_no(
+        self, app: App, pantalla
+    ) -> None:
+        pantalla.tecla_iniciar.invoke()
+        pantalla.tecla_finalizar.invoke()
+        self.aspa(app)
+        assert not pantalla.confirmacion.abierta
+        assert pantalla.servicio.estado_actual() is not None
 
 
 class TestLateral:
@@ -227,7 +334,7 @@ class TestLateral:
         pantalla = app.mostrar(PantallaTaximetro)
         pantalla.tecla_iniciar.invoke()
         pasar(60)
-        pantalla.tecla_finalizar.invoke()
+        finalizar_confirmando(pantalla)
         pantalla.tecla_volver.invoke()
         assert app.mostrar(PantallaTaximetro).visor.texto == "0,00 €"
 

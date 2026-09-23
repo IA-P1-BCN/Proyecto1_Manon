@@ -123,6 +123,8 @@ class TestServicioTaximetro:
             "cambiar_tarifas",
             "resumen_del_dia",
             "comprobar_contrasena",
+            "congelar_importe",
+            "seguir_carrera",
         ],
     )
     def test_expone_la_api_acordada(self, metodo: str) -> None:

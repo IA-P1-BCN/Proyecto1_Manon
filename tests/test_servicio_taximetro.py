@@ -35,6 +35,17 @@ from taximetro.taximetro import Taximetro
 
 
 @pytest.fixture
+def pasar(reloj, calendario):
+    """Adelanta a la vez el reloj del importe y el calendario."""
+
+    def _pasar(segundos: float) -> None:
+        reloj.avanzar(segundos)
+        calendario.avanzar(segundos)
+
+    return _pasar
+
+
+@pytest.fixture
 def servicio(reloj, calendario) -> ServicioTaximetro:
     """Un servicio sobre un taxímetro libre, en memoria y con relojes falsos."""
     return ServicioTaximetro(Taximetro(reloj=reloj, calendario=calendario))
@@ -165,6 +176,48 @@ class TestFinalizarCarrera:
         assert cerrada.guardada is False
         assert cerrada.carrera.importe == pytest.approx(0.50)
         assert servicio.estado_actual() is None
+
+
+class TestCongelarImporte:
+    """No se cobra al pasajero lo que se tarda en confirmar el cierre (T9.8)."""
+
+    def test_da_la_foto_del_instante(self, servicio, pasar) -> None:
+        servicio.iniciar_carrera()
+        pasar(10)
+        congelada = servicio.congelar_importe()
+        assert (congelada.importe, congelada.duracion) == (pytest.approx(0.50), 10)
+
+    def test_confirmar_cobra_lo_congelado(self, servicio, pasar) -> None:
+        servicio.iniciar_carrera()
+        pasar(10)
+        servicio.congelar_importe()
+        pasar(60)
+        cerrada = servicio.finalizar_carrera()
+        assert cerrada.carrera.importe == pytest.approx(0.50)
+        assert cerrada.carrera.duracion == 10
+
+    def test_seguir_cobra_tambien_la_pregunta(self, servicio, pasar) -> None:
+        servicio.iniciar_carrera()
+        pasar(10)
+        servicio.congelar_importe()
+        pasar(60)
+        servicio.seguir_carrera()
+        assert servicio.estado_actual().importe == pytest.approx(3.50)
+        assert servicio.finalizar_carrera().carrera.importe == pytest.approx(3.50)
+
+    def test_cambiar_de_estado_descarta_el_cierre_pedido(self, servicio, pasar) -> None:
+        servicio.iniciar_carrera()
+        pasar(10)
+        servicio.congelar_importe()
+        pasar(10)
+        servicio.cambiar_estado(Estado.PARADO)
+        pasar(10)
+        # 20 s en movimiento + 10 s parado: se cierra ahora, no al congelar.
+        assert servicio.finalizar_carrera().carrera.importe == pytest.approx(1.20)
+
+    def test_sin_carrera_lanza_sin_carrera_error(self, servicio) -> None:
+        with pytest.raises(SinCarreraError):
+            servicio.congelar_importe()
 
 
 class TestTarifas:

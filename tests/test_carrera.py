@@ -214,6 +214,44 @@ class TestDuracion:
         assert carrera.duracion() == 60
 
 
+class TestCerrarEnUnInstanteAnterior:
+    """Cobrar lo que había al pulsar FINALIZAR, no al confirmar (Fase 3, T9.8)."""
+
+    def test_importe_en_un_instante_anterior(self, carrera: Carrera, reloj) -> None:
+        reloj.avanzar(10)
+        pulsacion = reloj()
+        reloj.avanzar(50)
+        assert carrera.importe_actual(en=pulsacion) == pytest.approx(0.50)
+        assert carrera.importe_actual() == pytest.approx(3.00)
+
+    def test_finalizar_en_un_instante_anterior(self, carrera: Carrera, reloj, calendario) -> None:
+        reloj.avanzar(10)
+        calendario.avanzar(10)
+        pulsacion, hora = reloj(), calendario()
+        reloj.avanzar(50)  # lo que se tarda en confirmar
+        calendario.avanzar(50)
+        assert carrera.finalizar(en=pulsacion, hora_fin=hora) == pytest.approx(0.50)
+        assert carrera.hora_fin == hora
+        assert carrera.duracion() == 10
+
+    def test_nunca_antes_del_ultimo_cambio_de_estado(self, carrera: Carrera, reloj) -> None:
+        # Ese tramo ya se cobró a otra tarifa: cerrar antes restaría importe.
+        antes = reloj()
+        reloj.avanzar(10)
+        carrera.cambiar_estado(Estado.PARADO)
+        with pytest.raises(ValueError):
+            carrera.finalizar(en=antes)
+        with pytest.raises(ValueError):
+            carrera.importe_actual(en=antes)
+        assert not carrera.finalizada
+
+    def test_duracion_hasta_un_instante(self, carrera: Carrera, calendario) -> None:
+        calendario.avanzar(10)
+        hasta = calendario()
+        calendario.avanzar(50)
+        assert carrera.duracion(hasta=hasta) == 10
+
+
 class TestFinalizar:
     """US-03 / T3.1: cerrar la carrera y devolver el total a cobrar."""
 
