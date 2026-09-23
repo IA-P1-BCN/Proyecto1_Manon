@@ -265,6 +265,16 @@ config/
 
 **Why:** each step sits on a finished, tested base. Starting with US-08 would have meant wiring the CLI's password into `TaximetroApp` and then rewiring it into the service. Starting with the GUI would have left the password screen unconnected until the end.
 
+## GUI skeleton (T9.3, T9.14)
+
+**As built (2026-09-23):**
+
+- **`App`** (`gui/app.py`) owns the `Tk` window (1280×800 minimum, title, background) and shows one `Pantalla` at a time. `mostrar(Tipo, **datos)` destroys the current screen and builds the next, and screens ask each other for navigation through it. The ✕ calls `al_cerrar_ventana()`, which just closes for now; T9.8 adds the "carrera en curso" confirmation there.
+- **`Pantalla`** (`gui/pantalla.py`) is the base of every screen. It gives access to `app` and `servicio`, and `programar(ms, fn)` wraps `after()` so that **pending timers are cancelled when the screen is destroyed**. Otherwise the 200 ms refresh (T9.13) would keep calling widgets that no longer exist, raising `TclError` inside a callback, which tkinter swallows (see *Operation logs*).
+- **`python -m taximetro`** (`taximetro/__main__.py`) calls `configurar_logs()` first, then `App(ServicioTaximetro.por_defecto()).ejecutar()`. It uses the same wiring as the CLI.
+- **`inicio.py` is a placeholder** (title + Salir) so the window opens on something. T9.7 replaces it with the approved screen.
+- **Tests** (`tests/gui/`, a package so names don't clash with `tests/`) use a hidden `Tk()` window injected into `App`. They never enter `mainloop()`: they call methods and process events with `update()`. Without a display the GUI tests are **skipped locally but fail in CI** (`CI` is set there), so a missing display can't silently hide them. CI installs `xvfb` and runs `xvfb-run -a pytest`.
+
 ## Tracking: the refactor lives inside US-09
 
 **Decision (2026-09-23):** no separate epic. The refactor is tasks **T9.10–T9.12** of US-09 ([#100](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/100)–[#102](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/102)), whose acceptance criterion ("se apoya en la lógica de backend ya existente sin duplicarla") is what it delivers. Also added: T9.13, the meter screen with its 200 ms refresh ([#103](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/103)), which had no task, and T9.14, `xvfb` in CI ([#104](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/104)). T8.2, T8.3 and T9.3 (#45, #46, #50) were reworded to match today's decisions. The work order above still applies: T9.10–T9.12 first, even though they're numbered inside US-09.
