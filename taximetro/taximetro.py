@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Callable
 
@@ -22,6 +23,24 @@ class CarreraActivaError(Exception):
 
 class SinCarreraError(Exception):
     """Se lanza al intentar finalizar cuando no hay ninguna carrera activa."""
+
+
+@dataclass(frozen=True)
+class Congelacion:
+    """El instante en que se pidió cerrar la carrera, y lo que se cobraría en él.
+
+    `reloj` y `hora` son las lecturas de los dos relojes en ese instante: si se
+    confirma, la carrera se cierra ahí y no cuando llega la respuesta.
+    """
+
+    carrera: Carrera
+    reloj: float
+    hora: datetime
+
+    @property
+    def importe(self) -> float:
+        """El importe de la carrera en ese instante."""
+        return self.carrera.importe_actual(en=self.reloj)
 
 
 class Taximetro:
@@ -62,6 +81,7 @@ class Taximetro:
         self._reloj = reloj
         self._calendario = calendario
         self._carrera: Carrera | None = None
+        self._congelacion: Congelacion | None = None
         self._historial = historial
         self._siguiente_id = 1 + (historial.ultimo_numero() if historial else 0)
 
@@ -123,8 +143,37 @@ class Taximetro:
         self._siguiente_id += 1
         return self._carrera
 
+    def congelar(self) -> Congelacion:
+        """Marca el instante en que se pide cerrar la carrera activa (FINALIZAR, ✕, Ctrl+C).
+
+        Si luego se confirma, `finalizar_carrera()` cobra lo que había en este
+        instante: no se cobra al pasajero lo que se tarda en contestar. Si no,
+        `descongelar()` y la carrera sigue como si no hubiera pasado nada (el
+        tiempo de la pregunta también se cobra: el taxi seguía ocupado).
+        Sin carrera activa lanza `SinCarreraError`.
+        """
+        carrera = self.carrera_activa
+        if carrera is None:
+            raise SinCarreraError("No hay ninguna carrera activa.")
+        self._congelacion = Congelacion(carrera=carrera, reloj=self._reloj(), hora=self._calendario())
+        logger.info(
+            "cierre_solicitado %s",
+            campos(carrera=carrera.id, importe=self._congelacion.importe),
+        )
+        return self._congelacion
+
+    def descongelar(self) -> None:
+        """Descarta el cierre pedido: la carrera sigue. Sin cierre pedido no hace nada."""
+        if self._congelacion is None:
+            return
+        logger.info("cierre_cancelado %s", campos(carrera=self._congelacion.carrera.id))
+        self._congelacion = None
+
     def finalizar_carrera(self) -> float:
         """Cierra la carrera activa, la guarda en el histórico y devuelve el total.
+
+        Si se pidió el cierre con `congelar()`, la carrera se cierra en ese
+        instante; si no, ahora.
 
         La carrera se cierra antes de guardarla: si el fichero no se puede
         escribir, sale el `OSError` pero la carrera ya está cerrada y su total
@@ -135,7 +184,11 @@ class Taximetro:
         if carrera is None:
             logger.warning("finalizar_rechazado %s", campos(motivo="sin_carrera"))
             raise SinCarreraError("No hay ninguna carrera activa.")
-        total = carrera.finalizar()
+        congelacion, self._congelacion = self._congelacion, None
+        if congelacion is not None and congelacion.carrera is carrera:
+            total = carrera.finalizar(en=congelacion.reloj, hora_fin=congelacion.hora)
+        else:
+            total = carrera.finalizar()
         if self._historial is not None:
             self._historial.registrar(carrera)
         return total

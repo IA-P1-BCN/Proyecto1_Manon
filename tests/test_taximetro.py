@@ -229,6 +229,67 @@ class TestFinalizarCarrera:
         assert segunda_sesion.iniciar_carrera().id == 3
 
 
+class TestCongelar:
+    """Pedir el cierre fija el importe; confirmar cobra ese, cancelar sigue (T9.8)."""
+
+    def test_congelar_da_el_importe_de_ese_instante(self, taximetro: Taximetro, reloj) -> None:
+        taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        assert taximetro.congelar().importe == pytest.approx(0.50)
+
+    def test_confirmar_cobra_lo_congelado(self, taximetro: Taximetro, reloj, calendario) -> None:
+        carrera = taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        calendario.avanzar(10)
+        congelacion = taximetro.congelar()
+        reloj.avanzar(60)  # un minuto con la pregunta en pantalla
+        calendario.avanzar(60)
+        assert taximetro.finalizar_carrera() == pytest.approx(0.50)
+        assert carrera.hora_fin == congelacion.hora
+
+    def test_cancelar_sigue_como_si_nada(self, taximetro: Taximetro, reloj) -> None:
+        # El tiempo de la pregunta también se cobra: el taxi seguía ocupado.
+        taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        taximetro.congelar()
+        reloj.avanzar(60)
+        taximetro.descongelar()
+        assert taximetro.finalizar_carrera() == pytest.approx(3.50)
+
+    def test_sin_congelar_cierra_ahora(self, taximetro: Taximetro, reloj) -> None:
+        taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        assert taximetro.finalizar_carrera() == pytest.approx(0.50)
+
+    def test_la_congelacion_no_pasa_a_la_siguiente_carrera(
+        self, taximetro: Taximetro, reloj
+    ) -> None:
+        taximetro.iniciar_carrera()
+        taximetro.congelar()
+        taximetro.finalizar_carrera()
+        taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        assert taximetro.finalizar_carrera() == pytest.approx(0.50)
+
+    def test_sin_carrera_no_se_congela(self, taximetro: Taximetro) -> None:
+        with pytest.raises(SinCarreraError):
+            taximetro.congelar()
+
+    def test_descongelar_sin_congelar_no_hace_nada(self, taximetro: Taximetro) -> None:
+        taximetro.descongelar()
+        assert taximetro.carrera_activa is None
+
+    def test_registra_la_peticion_y_la_cancelacion(
+        self, eventos, taximetro: Taximetro, reloj
+    ) -> None:
+        taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        taximetro.congelar()
+        taximetro.descongelar()
+        assert "cierre_solicitado carrera=1 importe=0.50" in eventos()
+        assert "cierre_cancelado carrera=1" in eventos()
+
+
 class TestResumenDelDia:
     """US-05: el Taximetro pide al histórico las carreras de hoy."""
 
