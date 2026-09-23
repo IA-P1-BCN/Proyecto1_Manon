@@ -171,6 +171,14 @@ The Fase 2 requirement still holds: *"registrar en todo momento qué está ocurr
 
 **Alternatives considered:** result objects (`Resultado(ok, datos, error)`, fits HTTP well but is unidiomatic Python and rewrites all the CLI's error handling); the service returning final Spanish messages (no duplication, but it moves wording out of the interface layer).
 
+## Refactor: closing a ride never fails because of the disk (T9.10)
+
+**Decision (2026-09-23):** `finalizar_carrera()` returns `CarreraCerrada(carrera: InstantaneaCarrera, guardada: bool)` and does **not** raise when the history can't be written. `guardada=False` tells the interface to add its warning under the total. It still raises `SinCarreraError` when there is no ride. This is the one exception to the rule above. Every other failed read or write (`cambiar_tarifas`, `resumen_del_dia`) raises `AlmacenamientoError`, which wraps the original `OSError` in `__cause__`.
+
+**Why:** closing and charging always succeed. By the time the save is attempted the ride is already closed and its total frozen (`decisions-fase2.md`). If this failure were an exception carrying the total inside it, an interface that forgot the `except` would never show the passenger the amount. As a return value it can't be skipped. Same behaviour as the Fase 2 CLI, which shows the total and then the warning.
+
+**Also settled while building it:** the snapshot is `InstantaneaCarrera(id, estado, importe)` (nothing else is on screen). The rates come back as `TarifasVigentes(parado, en_movimiento)`, not as a `Tarifa`. `cambiar_estado(estado)` takes the target state, so each interface maps its single PARAR/ARRANCAR key to the opposite state. The service adds no log lines of its own, because the domain already logs each event where it happens.
+
 ## Refactor: Fase 4 replacement points are already in place
 
 **Decision (2026-09-23):** no extra code for Fase 4. The replacement points are written down:

@@ -34,7 +34,7 @@ Before changing behaviour, check whether it was already decided:
 - **`docs/future-implementation-ideas.md`** — ideas deliberately postponed; check before "improving" something that was dropped on purpose.
 - **`docs/demo-fase1.md`** — the script for the client demo; keep it true to the real CLI output.
 
-## Structure (Fase 1 + Fase 2 so far)
+## Structure (Fase 1 + Fase 2, Fase 3 so far)
 
 ```
 taximetro/
@@ -45,6 +45,7 @@ taximetro/
     historial.py        # Historial: append-only CSV of finished rides (Fase 2, US-05)
     logs.py             # configurar_logs(): rotating logs/taximetro.log, called only from __main__ (US-06)
     taximetro.py        # Taximetro: owns the Tarifa and the active Carrera
+    servicio_taximetro.py  # ServicioTaximetro: the façade the interfaces use (Fase 3, T9.10)
     taximetro_app.py    # TaximetroApp: CLI loop, prints usage on startup, no docs required to use it
     utils.py            # formato_euros()
 tests/
@@ -56,6 +57,7 @@ tests/
     test_historial.py
     test_logs.py
     test_taximetro.py
+    test_servicio_taximetro.py
     test_taximetro_app.py
     test_utils.py
 docs/                   # see "Design decisions" above
@@ -74,7 +76,7 @@ One test file per module. Later phases add `auth.py`, a GUI module, then `api/` 
 - `Tarifa` — state → rate lookup and `calcular_importe(estado, segundos)`. Owned by `Taximetro`, injected into each `Carrera`, so Fase 2's `ConfigTarifas` only touches `Taximetro`.
 - `Taximetro` — owns the active `Carrera`, the `Tarifa` and the injected clocks. Raises `CarreraActivaError` on a double `iniciar_carrera()`.
 - `TaximetroApp` — CLI only. Knows which mode it is in and produces the driver-facing messages itself; no fare logic.
-- `ServicioTaximetro` (Fase 3, not built yet) — the only object the CLI and the GUI talk to. Wraps `Taximetro` and `Auth`, returns data (snapshots, numbers), never a live `Carrera`; Fase 4 swaps it for an HTTP client with the same methods.
+- `ServicioTaximetro` (Fase 3) — the only object the CLI and the GUI talk to. Wraps `Taximetro` and `Auth`, returns data (snapshots, numbers), never a live `Carrera`; Fase 4 swaps it for an HTTP client with the same methods.
 
 **Two clocks, injected, never called globally:** `reloj: Callable[[], float] = time.monotonic` measures elapsed time for fare accrual (a wall clock can jump backwards and undercharge); `calendario: Callable[[], datetime] = datetime.now` stamps `hora_inicio` / `hora_fin`. `TaximetroApp` takes `entrada=input` and `salida=print` for the same reason — tests script commands in and read printed lines out.
 
