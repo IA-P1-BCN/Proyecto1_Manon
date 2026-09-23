@@ -1,7 +1,7 @@
 # Integración continua del taxímetro TTX-247.
 #
 # Ejecuta la batería de tests en cada push y en cada pull request contra
-# `main`, `dev` y `fase-2`. La cobertura y el umbral del 90 % no se pasan aquí como
+# `main`, `dev`, `fase-2` y `fase-3`. La cobertura y el umbral del 90 % no se pasan aquí como
 # flags: viven en `addopts` de `pyproject.toml`, para que `pytest` a secas
 # aplique exactamente las mismas reglas en local y en CI.
 
@@ -9,9 +9,9 @@ name: tests
 
 on:
   push:
-    branches: [main, dev, fase-2]
+    branches: [main, dev, fase-2, fase-3]
   pull_request:
-    branches: [main, dev, fase-2]
+    branches: [main, dev, fase-2, fase-3]
 
 jobs:
   pytest:
