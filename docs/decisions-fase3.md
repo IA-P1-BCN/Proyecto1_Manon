@@ -284,6 +284,20 @@ config/
 - **Assumption:** a pressed key turns slightly lighter (`aclarar`, 18 % towards white). The mockup has no pressed colour, and touch needs visible feedback.
 - A screenshot of a sample window built from the theme was checked against the mockup (visor, lamps, state colours, keys, sidebar).
 
+## The amount display (T9.6)
+
+**As built (2026-09-23):** `gui/visor.py` → `Visor(tk.Canvas)` draws the amount in 7-segment digits, using the mockup's segment shapes, with unlit segments still visible.
+
+- **The digits come from `formato_euros()`.** The visor takes the formatted string apart instead of rounding on its own, so it rounds exactly like the CLI and the history (CLAUDE.md: the shown amount is produced only by `formato_euros()`).
+- **3 integer digits, a 4th from 1.000 €**, in the same width (decided with the user; see `diseno-interfaz-fase3.md`, screen 4).
+- **No redrawing on refresh.** `mostrar()` runs five times a second, so it only recolours segments; the polygons are rebuilt only when the digit count changes (3 ↔ 4).
+- The IMPORTE / TOTAL A COBRAR caption and the 200 ms refresh belong to the meter screen (T9.13), which reads `ServicioTaximetro.estado_actual()`.
+
+## Two GUI test problems found and fixed during T9.6
+
+- **One Tk interpreter for the whole test session.** Creating and destroying a `Tk()` per test made Tk 9.0.4 on Windows (Python 3.14) abort now and then when creating the next one: `Windows fatal exception: code 0x80000003`, sometimes killing the pytest process. The test that created a second `Tk()` while the fixture's was alive made it much more likely (4/25 runs of `test_app.py`). It never showed on Linux CI. Now `tests/gui/conftest.py` has a session-scoped `Tk` and each test gets a fresh `Toplevel` as its window: 20/20 clean full runs, and the suite is twice as fast. For this, **`App.ejecutar()` uses `wait_window()` instead of `mainloop()`**. With the main window they behave the same, but `wait_window()` also returns when a `Toplevel` closes. The real program was checked: the window opens and `ejecutar()` returns on close.
+- **`Tecla` decides "released over the key" by geometry.** It used `winfo_containing`, which asks which window is really on top at that desktop point. Locally, any window covering the test window (the terminal, an editor) made two `Tecla` tests fail, 5 runs out of 8 on a clean `fase-3`. It now checks whether the point falls inside the key's rectangle, which is what matters and doesn't depend on other windows.
+
 ## Tracking: the refactor lives inside US-09
 
 **Decision (2026-09-23):** no separate epic. The refactor is tasks **T9.10–T9.12** of US-09 ([#100](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/100)–[#102](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/102)), whose acceptance criterion ("se apoya en la lógica de backend ya existente sin duplicarla") is what it delivers. Also added: T9.13, the meter screen with its 200 ms refresh ([#103](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/103)), which had no task, and T9.14, `xvfb` in CI ([#104](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/104)). T8.2, T8.3 and T9.3 (#45, #46, #50) were reworded to match today's decisions. The work order above still applies: T9.10–T9.12 first, even though they're numbered inside US-09.

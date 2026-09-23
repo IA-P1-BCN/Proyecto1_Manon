@@ -51,6 +51,7 @@ taximetro/
     gui/                # tkinter GUI (Fase 3, US-09): app.py (App: window + screen switching),
                         # pantalla.py (Pantalla base: timers cancelled on leave), estilo.py (theme:
                         # sizes, colours, px fonts ≥ 24), tecla.py (Tecla: touch key ≥ 88 px),
+                        # visor.py (Visor: 7-segment amount, digits from formato_euros),
                         # one module per screen (inicio.py is a placeholder until T9.7)
     taximetro_app.py    # TaximetroApp: CLI loop, prints usage on startup, no docs required to use it
     utils.py            # formato_euros()
@@ -67,7 +68,7 @@ tests/
     test_servicio_taximetro.py
     test_taximetro_app.py
     test_utils.py
-    gui/                # GUI tests: a hidden Tk window, no mainloop(); conftest.py has the fixtures
+    gui/                # GUI tests: one Tk per session, a fresh hidden Toplevel per test, no mainloop()
 config/
     tarifas.example.json  # committed; the live tarifas.json is git-ignored
     credenciales.json   # committed: salt + scrypt hash of the Admin password, never the password
