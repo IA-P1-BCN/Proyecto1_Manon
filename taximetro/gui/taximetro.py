@@ -12,6 +12,7 @@ import tkinter as tk
 from typing import TYPE_CHECKING
 
 from taximetro.gui import estilo
+from taximetro.gui.confirmacion import Confirmacion
 from taximetro.gui.pantalla import Pantalla
 from taximetro.gui.tecla import Tecla
 from taximetro.gui.visor import Visor
@@ -40,6 +41,7 @@ class PantallaTaximetro(Pantalla):
         super().__init__(app)
         self._cerrada: CarreraCerrada | None = None  # la última, mientras se cobra
         self._refrescando = False
+        self._saliendo = False  # «SÍ, FINALIZAR Y SALIR»: solo queda la tecla CERRAR
 
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, minsize=estilo.LATERAL)
@@ -54,6 +56,7 @@ class PantallaTaximetro(Pantalla):
         self._montar_teclas(principal)
         self._montar_lateral(lateral)
         self._montar_ayuda()
+        self.confirmacion = Confirmacion(self)  # la última: queda por encima de todo
         self._pintar()
 
     # ------------------------------------------------------------------
@@ -75,14 +78,70 @@ class PantallaTaximetro(Pantalla):
         self.servicio.cambiar_estado(destino)
         self._pintar()
 
+    def pedir_finalizar(self) -> None:
+        """FINALIZAR: congela el importe y pregunta antes de cerrar (T9.8).
+
+        Un toque sin querer con el coche en marcha cerraría una carrera que no
+        se puede reabrir. Lo que se cobra es lo de este instante, no lo que se
+        tarda en contestar.
+        """
+        congelada = self.servicio.congelar_importe()
+        self.confirmacion.abrir(
+            pregunta=f"¿Finalizar la carrera nº {congelada.id}?",
+            importe=formato_euros(congelada.importe),
+            si="SÍ, FINALIZAR",
+            al_si=self._confirmar_finalizar,
+            al_no=self.seguir,
+        )
+
+    def seguir(self) -> None:
+        """NO, SEGUIR: la carrera sigue como si nada (también se cobra la pregunta)."""
+        self.servicio.seguir_carrera()
+        self.confirmacion.cerrar()
+        self._pintar()
+
     def finalizar(self) -> None:
         """Cierra la carrera y deja el total en el visor hasta la siguiente.
 
-        Sin confirmación todavía: el panel SÍ, FINALIZAR / NO, SEGUIR (T9.8)
-        se pondrá delante de este método.
+        Si antes se pidió el cierre, se cobra el importe congelado entonces.
         """
         self._cerrada = self.servicio.finalizar_carrera()
         self._pintar()
+
+    def al_cerrar_ventana(self) -> bool:
+        """El ✕ con una carrera en curso pregunta antes de salir (`flujo-fase3.md`).
+
+        Con el panel ya abierto, el ✕ cuenta como NO, SEGUIR: un doble clic
+        nervioso nunca termina una carrera. Sin carrera, se cierra sin preguntar.
+        """
+        if self.confirmacion.abierta:
+            self.seguir()
+            return True
+        if self.servicio.estado_actual() is None:
+            return False
+        congelada = self.servicio.congelar_importe()
+        self.confirmacion.abrir(
+            pregunta=f"Vas a salir del programa con la carrera nº {congelada.id} en curso.",
+            importe=formato_euros(congelada.importe),
+            si="SÍ, FINALIZAR Y SALIR",
+            al_si=self._finalizar_y_salir,
+            al_no=self.seguir,
+        )
+        return True
+
+    def _confirmar_finalizar(self) -> None:
+        self.confirmacion.cerrar()
+        self.finalizar()
+
+    def _finalizar_y_salir(self) -> None:
+        """Cierra la carrera y deja el total a la vista con una sola tecla, CERRAR.
+
+        Cerrar la ventana en el acto escondería el total antes de que el
+        pasajero lo vea; el programa termina al pulsar CERRAR.
+        """
+        self.confirmacion.cerrar()
+        self._saliendo = True
+        self.finalizar()
 
     def volver(self) -> None:
         """Volver a la pantalla de inicio (solo existe sin carrera)."""
@@ -148,10 +207,15 @@ class PantallaTaximetro(Pantalla):
                 self.tarifa.configure(text=NO_GUARDADA, fg=estilo.LED_AMBAR)
             self.rotulo.configure(text="TOTAL A COBRAR")
             self._mostrar_carrera(cerrada.carrera)
-        subtitulo = f"Empieza en movimiento · {self._tarifa_de(Estado.EN_MOVIMIENTO)}/s"
-        self.tecla_iniciar.configurar(subtitulo=subtitulo)
         self.tecla_cambiar.pack_forget()
         self.tecla_finalizar.pack_forget()
+        if self._saliendo:
+            self.tecla_iniciar.pack_forget()
+            self.tecla_volver.pack_forget()
+            self.tecla_cerrar.pack(fill=tk.X, expand=True)
+            return
+        subtitulo = f"Empieza en movimiento · {self._tarifa_de(Estado.EN_MOVIMIENTO)}/s"
+        self.tecla_iniciar.configurar(subtitulo=subtitulo)
         self.tecla_iniciar.pack(fill=tk.X, expand=True)
         # Encima de Ayuda: al apilar desde abajo, lo que se empaqueta después queda más arriba.
         self.tecla_volver.pack(side=tk.BOTTOM, fill=tk.X, pady=(0, estilo.SEPARACION), after=self.tecla_ayuda)
@@ -250,10 +314,14 @@ class PantallaTaximetro(Pantalla):
         alto = estilo.TECLA_TAXIMETRO
         self.tecla_cambiar = Tecla(teclas, "PARAR", self.cambiar_estado, variante=estilo.GRIS, alto=alto)
         self.tecla_finalizar = Tecla(
-            teclas, "FINALIZAR", self.finalizar, variante=estilo.ROJA, alto=alto,
+            teclas, "FINALIZAR", self.pedir_finalizar, variante=estilo.ROJA, alto=alto,
             subtitulo="Termina y muestra el total",
         )
         self.tecla_iniciar = Tecla(teclas, "INICIAR CARRERA", self.iniciar, variante=estilo.VERDE, alto=alto)
+        self.tecla_cerrar = Tecla(
+            teclas, "CERRAR", self.app.cerrar, variante=estilo.GRIS, alto=alto,
+            subtitulo="Sale del programa",
+        )
 
     def _montar_lateral(self, padre: tk.Frame) -> None:
         """Nº de carrera, tiempo e inicio arriba; Volver y Ayuda abajo."""

@@ -47,6 +47,15 @@ class Pantalla(tk.Frame):
         self._temporizadores.add(identificador)
         return identificador
 
+    def al_cerrar_ventana(self) -> bool:
+        """El ✕ de la ventana, antes de cerrar el programa.
+
+        Devuelve True si la pantalla se ocupa (p. ej. pregunta porque hay una
+        carrera en curso) y el programa no debe cerrarse todavía. Por defecto,
+        False: se cierra.
+        """
+        return False
+
     def destroy(self) -> None:
         """Cancela los temporizadores pendientes y destruye la pantalla."""
         for identificador in self._temporizadores:

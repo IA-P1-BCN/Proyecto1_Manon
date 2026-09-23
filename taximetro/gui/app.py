@@ -51,11 +51,13 @@ class App:
         return self.pantalla
 
     def al_cerrar_ventana(self) -> None:
-        """El ✕ de la ventana.
+        """El ✕ de la ventana: cierra, salvo que la pantalla tenga algo que preguntar.
 
-        De momento cierra sin más. Con una carrera en curso tendrá que
-        preguntar antes (T9.8, `docs/flujo-fase3.md`).
+        Con una carrera en curso, la pantalla del taxímetro pregunta antes
+        (`docs/flujo-fase3.md`, *Cerrar la ventana con una carrera en curso*).
         """
+        if self.pantalla is not None and self.pantalla.al_cerrar_ventana():
+            return
         self.cerrar()
 
     def cerrar(self) -> None:

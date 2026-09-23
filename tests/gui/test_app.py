@@ -61,6 +61,19 @@ class TestCerrar:
         app.raiz.tk.call(app.raiz.protocol("WM_DELETE_WINDOW"))
         assert cerrada(app.raiz)
 
+    def test_el_aspa_pregunta_antes_a_la_pantalla(self, app: App, cerrada) -> None:
+        # Si la pantalla dice que se ocupa ella (p. ej. hay una carrera), no se cierra.
+        class Ocupada(Pantalla):
+            def al_cerrar_ventana(self) -> bool:
+                return True
+
+        app.mostrar(Ocupada)
+        app.raiz.tk.call(app.raiz.protocol("WM_DELETE_WINDOW"))
+        assert not cerrada(app.raiz)
+
+    def test_por_defecto_una_pantalla_deja_cerrar(self, app: App) -> None:
+        assert app.mostrar(PantallaA).al_cerrar_ventana() is False
+
     def test_cerrar_destruye_la_pantalla_y_la_ventana(self, app: App, cerrada) -> None:
         app.cerrar()
         assert app.pantalla is None
