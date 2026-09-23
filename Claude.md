@@ -54,7 +54,9 @@ taximetro/
                         # visor.py (Visor: 7-segment amount, digits from formato_euros),
                         # taximetro.py (PantallaTaximetro: the meter, LIBRE/OCUPADO, 200 ms refresh),
                         # confirmacion.py (Confirmacion: full-screen YES/NO panel),
-                        # one module per screen (inicio.py is a placeholder until T9.7)
+                        # inicio.py, contrasena.py, administrador.py, tarifas.py, historico.py (screens 1, 2, 6-8),
+                        # franja.py (top strip), iconos.py (icons drawn on a Canvas)
+                        # one module per screen
     taximetro_app.py    # TaximetroApp: CLI loop, prints usage on startup, no docs required to use it
     utils.py            # formato_euros()
 tests/
@@ -70,7 +72,8 @@ tests/
     test_servicio_taximetro.py
     test_taximetro_app.py
     test_utils.py
-    gui/                # GUI tests: one Tk per session, a fresh hidden Toplevel per test, no mainloop()
+    gui/                # GUI tests: one Tk per session, a fresh hidden Toplevel per test, no mainloop();
+                        # test_cabe.py checks nothing is cut off or out of place on any screen
 config/
     tarifas.example.json  # committed; the live tarifas.json is git-ignored
     credenciales.json   # committed: salt + scrypt hash of the Admin password, never the password

@@ -152,6 +152,7 @@ Equivale al *menú de inicio* de la Fase 2. Aprobada el 2026-09-22.
 - **ADMINISTRADOR**: teja gris, un tercio, con candado. Lleva a la pantalla de contraseña.
 - Franja superior en estilo visor, con las tarifas vigentes (como el banner del CLI).
 - **Salir** abajo en el lateral: las acciones secundarias siempre en el mismo sitio.
+- **Ajustes al programarla (T9.7):** «ADMINISTRADOR» va a 34 px y no a 40: a 40 mide 339 px y la teja de un tercio solo tiene 309 (el navegador de la maqueta lo ajustaba solo; tkinter lo cortaría). Su subtítulo va en dos líneas: «Tarifas e histórico / con contraseña».
 
 ### 2. Pantalla de contraseña (US-08)
 
@@ -231,6 +232,7 @@ Equivale al menú de Administrador de la Fase 2. Aprobada el 2026-09-22.
   - **CAMBIAR TARIFAS**: «Los €/s de cada estado, desde la próxima carrera».
   - **VER HISTÓRICO**: «Carreras terminadas hoy y total de caja».
 - **Volver** abajo en el lateral: vuelve a Inicio. Para volver a entrar hay que teclear otra vez la contraseña.
+- **Ajustes al programarla (T9.7):** los subtítulos de las tejas y la línea de tarifas de la franja van en dos líneas, porque en una no caben en su ancho.
 
 ### 7. Administrador — cambiar tarifas
 
@@ -269,7 +271,7 @@ Aprobada el 2026-09-22.
 - Título «Histórico de hoy · dd/mm/aaaa».
 - Tabla con las columnas del CLI (Nº, Inicio, Fin, Importe): filas de 64 px, texto 28 px, sombreado alterno.
 - Abajo, en un recuadro estilo visor: «N carreras · Total del día» y el total en rojo LED.
-- **▲ / ▼** en el lateral para desplazarse cuando no caben todas (unas 7 filas por pantalla). Una barra de desplazamiento es demasiado fina para un dedo.
+- **▲ / ▼** en el lateral para desplazarse cuando no caben todas. Una barra de desplazamiento es demasiado fina para un dedo. **Caben 6 filas** con el título y el total (T9.7); ▲ ▼ avanzan una página y la última se llena hasta el final, sin huecos.
 - **Sin carreras hoy:** tabla vacía con «No hay carreras terminadas hoy.» (el texto del CLI) y total `0,00 €`.
 - Si el fichero no se puede leer: «No se pudo leer el histórico.» (el texto del CLI).
 - **Volver** abajo en el lateral: vuelve al menú de Administrador.
