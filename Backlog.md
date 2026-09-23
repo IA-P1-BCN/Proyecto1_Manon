@@ -191,7 +191,7 @@ Tareas:
 - [ ] **T9.9** Logs de la interfaz gráfica y errores de los callbacks de tkinter — `tech-task`, `could` — [#97](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/97)
 - [x] **T9.10** Refactorización: `ServicioTaximetro` (métodos, instantánea de la carrera, excepciones del contrato) — `tech-task`, `could` — [#100](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/100) ✅
 - [x] **T9.11** Refactorización: el CLI pasa a usar `ServicioTaximetro` sin cambiar su comportamiento — `tech-task`, `could` — [#101](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/101) ✅
-- [ ] **T9.12** Test de estructura: las interfaces solo importan `ServicioTaximetro` del dominio — `test`, `could` — [#102](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/102)
+- [x] **T9.12** Test de estructura: las interfaces solo importan `ServicioTaximetro` del dominio — `test`, `could` — [#102](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/102) ✅
 - [ ] **T9.13** Pantalla del taxímetro, LIBRE/OCUPADO, con el importe refrescado cada 200 ms — `feature`, `could` — [#103](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/103)
 - [ ] **T9.14** CI: pantalla virtual (`xvfb`) para los tests de la interfaz gráfica — `tech-task`, `could` — [#104](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/104)
 

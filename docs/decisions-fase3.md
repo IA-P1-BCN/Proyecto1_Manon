@@ -183,6 +183,8 @@ The Fase 2 requirement still holds: *"registrar en todo momento qué está ocurr
 
 **Pitfall found while moving the CLI (T9.11):** the menu is drawn from a snapshot taken *before* waiting for input. Anything that shows the amount must ask again (`estado_actual()`), or the driver sees the amount from before they typed. A regression test covers *Ver importe*. The GUI has the same trap, because a snapshot never updates itself.
 
+**Enforced by a test (T9.12):** `test_estructura.py` parses (with `ast`) every import in `taximetro_app.py` and in everything under `taximetro/gui/`, including screens that don't exist yet. From the `taximetro` package they may import only `servicio_taximetro`, `logs` and `utils`, plus their own package (the GUI screens among themselves). `ast` rather than a regex, so comments and strings are ignored, and imports inside functions, under `TYPE_CHECKING` or written as relative (`from ..carrera`) are still caught. The checker has its own tests with each way of sneaking a domain import in, so a broken checker can't pass silently.
+
 ## Refactor: Fase 4 replacement points are already in place
 
 **Decision (2026-09-23):** no extra code for Fase 4. The replacement points are written down:
