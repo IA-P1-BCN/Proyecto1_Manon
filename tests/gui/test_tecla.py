@@ -20,8 +20,8 @@ def pulsaciones() -> list[str]:
 def tecla(raiz, pulsaciones) -> Tecla:
     """Una FINALIZAR roja con subtítulo, en una ventana visible.
 
-    Visible porque medir la tecla y saber qué hay bajo el dedo
-    (`winfo_containing`) solo funciona con la ventana en pantalla.
+    Visible porque su tamaño y su posición en pantalla (lo que decide si el
+    dedo se levantó encima) solo existen con la ventana mostrada.
     """
     raiz.geometry("600x400+0+0")
     raiz.deiconify()
