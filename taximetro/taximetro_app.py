@@ -1,4 +1,4 @@
-"""TaximetroApp: bucle CLI que orquesta el uso del Taximetro."""
+"""TaximetroApp: bucle CLI sobre el ServicioTaximetro."""
 
 from __future__ import annotations
 
@@ -6,12 +6,16 @@ import logging
 import sys
 from typing import Callable
 
-from taximetro.carrera import Carrera, Estado
-from taximetro.config_tarifas import ConfigTarifas
-from taximetro.historial import Historial, ResumenDia
 from taximetro.logs import campos, configurar_logs
-from taximetro.tarifa import Tarifa, TarifaInvalidaError
-from taximetro.taximetro import Taximetro
+from taximetro.servicio_taximetro import (
+    AlmacenamientoError,
+    Estado,
+    InstantaneaCarrera,
+    ResumenDia,
+    ServicioTaximetro,
+    TarifaInvalidaError,
+    TarifasVigentes,
+)
 from taximetro.utils import formato_euros
 
 # Nombre fijo, no `__name__`: con `python -m taximetro.taximetro_app` este
@@ -80,11 +84,15 @@ HISTORICO_NO_GUARDADO = (
 
 
 class TaximetroApp:
-    """Capa CLI: muestra los menús numerados y llama al Taximetro.
+    """Capa CLI: muestra los menús numerados y llama al ServicioTaximetro.
 
     Arranca en el menú de inicio, donde se elige perfil: Conductor (el bucle de
     carreras de la Fase 1) o Administrador (las funciones de la Fase 2). Ver
     `docs/decisions-fase2.md`.
+
+    Del dominio solo usa el servicio, el mismo que la interfaz gráfica
+    (`docs/decisions-fase3.md`, *Structural refactor*). Recibe datos, nunca
+    objetos vivos: para saber el importe de ahora hay que volver a preguntar.
 
     `entrada` y `salida` se inyectan para que los tests puedan guionizar una
     sesión completa (lista de opciones dentro, lista de líneas fuera) sin
@@ -93,12 +101,12 @@ class TaximetroApp:
 
     def __init__(
         self,
-        taximetro: Taximetro | None = None,
+        servicio: ServicioTaximetro,
         entrada: Callable[[str], str] = input,
         salida: Callable[[str], None] = print,
     ) -> None:
-        """Inicializa la app con un Taximetro nuevo y los canales de E/S."""
-        self._taximetro = taximetro or Taximetro()
+        """Inicializa la app con el servicio y los canales de E/S."""
+        self._servicio = servicio
         self._entrada = entrada
         self._salida = salida
 
@@ -112,7 +120,7 @@ class TaximetroApp:
         Registra el arranque y el cierre, con el motivo del cierre (US-06). Un
         error inesperado queda en el log con su traza antes de propagarse.
         """
-        tarifa = self._taximetro.tarifa
+        tarifa = self._servicio.tarifas()
         logger.info(
             "aplicacion_iniciada %s",
             campos(parado=tarifa.parado, movimiento=tarifa.en_movimiento),
@@ -149,7 +157,10 @@ class TaximetroApp:
             return "eof"
 
     def _leer(
-        self, cabecera: str, opciones: tuple[str, ...], carrera: Carrera | None = None
+        self,
+        cabecera: str,
+        opciones: tuple[str, ...],
+        carrera: InstantaneaCarrera | None = None,
     ) -> str:
         """Muestra un menú y repite hasta que se teclea uno de sus números."""
         while True:
@@ -172,7 +183,7 @@ class TaximetroApp:
         carrera.
         """
         while True:
-            carrera = self._taximetro.carrera_activa
+            carrera = self._servicio.estado_actual()
             try:
                 opcion = self._leer(
                     self._cabecera(carrera), self._opciones(carrera), carrera
@@ -181,7 +192,7 @@ class TaximetroApp:
                 if carrera is None:
                     raise
                 if self._confirmar_salida(carrera):
-                    self._cerrar(carrera)
+                    self._cerrar()
                     return "ctrl_c_con_carrera"
                 continue
             except EOFError:
@@ -189,14 +200,14 @@ class TaximetroApp:
                     raise
                 # EOF no es reintentable: volver a leer sería un bucle infinito,
                 # así que se cierra la carrera en vez de avisar y reintentar.
-                self._cerrar(carrera)
+                self._cerrar()
                 return "eof_con_carrera"
 
             if opcion == "volver":
                 return None
             self._aplicar(opcion, carrera)
 
-    def _confirmar_salida(self, carrera: Carrera) -> bool:
+    def _confirmar_salida(self, carrera: InstantaneaCarrera) -> bool:
         """Ctrl+C con carrera activa: pregunta antes de cerrar el programa (T7.7).
 
         El taxímetro sigue contando mientras se pregunta: el importe se calcula
@@ -232,7 +243,7 @@ class TaximetroApp:
             return opciones[numero - 1]
         return None
 
-    def _aplicar(self, opcion: str, carrera: Carrera | None) -> None:
+    def _aplicar(self, opcion: str, carrera: InstantaneaCarrera | None) -> None:
         """Ejecuta una opción ya validada contra el menú del modo actual."""
         if opcion == "ayuda":
             self._salida(self._banner())
@@ -243,42 +254,43 @@ class TaximetroApp:
 
     def _iniciar(self) -> None:
         """Abre una carrera nueva y anuncia su número, estado y tarifa."""
-        nueva = self._taximetro.iniciar_carrera()
+        nueva = self._servicio.iniciar_carrera()
         self._salida(
             f"Carrera nº {nueva.id} iniciada · {self._legible(nueva.estado)} · "
             f"{self._tarifa_por_segundo(nueva.estado)}/s"
         )
 
-    def _con_carrera(self, opcion: str, carrera: Carrera) -> None:
-        """Opciones disponibles durante una carrera."""
+    def _con_carrera(self, opcion: str, carrera: InstantaneaCarrera) -> None:
+        """Opciones disponibles durante una carrera.
+
+        `carrera` es la foto tomada antes de esperar la opción: vale para saber
+        el estado, pero el importe se vuelve a pedir, o saldría el de antes de
+        que el conductor tecleara.
+        """
         if opcion == "cambiar":
-            carrera.cambiar_estado(self._contrario(carrera.estado))
+            ahora = self._servicio.cambiar_estado(self._contrario(carrera.estado))
             self._salida(
-                f"{self._legible(carrera.estado)} · "
-                f"{formato_euros(carrera.importe_actual())} acumulado"
+                f"{self._legible(ahora.estado)} · {formato_euros(ahora.importe)} acumulado"
             )
         elif opcion == "importe":
+            ahora = self._servicio.estado_actual()
             self._salida(
-                f"Carrera nº {carrera.id} · {self._legible(carrera.estado)} · "
-                f"{formato_euros(carrera.importe_actual())} acumulado"
+                f"Carrera nº {ahora.id} · {self._legible(ahora.estado)} · "
+                f"{formato_euros(ahora.importe)} acumulado"
             )
         else:  # finalizar
-            self._cerrar(carrera)
+            self._cerrar()
 
-    def _cerrar(self, carrera: Carrera) -> None:
+    def _cerrar(self) -> None:
         """Finaliza la carrera, la guarda en el histórico y muestra el total.
 
         Si el histórico no se puede escribir, la carrera ya está cerrada y el
         total se muestra igualmente: el cobro al pasajero no depende del disco.
         """
-        try:
-            self._taximetro.finalizar_carrera()
-            aviso = None
-        except OSError:
-            aviso = HISTORICO_NO_GUARDADO
-        self._salida(f"TOTAL A COBRAR: {formato_euros(carrera.importe)}")
-        if aviso:
-            self._salida(aviso)
+        cerrada = self._servicio.finalizar_carrera()
+        self._salida(f"TOTAL A COBRAR: {formato_euros(cerrada.carrera.importe)}")
+        if not cerrada.guardada:
+            self._salida(HISTORICO_NO_GUARDADO)
 
     # ------------------------------------------------------------------
     # Administrador
@@ -302,8 +314,8 @@ class TaximetroApp:
     def _ver_historico(self) -> None:
         """Las carreras terminadas hoy y el total de caja (US-05 / T5.3)."""
         try:
-            resumen = self._taximetro.resumen_del_dia()
-        except OSError:
+            resumen = self._servicio.resumen_del_dia()
+        except AlmacenamientoError:
             logger.error("historico_ilegible", exc_info=True)
             self._salida("No se pudo leer el histórico.")
             return
@@ -314,14 +326,14 @@ class TaximetroApp:
         self._salida(self._tabla_historico(resumen))
 
     def _cambiar_tarifas(self) -> None:
-        """Pide las dos tarifas nuevas y se las pasa al Taximetro (T7.6).
+        """Pide las dos tarifas nuevas y se las pasa al servicio (T7.6).
 
-        Las reglas de qué es una tarifa válida son de `Tarifa`; aquí solo se
+        Las reglas de qué es una tarifa válida son del dominio; aquí solo se
         traduce lo tecleado a número. Cualquier fallo vuelve al menú de
         Administrador sin haber cambiado nada. Ctrl+C a mitad cancela; EOF
         sube hasta `ejecutar` y cierra el programa, también sin cambiar nada.
         """
-        self._salida(f"Tarifas vigentes: {self._resumen(self._taximetro.tarifa)}")
+        self._salida(f"Tarifas vigentes: {self._resumen(self._servicio.tarifas())}")
         try:
             parado = self._leer_tarifa("Nueva tarifa parado (€/s): ")
             if parado is None:
@@ -335,8 +347,7 @@ class TaximetroApp:
             return
 
         try:
-            tarifa = Tarifa(parado=parado, en_movimiento=en_movimiento)
-            self._taximetro.cambiar_tarifa(tarifa)
+            tarifa = self._servicio.cambiar_tarifas(parado, en_movimiento)
         except TarifaInvalidaError as error:
             logger.warning(
                 "tarifa_rechazada %s",
@@ -344,7 +355,7 @@ class TaximetroApp:
             )
             self._salida(f"{error} {NADA_GUARDADO}")
             return
-        except OSError:
+        except AlmacenamientoError:
             # El detalle ya lo registró ConfigTarifas.
             self._salida(f"No se pudo escribir el fichero de tarifas. {NADA_GUARDADO}")
             return
@@ -373,7 +384,7 @@ class TaximetroApp:
     # Presentación
     # ------------------------------------------------------------------
 
-    def _opciones(self, carrera: Carrera | None) -> tuple[str, ...]:
+    def _opciones(self, carrera: InstantaneaCarrera | None) -> tuple[str, ...]:
         """El menú vigente: el número tecleado se resuelve contra esta tupla."""
         return OPCIONES_SIN_CARRERA if carrera is None else OPCIONES_CON_CARRERA
 
@@ -383,20 +394,23 @@ class TaximetroApp:
             return Estado.PARADO
         return Estado.EN_MOVIMIENTO
 
-    def _etiqueta(self, opcion: str, carrera: Carrera | None) -> str:
+    def _etiqueta(self, opcion: str, carrera: InstantaneaCarrera | None) -> str:
         """El texto de una opción; el de `cambiar` depende del estado actual."""
         if opcion == "cambiar" and carrera is not None:
             return ETIQUETAS_CAMBIO[self._contrario(carrera.estado)]
         return ETIQUETAS[opcion]
 
-    def _cabecera(self, carrera: Carrera | None) -> str:
+    def _cabecera(self, carrera: InstantaneaCarrera | None) -> str:
         """La situación del conductor, encima de su menú."""
         if carrera is None:
             return "Sin carrera"
         return f"Carrera nº {carrera.id} en curso ({self._legible(carrera.estado)})"
 
     def _menu(
-        self, cabecera: str, opciones: tuple[str, ...], carrera: Carrera | None = None
+        self,
+        cabecera: str,
+        opciones: tuple[str, ...],
+        carrera: InstantaneaCarrera | None = None,
     ) -> str:
         """La cabecera y, numeradas, las opciones válidas ahora mismo.
 
@@ -461,7 +475,7 @@ class TaximetroApp:
         )
         return "\n".join(lineas)
 
-    def _resumen(self, tarifa: Tarifa) -> str:
+    def _resumen(self, tarifa: TarifasVigentes) -> str:
         """Las dos tarifas en una línea: 'parado 0,02 €/s · en movimiento 0,05 €/s'."""
         return (
             f"parado {formato_euros(tarifa.parado)}/s · "
@@ -469,8 +483,11 @@ class TaximetroApp:
         )
 
     def _tarifa_por_segundo(self, estado: Estado) -> str:
-        """La tarifa del estado, formateada — el importe de un solo segundo."""
-        return formato_euros(self._taximetro.tarifa.calcular_importe(estado, 1))
+        """La tarifa del estado en €/s, formateada."""
+        tarifa = self._servicio.tarifas()
+        return formato_euros(
+            tarifa.parado if estado is Estado.PARADO else tarifa.en_movimiento
+        )
 
     def _legible(self, estado: Estado) -> str:
         """El estado tal y como se muestra al conductor: 'EN MOVIMIENTO'."""
@@ -489,4 +506,4 @@ if __name__ == "__main__":
     # memoria o rutas temporales. Los logs se configuran primero para que
     # también quede registrada la carga de las tarifas.
     configurar_logs()
-    TaximetroApp(Taximetro(config=ConfigTarifas(), historial=Historial())).ejecutar()
+    TaximetroApp(ServicioTaximetro.por_defecto()).ejecutar()
