@@ -159,10 +159,12 @@ Tareas:
 
 Tareas:
 - [ ] **T8.1** Implementar clase `Auth` con verificación de contraseña — `tech-task`, `could` — [#44](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/44)
-- [ ] **T8.2** Almacenamiento con hash (p.ej. `hashlib`/`bcrypt`) — `tech-task`, `could` — [#45](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/45)
-- [ ] **T8.3** Integrar `Auth` en el arranque de `TaximetroApp` — `tech-task`, `could` — [#46](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/46)
+- [ ] **T8.2** Hash con `hashlib.scrypt` en `config/credenciales.json` (contraseña de la demo: `taxi`, facilitada por el equipo técnico) — `tech-task`, `could` — [#45](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/45)
+- [ ] **T8.3** `comprobar_contrasena` en `ServicioTaximetro`, con los logs de acceso concedido/denegado — `tech-task`, `could` — [#46](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/46)
 - [ ] **T8.4** Tests de autenticación (correcta/incorrecta) — `test`, `could` — [#47](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/47)
 - [ ] **T8.5** El Administrador del CLI también pide contraseña — `tech-task`, `could` — [#98](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/98)
+
+*Contraseña, fallos y ubicación del hash: ver `docs/decisions-fase3.md`. No se programa cómo poner ni cambiar la contraseña; se simula que la gestiona el equipo técnico.*
 
 *T8.5 no viene del cliente: la interfaz gráfica y el CLI conviven (`docs/decisions-fase3.md`), así que un CLI sin contraseña sería una puerta trasera para cambiar las tarifas. La comprobación vive fuera de las dos interfaces.*
 
@@ -180,15 +182,22 @@ Tareas:
 Tareas:
 - [x] **T9.1** Spike técnico: elegir framework de UI — `tech-task`, `could` — [#48](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/48) ✅ *(se elige `tkinter`; alternativas y razones en `docs/decisions-fase3.md`)*
 - [x] **T9.2** Diseñar pantalla principal (botones grandes, tipografía táctil) — `tech-task`, `could` — [#49](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/49) ✅ *(y el resto de pantallas, en `docs/diseno-interfaz-fase3.md`)*
-- [ ] **T9.3** Conectar UI a la capa de backend (`Taximetro`/`TaximetroApp`) — `tech-task`, `could` — [#50](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/50)
+- [ ] **T9.3** Conectar la interfaz gráfica a `ServicioTaximetro` — `tech-task`, `could` — [#50](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/50)
 - [ ] **T9.4** Tests manuales/UX en dispositivo táctil — `test`, `could` — [#51](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/51)
 - [ ] **T9.5** Tema visual de tkinter (colores, fuentes y tamaños táctiles) — `tech-task`, `could` — [#93](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/93)
 - [ ] **T9.6** Visor del importe con dígitos de 7 segmentos en un `Canvas` — `tech-task`, `could` — [#94](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/94)
 - [ ] **T9.7** Pantallas de Inicio y de Administrador (menú, tarifas, histórico) — `feature`, `could` — [#95](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/95)
 - [ ] **T9.8** Confirmaciones: FINALIZAR y cerrar la ventana con una carrera en curso — `feature`, `could` — [#96](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/96)
 - [ ] **T9.9** Logs de la interfaz gráfica y errores de los callbacks de tkinter — `tech-task`, `could` — [#97](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/97)
+- [ ] **T9.10** Refactorización: `ServicioTaximetro` (métodos, instantánea de la carrera, excepciones del contrato) — `tech-task`, `could` — [#100](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/100)
+- [ ] **T9.11** Refactorización: el CLI pasa a usar `ServicioTaximetro` sin cambiar su comportamiento — `tech-task`, `could` — [#101](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/101)
+- [ ] **T9.12** Test de estructura: las interfaces solo importan `ServicioTaximetro` del dominio — `test`, `could` — [#102](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/102)
+- [ ] **T9.13** Pantalla del taxímetro, LIBRE/OCUPADO, con el importe refrescado cada 200 ms — `feature`, `could` — [#103](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/103)
+- [ ] **T9.14** CI: pantalla virtual (`xvfb`) para los tests de la interfaz gráfica — `tech-task`, `could` — [#104](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/104)
 
-*T9.5 a T9.9 salen de la sesión de diseño de la Fase 3 (ver `docs/decisions-fase3.md` y `docs/diseno-interfaz-fase3.md`), no del cliente. T9.9 es lo que hace falta para que la US-06 se siga cumpliendo con la interfaz gráfica: tkinter se traga las excepciones de los callbacks.*
+*T9.5 a T9.14 salen de la sesión de diseño de la Fase 3 (ver `docs/decisions-fase3.md` y `docs/diseno-interfaz-fase3.md`), no del cliente. T9.9 es lo que hace falta para que la US-06 se siga cumpliendo con la interfaz gráfica: tkinter se traga las excepciones de los callbacks.*
+
+*T9.10 a T9.12 son la refactorización estructural que pide la Fase 3; van en US-09 porque su criterio es «se apoya en la lógica de backend ya existente sin duplicarla». Orden de trabajo de la fase: T9.10 → T9.11 → T9.12 (refactorización), después US-08, y por último el resto de US-09.*
 
 ---
 
