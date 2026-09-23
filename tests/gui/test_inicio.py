@@ -13,6 +13,13 @@ def test_muestra_el_nombre_del_taximetro(app: App) -> None:
     assert app.pantalla.titulo.cget("text") == estilo.TITULO
 
 
+def test_conductor_abre_el_taximetro(app: App) -> None:
+    from taximetro.gui.taximetro import PantallaTaximetro
+
+    app.pantalla.conductor.invoke()
+    assert isinstance(app.pantalla, PantallaTaximetro)
+
+
 def test_salir_cierra_el_programa(app: App, cerrada) -> None:
     app.pantalla.salir.invoke()
     assert cerrada(app.raiz)

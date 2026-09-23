@@ -1,7 +1,7 @@
 """Inicio: la primera pantalla (elección de perfil).
 
-PROVISIONAL (esqueleto de la US-09): solo el título y Salir, para que la
-ventana abra con algo. La pantalla aprobada (tejas CONDUCTOR y ADMINISTRADOR,
+PROVISIONAL (esqueleto de la US-09): título, una tecla CONDUCTOR que abre el
+taxímetro y Salir, para poder usar la ventana. La pantalla aprobada (tejas CONDUCTOR y ADMINISTRADOR,
 franja de tarifas) llega con la tarea T9.7; ver `docs/diseno-interfaz-fase3.md`,
 *1. Pantalla de inicio*.
 """
@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from taximetro.gui import estilo
 from taximetro.gui.pantalla import Pantalla
+from taximetro.gui.taximetro import PantallaTaximetro
 from taximetro.gui.tecla import Tecla
 
 if TYPE_CHECKING:
@@ -23,7 +24,7 @@ class Inicio(Pantalla):
     """Pantalla de inicio (provisional)."""
 
     def __init__(self, app: App) -> None:
-        """Construye el título y la tecla Salir en el lateral."""
+        """Construye el título, la tecla CONDUCTOR y Salir en el lateral."""
         super().__init__(app)
         lateral = tk.Frame(self, bg=estilo.FONDO, width=estilo.LATERAL)
         lateral.pack(side=tk.RIGHT, fill=tk.Y, padx=estilo.MARGEN, pady=estilo.MARGEN)
@@ -42,3 +43,12 @@ class Inicio(Pantalla):
             font=estilo.FUENTE_MARCA,
         )
         self.titulo.pack(expand=True)
+        self.conductor = Tecla(
+            self,
+            "CONDUCTOR",
+            lambda: app.mostrar(PantallaTaximetro),
+            variante=estilo.VERDE,
+            alto=estilo.TECLA_TAXIMETRO,
+            subtitulo="Abrir el taxímetro",
+        )
+        self.conductor.pack(fill=tk.X, padx=(estilo.MARGEN, 0), pady=estilo.MARGEN)
