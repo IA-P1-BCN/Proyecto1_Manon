@@ -7,16 +7,20 @@ traduce lo tecleado a número y se enseñan los mismos mensajes que en el CLI.
 
 from __future__ import annotations
 
+import logging
 import tkinter as tk
 from typing import TYPE_CHECKING
 
 from taximetro.gui import estilo
 from taximetro.gui.pantalla import Pantalla
 from taximetro.gui.tecla import Tecla
+from taximetro.logs import campos
 from taximetro.servicio_taximetro import AlmacenamientoError, TarifaInvalidaError
 
 if TYPE_CHECKING:
     from taximetro.gui.app import App
+
+logger = logging.getLogger("taximetro.gui")
 
 NADA_GUARDADO = "No se ha guardado nada."
 NO_ESCRITO = f"No se pudo escribir el fichero de tarifas. {NADA_GUARDADO}"
@@ -117,6 +121,9 @@ class CambiarTarifas(Pantalla):
             try:
                 valores[nombre] = float(tecleado.replace(",", "."))
             except ValueError:
+                logger.warning(
+                    "tarifa_rechazada %s", campos(tecleado=repr(tecleado), motivo="no_numerica")
+                )
                 self._error(
                     f"«{tecleado}» no es un número. Escribe, por ejemplo, 0,03. {NADA_GUARDADO}",
                     (nombre,),
@@ -125,9 +132,18 @@ class CambiarTarifas(Pantalla):
         try:
             nuevas = self.servicio.cambiar_tarifas(valores["parado"], valores["en_movimiento"])
         except TarifaInvalidaError as error:
+            logger.warning(
+                "tarifa_rechazada %s",
+                campos(
+                    parado=valores["parado"],
+                    movimiento=valores["en_movimiento"],
+                    motivo=repr(str(error)),
+                ),
+            )
             self._error(f"{error} {NADA_GUARDADO}", error.campos)
             return
         except AlmacenamientoError:
+            # El detalle ya lo registró ConfigTarifas, donde ocurrió la escritura.
             self._error(NO_ESCRITO, ())
             return
         self._pintar_vigentes()

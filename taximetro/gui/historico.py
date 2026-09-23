@@ -7,16 +7,20 @@ todas (una barra de desplazamiento es demasiado fina para un dedo).
 
 from __future__ import annotations
 
+import logging
 import tkinter as tk
 from typing import TYPE_CHECKING
 
 from taximetro.gui import estilo
 from taximetro.gui.pantalla import Pantalla
+from taximetro.logs import campos
 from taximetro.servicio_taximetro import AlmacenamientoError, RegistroCarrera
 from taximetro.utils import formato_euros
 
 if TYPE_CHECKING:
     from taximetro.gui.app import App
+
+logger = logging.getLogger("taximetro.gui")
 
 SIN_CARRERAS = "No hay carreras terminadas hoy."
 ILEGIBLE = "No se pudo leer el histórico."
@@ -91,10 +95,15 @@ class Historico(Pantalla):
         try:
             resumen = self.servicio.resumen_del_dia()
         except AlmacenamientoError:
+            logger.error("historico_ilegible", exc_info=True)
             self.titulo.configure(text="Histórico de hoy")
             self.mensaje.configure(text=ILEGIBLE, fg=estilo.MENSAJE_ERROR)
             self.mensaje.pack(fill=tk.X, pady=(estilo.SEPARACION, 0))
             return
+        logger.info(
+            "historico_consultado %s",
+            campos(fecha=resumen.fecha, carreras=len(resumen.carreras), total=resumen.total),
+        )
         self.titulo.configure(text=f"Histórico de hoy · {resumen.fecha:%d/%m/%Y}")
         self._carreras = resumen.carreras
         cuantas = len(resumen.carreras)

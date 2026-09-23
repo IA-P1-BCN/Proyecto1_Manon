@@ -67,6 +67,17 @@ Companion docs: `docs/project-brief.md` (client requirements, Fase 3 section), `
 
 ## Operation logs (US-06) carry over to the GUI
 
+**Built in T9.9 (2026-09-23)** as planned below. All GUI modules log to the fixed logger `taximetro.gui`.
+- **Events:**
+  - `aplicacion_iniciada` / `aplicacion_cerrada motivo=`, with `salir`, `ventana` (✕ with no ride) or `ventana_con_carrera` (CERRAR after «SÍ, FINALIZAR Y SALIR»);
+  - `perfil_elegido`;
+  - `salida_solicitada` / `salida_confirmada` / `salida_cancelada` for the ✕ with a ride, the same names as the CLI's Ctrl+C;
+  - `tarifa_rechazada` with the CLI's fields;
+  - `historico_consultado` / `historico_ilegible`.
+- **`App.error_en_callback`** is installed as the Tk interpreter's `report_callback_exception`. It logs `error_inesperado` with the traceback and shows the driver a short notice with a Cerrar key; the program keeps running. Checked on the real program: an error raised in a timer reached `logs/taximetro.log` with its traceback, nothing went to the console, and the ride in progress finished and was saved normally.
+- The test fixture restores the interpreter's handler after each test, since the interpreter is shared by the whole session.
+- **Not duplicated:** the FINALIZAR answer is already logged by the domain (`cierre_solicitado` / `cierre_cancelado`, then `carrera_finalizada`), and admin access by the service.
+
 The Fase 2 requirement still holds: *"registrar en todo momento qué está ocurriendo: arranque, cambios de estado del vehículo, cierre de carrera y cualquier error […] accesible para el equipo técnico sin necesidad de intervenir en el proceso en ejecución"*. Fase 2 met it with `logs/taximetro.log` (see `decisions-fase2.md`, *US-06*). The file can be read (`tail`, `grep`, a text editor) while the app runs, and the GUI doesn't change that.
 
 **What carries over for free:** every domain event is logged by the module that knows it (`Carrera`: ride started / state changed / finished; `Taximetro`, `ConfigTarifas`, `Historial`: fares, files). The GUI calls the same methods, so these lines appear unchanged.
