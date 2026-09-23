@@ -204,6 +204,23 @@ class TestResumenDelDia:
             servicio.resumen_del_dia()
 
 
+class TestPorDefecto:
+    """El montaje del programa real, compartido por el CLI y la interfaz gráfica."""
+
+    def test_usa_los_ficheros_por_defecto(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Las rutas por defecto son relativas al directorio de trabajo.
+        monkeypatch.chdir(tmp_path)
+        servicio = ServicioTaximetro.por_defecto()
+        servicio.cambiar_tarifas(0.03, 0.06)
+        servicio.iniciar_carrera()
+        servicio.finalizar_carrera()
+
+        assert (tmp_path / "config" / "tarifas.json").exists()
+        assert (tmp_path / "data" / "historial.csv").exists()
+
+
 class TestSoloDatos:
     """Lo que hace posible sustituir el servicio por un cliente HTTP (Fase 4)."""
 

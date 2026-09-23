@@ -15,7 +15,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from taximetro.carrera import Carrera, Estado
-from taximetro.historial import RegistroCarrera, ResumenDia
+from taximetro.config_tarifas import ConfigTarifas
+from taximetro.historial import Historial, RegistroCarrera, ResumenDia
 from taximetro.tarifa import Tarifa, TarifaInvalidaError
 from taximetro.taximetro import CarreraActivaError, SinCarreraError, Taximetro
 
@@ -82,6 +83,16 @@ class ServicioTaximetro:
     def __init__(self, taximetro: Taximetro) -> None:
         """Envuelve un `Taximetro` ya construido (con sus relojes y ficheros)."""
         self._taximetro = taximetro
+
+    @classmethod
+    def por_defecto(cls) -> ServicioTaximetro:
+        """El servicio del programa real: tarifas e histórico en sus ficheros.
+
+        Lo usan los dos puntos de entrada (CLI e interfaz gráfica), así que el
+        montaje del dominio está en un solo sitio y ninguna interfaz lo conoce.
+        Lee `config/tarifas.json` y `data/historial.csv` al crearse.
+        """
+        return cls(Taximetro(config=ConfigTarifas(), historial=Historial()))
 
     def iniciar_carrera(self) -> InstantaneaCarrera:
         """Inicia una carrera. Lanza `CarreraActivaError` si ya hay una."""
