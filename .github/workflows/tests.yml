@@ -1,7 +1,7 @@
 # Integración continua del taxímetro TTX-247.
 #
 # Ejecuta la batería de tests en cada push y en cada pull request contra
-# `main` y `dev`. La cobertura y el umbral del 90 % no se pasan aquí como
+# `main`, `dev`, `fase-2` y `fase-3`. La cobertura y el umbral del 90 % no se pasan aquí como
 # flags: viven en `addopts` de `pyproject.toml`, para que `pytest` a secas
 # aplique exactamente las mismas reglas en local y en CI.
 
@@ -9,9 +9,9 @@ name: tests
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main, dev, fase-2, fase-3]
   pull_request:
-    branches: [main, dev]
+    branches: [main, dev, fase-2, fase-3]
 
 jobs:
   pytest:
@@ -20,6 +20,9 @@ jobs:
     steps:
       - name: Descargar el repositorio
         uses: actions/checkout@v4
+
+      - name: Instalar la pantalla virtual (xvfb)
+        run: sudo apt-get update && sudo apt-get install -y xvfb
 
       - name: Preparar Python
         uses: actions/setup-python@v5
@@ -31,5 +34,9 @@ jobs:
       - name: Instalar dependencias de desarrollo
         run: pip install -r requirements-dev.txt
 
+      # Los tests de la interfaz gráfica (tkinter) necesitan una pantalla, y
+      # el runner no tiene: `xvfb-run` pone una virtual (Fase 3, T9.14). Con
+      # `CI` definida, un test de la interfaz sin pantalla falla en vez de
+      # saltarse (ver tests/gui/conftest.py).
       - name: Ejecutar tests con cobertura
-        run: pytest --cov-report=term-missing
+        run: xvfb-run -a pytest --cov-report=term-missing

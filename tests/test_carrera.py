@@ -7,6 +7,7 @@ al cambiar de estado (US-02 / T2.1, T2.3) y la lectura del importe bajo demanda
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 
 import pytest
@@ -196,6 +197,61 @@ class TestCarreraFinalizadaFlag:
         assert carrera.finalizada is True
 
 
+class TestDuracion:
+    """Tiempo transcurrido, para mostrarlo en pantalla (Fase 3, T9.13)."""
+
+    def test_una_carrera_recien_iniciada_dura_cero(self, carrera: Carrera) -> None:
+        assert carrera.duracion() == 0
+
+    def test_en_curso_cuenta_hasta_ahora(self, carrera: Carrera, calendario) -> None:
+        calendario.avanzar(252)
+        assert carrera.duracion() == 252
+
+    def test_finalizada_se_queda_en_su_hora_de_fin(self, carrera: Carrera, calendario) -> None:
+        calendario.avanzar(60)
+        carrera.finalizar()
+        calendario.avanzar(600)
+        assert carrera.duracion() == 60
+
+
+class TestCerrarEnUnInstanteAnterior:
+    """Cobrar lo que había al pulsar FINALIZAR, no al confirmar (Fase 3, T9.8)."""
+
+    def test_importe_en_un_instante_anterior(self, carrera: Carrera, reloj) -> None:
+        reloj.avanzar(10)
+        pulsacion = reloj()
+        reloj.avanzar(50)
+        assert carrera.importe_actual(en=pulsacion) == pytest.approx(0.50)
+        assert carrera.importe_actual() == pytest.approx(3.00)
+
+    def test_finalizar_en_un_instante_anterior(self, carrera: Carrera, reloj, calendario) -> None:
+        reloj.avanzar(10)
+        calendario.avanzar(10)
+        pulsacion, hora = reloj(), calendario()
+        reloj.avanzar(50)  # lo que se tarda en confirmar
+        calendario.avanzar(50)
+        assert carrera.finalizar(en=pulsacion, hora_fin=hora) == pytest.approx(0.50)
+        assert carrera.hora_fin == hora
+        assert carrera.duracion() == 10
+
+    def test_nunca_antes_del_ultimo_cambio_de_estado(self, carrera: Carrera, reloj) -> None:
+        # Ese tramo ya se cobró a otra tarifa: cerrar antes restaría importe.
+        antes = reloj()
+        reloj.avanzar(10)
+        carrera.cambiar_estado(Estado.PARADO)
+        with pytest.raises(ValueError):
+            carrera.finalizar(en=antes)
+        with pytest.raises(ValueError):
+            carrera.importe_actual(en=antes)
+        assert not carrera.finalizada
+
+    def test_duracion_hasta_un_instante(self, carrera: Carrera, calendario) -> None:
+        calendario.avanzar(10)
+        hasta = calendario()
+        calendario.avanzar(50)
+        assert carrera.duracion(hasta=hasta) == 10
+
+
 class TestFinalizar:
     """US-03 / T3.1: cerrar la carrera y devolver el total a cobrar."""
 
@@ -250,3 +306,43 @@ class TestFinalizar:
         reloj.avanzar(45)
 
         assert consultada.finalizar() == pytest.approx(intacta.finalizar())
+
+
+class TestLogs:
+    """US-06 / T6.2: la carrera deja rastro de su ciclo de vida."""
+
+    def test_registra_el_inicio(self, eventos, reloj, calendario) -> None:
+        Carrera(id=7, tarifa=Tarifa(), reloj=reloj, calendario=calendario)
+        assert eventos() == ["carrera_iniciada carrera=7 estado=en_movimiento tarifa=0.05"]
+
+    def test_registra_el_cambio_de_estado(self, eventos, carrera, reloj) -> None:
+        reloj.avanzar(60)
+        carrera.cambiar_estado(Estado.PARADO)
+        assert (
+            "estado_cambiado carrera=1 de=en_movimiento a=parado acumulado=3.00"
+            in eventos()
+        )
+
+    def test_repetir_el_estado_no_registra_nada(self, eventos, carrera) -> None:
+        antes = len(eventos())
+        carrera.cambiar_estado(Estado.EN_MOVIMIENTO)
+        assert len(eventos()) == antes
+
+    def test_registra_el_final_con_importe_y_duracion(
+        self, eventos, carrera, reloj, calendario
+    ) -> None:
+        reloj.avanzar(90)
+        calendario.avanzar(90)
+        carrera.finalizar()
+        assert "carrera_finalizada carrera=1 importe=4.50 duracion_s=90" in eventos()
+
+    def test_los_cambios_rechazados_son_warning(self, eventos, carrera) -> None:
+        carrera.finalizar()
+        with pytest.raises(CarreraFinalizadaError):
+            carrera.cambiar_estado(Estado.PARADO)
+        with pytest.raises(CarreraFinalizadaError):
+            carrera.finalizar()
+        assert eventos(logging.WARNING) == [
+            "cambio_rechazado carrera=1 motivo=finalizada",
+            "finalizar_rechazado carrera=1 motivo=finalizada",
+        ]

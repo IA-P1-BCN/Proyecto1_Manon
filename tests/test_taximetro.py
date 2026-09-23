@@ -6,12 +6,17 @@ Cubre el inicio de carreras y la validación de "no hay carrera activa"
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 
 from taximetro.carrera import Carrera, Estado
-from taximetro.taximetro import CarreraActivaError, Taximetro
+from taximetro.config_tarifas import ConfigTarifas
+from taximetro.historial import Historial
+from taximetro.tarifa import Tarifa
+from taximetro.taximetro import CarreraActivaError, SinCarreraError, Taximetro
 
 
 @pytest.fixture
@@ -115,3 +120,219 @@ class TestCarreraDuplicada:
         carrera = taximetro.iniciar_carrera()
         carrera.finalizar()
         assert taximetro.carrera_activa is None
+
+
+class TestTarifasDesdeConfiguracion:
+    """US-07 / T7.3: `Taximetro` carga las tarifas del fichero y guarda los cambios."""
+
+    def test_sin_configuracion_usa_las_tarifas_por_defecto(self, taximetro) -> None:
+        assert taximetro.tarifa.parado == 0.02
+
+    def test_carga_las_tarifas_del_fichero(self, tmp_path: Path, reloj) -> None:
+        ruta = tmp_path / "tarifas.json"
+        ruta.write_text('{"parado": 0.03, "en_movimiento": 0.06}', encoding="utf-8")
+        taximetro = Taximetro(config=ConfigTarifas(ruta), reloj=reloj)
+        assert taximetro.tarifa.en_movimiento == 0.06
+
+    def test_una_tarifa_explicita_manda_sobre_el_fichero(self, tmp_path: Path) -> None:
+        ruta = tmp_path / "tarifas.json"
+        ruta.write_text('{"parado": 0.03, "en_movimiento": 0.06}', encoding="utf-8")
+        taximetro = Taximetro(tarifa=Tarifa(0.01, 0.01), config=ConfigTarifas(ruta))
+        assert taximetro.tarifa.parado == 0.01
+
+
+class TestCambiarTarifa:
+    """T7.6 en el dominio: la tarifa nueva se aplica desde la próxima carrera."""
+
+    def test_la_proxima_carrera_cobra_la_tarifa_nueva(self, taximetro, reloj) -> None:
+        taximetro.cambiar_tarifa(Tarifa(parado=0.03, en_movimiento=0.10))
+        carrera = taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        assert carrera.importe_actual() == pytest.approx(1.00)
+
+    def test_la_carrera_ya_cerrada_conserva_su_tarifa(self, taximetro, reloj) -> None:
+        carrera = taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        carrera.finalizar()
+        taximetro.cambiar_tarifa(Tarifa(parado=0.03, en_movimiento=0.10))
+        assert carrera.importe_actual() == pytest.approx(0.50)
+
+    def test_con_una_carrera_activa_falla(self, taximetro) -> None:
+        taximetro.iniciar_carrera()
+        with pytest.raises(CarreraActivaError):
+            taximetro.cambiar_tarifa(Tarifa(parado=0.03, en_movimiento=0.10))
+        assert taximetro.tarifa.parado == 0.02
+
+    def test_guarda_la_tarifa_en_el_fichero(self, tmp_path: Path) -> None:
+        config = ConfigTarifas(tmp_path / "tarifas.json")
+        Taximetro(config=config).cambiar_tarifa(Tarifa(0.03, 0.10))
+        assert ConfigTarifas(config.ruta).cargar().en_movimiento == 0.10
+
+    def test_si_no_se_puede_guardar_no_la_aplica(self, tmp_path: Path) -> None:
+        # Fichero y taxímetro nunca discrepan: sin guardar, no hay cambio.
+        (tmp_path / "config").write_text("", encoding="utf-8")  # bloquea mkdir
+        taximetro = Taximetro(config=ConfigTarifas(tmp_path / "config" / "t.json"))
+        with pytest.raises(OSError):
+            taximetro.cambiar_tarifa(Tarifa(0.03, 0.10))
+        assert taximetro.tarifa.parado == 0.02
+
+
+class TestFinalizarCarrera:
+    """US-05 / T5.1: toda carrera cerrada por el Taximetro se guarda."""
+
+    @pytest.fixture
+    def historial(self, tmp_path: Path) -> Historial:
+        return Historial(tmp_path / "historial.csv")
+
+    def test_devuelve_el_total_y_cierra_la_carrera(self, taximetro, reloj) -> None:
+        carrera = taximetro.iniciar_carrera()
+        reloj.avanzar(60)
+        assert taximetro.finalizar_carrera() == pytest.approx(3.00)
+        assert carrera.finalizada
+        assert taximetro.carrera_activa is None
+
+    def test_sin_carrera_activa_falla(self, taximetro) -> None:
+        with pytest.raises(SinCarreraError):
+            taximetro.finalizar_carrera()
+
+    def test_guarda_la_carrera_en_el_historial(
+        self, historial, reloj, calendario
+    ) -> None:
+        taximetro = Taximetro(historial=historial, reloj=reloj, calendario=calendario)
+        taximetro.iniciar_carrera()
+        reloj.avanzar(60)
+        taximetro.finalizar_carrera()
+        assert [r.importe for r in historial.registros()] == [3.00]
+
+    def test_si_no_se_puede_guardar_el_cobro_no_se_pierde(
+        self, tmp_path: Path, reloj
+    ) -> None:
+        (tmp_path / "data").write_text("", encoding="utf-8")  # bloquea mkdir
+        taximetro = Taximetro(historial=Historial(tmp_path / "data" / "h.csv"), reloj=reloj)
+        carrera = taximetro.iniciar_carrera()
+        reloj.avanzar(60)
+        with pytest.raises(OSError):
+            taximetro.finalizar_carrera()
+        assert carrera.finalizada
+        assert carrera.importe == pytest.approx(3.00)
+        assert taximetro.carrera_activa is None
+
+    def test_la_numeracion_sigue_desde_el_historial(
+        self, historial, reloj, calendario
+    ) -> None:
+        # Un reinicio del programa no repite números en el histórico del día.
+        primera_sesion = Taximetro(historial=historial, reloj=reloj, calendario=calendario)
+        for _ in range(2):
+            primera_sesion.iniciar_carrera()
+            primera_sesion.finalizar_carrera()
+        segunda_sesion = Taximetro(historial=historial, reloj=reloj, calendario=calendario)
+        assert segunda_sesion.iniciar_carrera().id == 3
+
+
+class TestCongelar:
+    """Pedir el cierre fija el importe; confirmar cobra ese, cancelar sigue (T9.8)."""
+
+    def test_congelar_da_el_importe_de_ese_instante(self, taximetro: Taximetro, reloj) -> None:
+        taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        assert taximetro.congelar().importe == pytest.approx(0.50)
+
+    def test_confirmar_cobra_lo_congelado(self, taximetro: Taximetro, reloj, calendario) -> None:
+        carrera = taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        calendario.avanzar(10)
+        congelacion = taximetro.congelar()
+        reloj.avanzar(60)  # un minuto con la pregunta en pantalla
+        calendario.avanzar(60)
+        assert taximetro.finalizar_carrera() == pytest.approx(0.50)
+        assert carrera.hora_fin == congelacion.hora
+
+    def test_cancelar_sigue_como_si_nada(self, taximetro: Taximetro, reloj) -> None:
+        # El tiempo de la pregunta también se cobra: el taxi seguía ocupado.
+        taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        taximetro.congelar()
+        reloj.avanzar(60)
+        taximetro.descongelar()
+        assert taximetro.finalizar_carrera() == pytest.approx(3.50)
+
+    def test_sin_congelar_cierra_ahora(self, taximetro: Taximetro, reloj) -> None:
+        taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        assert taximetro.finalizar_carrera() == pytest.approx(0.50)
+
+    def test_la_congelacion_no_pasa_a_la_siguiente_carrera(
+        self, taximetro: Taximetro, reloj
+    ) -> None:
+        taximetro.iniciar_carrera()
+        taximetro.congelar()
+        taximetro.finalizar_carrera()
+        taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        assert taximetro.finalizar_carrera() == pytest.approx(0.50)
+
+    def test_sin_carrera_no_se_congela(self, taximetro: Taximetro) -> None:
+        with pytest.raises(SinCarreraError):
+            taximetro.congelar()
+
+    def test_descongelar_sin_congelar_no_hace_nada(self, taximetro: Taximetro) -> None:
+        taximetro.descongelar()
+        assert taximetro.carrera_activa is None
+
+    def test_registra_la_peticion_y_la_cancelacion(
+        self, eventos, taximetro: Taximetro, reloj
+    ) -> None:
+        taximetro.iniciar_carrera()
+        reloj.avanzar(10)
+        taximetro.congelar()
+        taximetro.descongelar()
+        assert "cierre_solicitado carrera=1 importe=0.50" in eventos()
+        assert "cierre_cancelado carrera=1" in eventos()
+
+
+class TestResumenDelDia:
+    """US-05: el Taximetro pide al histórico las carreras de hoy."""
+
+    def test_sin_historial_el_resumen_esta_vacio(self, taximetro) -> None:
+        resumen = taximetro.resumen_del_dia()
+        assert resumen.carreras == ()
+        assert resumen.fecha == datetime(2025, 6, 1).date()
+
+    def test_hoy_lo_dice_el_calendario(self, tmp_path: Path, reloj, calendario) -> None:
+        historial = Historial(tmp_path / "historial.csv")
+        taximetro = Taximetro(historial=historial, reloj=reloj, calendario=calendario)
+        taximetro.iniciar_carrera()
+        taximetro.finalizar_carrera()
+        assert len(taximetro.resumen_del_dia().carreras) == 1
+        calendario.avanzar(24 * 3600)
+        assert taximetro.resumen_del_dia().carreras == ()
+
+
+class TestLogs:
+    """US-06 / T6.2: los rechazos del taxímetro y los cambios de tarifa."""
+
+    def test_iniciar_dos_veces_es_warning(self, eventos, taximetro) -> None:
+        taximetro.iniciar_carrera()
+        with pytest.raises(CarreraActivaError):
+            taximetro.iniciar_carrera()
+        assert eventos(logging.WARNING) == [
+            "inicio_rechazado carrera_activa=1 motivo=carrera_activa"
+        ]
+
+    def test_finalizar_sin_carrera_es_warning(self, eventos, taximetro) -> None:
+        with pytest.raises(SinCarreraError):
+            taximetro.finalizar_carrera()
+        assert eventos(logging.WARNING) == ["finalizar_rechazado motivo=sin_carrera"]
+
+    def test_registra_el_cambio_de_tarifa(self, eventos, taximetro) -> None:
+        taximetro.cambiar_tarifa(Tarifa(parado=0.03, en_movimiento=0.10))
+        assert eventos() == [
+            "tarifa_cambiada parado_antes=0.02 movimiento_antes=0.05 "
+            "parado=0.03 movimiento=0.10"
+        ]
+
+    def test_cambiar_tarifa_con_carrera_es_warning(self, eventos, taximetro) -> None:
+        taximetro.iniciar_carrera()
+        with pytest.raises(CarreraActivaError):
+            taximetro.cambiar_tarifa(Tarifa(0.03, 0.10))
+        assert eventos(logging.WARNING) == ["cambio_tarifa_rechazado motivo=carrera_activa"]
