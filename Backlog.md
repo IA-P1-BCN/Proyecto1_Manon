@@ -275,7 +275,7 @@ Tareas:
 - [x] **TP.10** README mínimo en español — `docs`, `should` — [#72](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/72) ✅
 - [x] **TP.11** Guion de la demo de Fase 1 — `docs`, `must` — [#73](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/73) ✅
 - [x] **TP.12** `conftest` con relojes falsos y test de estructura — `test`, `must` — [#74](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/74) ✅
-- [ ] **TP.13** CI: disparar `tests.yml` también en `fase-3` — `tech-task`, `must` — [#99](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/99)
+- [x] **TP.13** CI: disparar `tests.yml` también en `fase-3` — `tech-task`, `must` — [#99](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/99) ✅
 
 **Relación con tareas existentes:** TP.1 se implementa junto a **T1.1** (clase `Carrera`); TP.3 junto a **T4.1** (bucle principal); TP.4 junto a **TD.7** (gestión de Ctrl+C), que es la otra mitad de la misma rama del bucle; TP.5 concreta el formato que produce **T3.2**.
 
