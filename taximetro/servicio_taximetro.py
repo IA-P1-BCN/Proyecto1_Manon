@@ -147,8 +147,13 @@ class ServicioTaximetro:
         return self._instantanea(self._taximetro.iniciar_carrera())
 
     def cambiar_estado(self, estado: Estado) -> InstantaneaCarrera:
-        """Pasa la carrera activa a `estado`. Lanza `SinCarreraError` si no hay."""
+        """Pasa la carrera activa a `estado`. Lanza `SinCarreraError` si no hay.
+
+        Descarta un cierre pedido y no confirmado: después de cambiar de estado
+        ya no se puede cerrar en aquel instante.
+        """
         carrera = self._carrera_activa()
+        self._taximetro.descongelar()
         carrera.cambiar_estado(estado)
         return self._instantanea(carrera)
 
@@ -157,8 +162,36 @@ class ServicioTaximetro:
         carrera = self._taximetro.carrera_activa
         return None if carrera is None else self._instantanea(carrera)
 
+    def congelar_importe(self) -> InstantaneaCarrera:
+        """Pide cerrar la carrera: la foto de este instante, que es lo que se cobrará.
+
+        Se llama al pulsar FINALIZAR (o al pedir salir con una carrera en
+        curso), antes de preguntar. Si se confirma, `finalizar_carrera()` cobra
+        este importe y no el del momento de la respuesta; si no,
+        `seguir_carrera()`. Lanza `SinCarreraError` si no hay carrera.
+        """
+        congelacion = self._taximetro.congelar()
+        carrera = congelacion.carrera
+        return InstantaneaCarrera(
+            id=carrera.id,
+            estado=carrera.estado,
+            importe=congelacion.importe,
+            hora_inicio=carrera.hora_inicio,
+            duracion=carrera.duracion(hasta=congelacion.hora),
+        )
+
+    def seguir_carrera(self) -> None:
+        """NO, SEGUIR: descarta el cierre pedido y la carrera sigue como si nada.
+
+        El tiempo de la pregunta también se cobra: el taxi seguía ocupado.
+        """
+        self._taximetro.descongelar()
+
     def finalizar_carrera(self) -> CarreraCerrada:
         """Cierra la carrera activa y la guarda en el histórico.
+
+        Si antes se llamó a `congelar_importe()`, cobra el importe de aquel
+        instante.
 
         Lanza `SinCarreraError` si no hay carrera. Un fallo al guardar no se
         lanza: la carrera ya está cerrada y su total congelado, así que se
