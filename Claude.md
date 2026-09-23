@@ -94,7 +94,7 @@ Run `pytest` after every change. Don't call a task done with failing tests.
 - One class per file, snake_case filename matching the class.
 - Domain vocabulary in Spanish for consistency with the user stories (`Carrera`, `iniciar_carrera`, `cambiar_estado`, `finalizar`); generic utility code can be English (`formato_euros`).
 - **Language:** anything the client or an evaluator reads is Spanish — `README.md`, `docs/project-brief.md`, `docs/flujo-fase1.md`, `docs/demo-fase1.md`, docstrings, CLI output, commit subjects. Internal working notes (`docs/decisions-*.md`, `docs/future-implementation-ideas.md`) may stay in English.
-- Keep the CLI layer thin — it parses input and calls methods on `Taximetro`/`Carrera`; no fare logic there.
+- Keep the interface layers thin — they parse input and call `ServicioTaximetro`; no fare logic there. The CLI and everything under `taximetro/gui/` may import only `servicio_taximetro`, `logs` and `utils` from the package; `test_estructura.py` fails otherwise (T9.12).
 - Fase 1 requires no external libraries beyond the standard library (`time`, `datetime`) unless a specific later-phase story calls for one (justify any new dependency in the PR description, per the client's technical constraints).
 - Commits: [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/) format, referencing the story/task id, e.g. `feat(carrera): implement cambiar_estado (US-02)`.
 
