@@ -110,10 +110,13 @@ class Tecla(tk.Frame):
             self.comando()
 
     def _contiene(self, x: int, y: int) -> bool:
-        """True si el punto de la pantalla (x, y) cae sobre la tecla."""
-        widget = self.winfo_containing(x, y)
-        while widget is not None:
-            if widget is self:
-                return True
-            widget = widget.master
-        return False
+        """True si el punto de la pantalla (x, y) cae dentro del rectángulo de la tecla.
+
+        Se mira la geometría y no `winfo_containing`, que pregunta qué ventana
+        hay de verdad en ese punto del escritorio y falla si otra la tapa.
+        """
+        izquierda, arriba = self.winfo_rootx(), self.winfo_rooty()
+        return (
+            izquierda <= x < izquierda + self.winfo_width()
+            and arriba <= y < arriba + self.winfo_height()
+        )

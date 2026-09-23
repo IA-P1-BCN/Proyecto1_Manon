@@ -212,7 +212,7 @@ Equivale a *CARRERA ACTIVA* de la Fase 2. Aprobada el 2026-09-22 (maqueta A, sin
 
 - El importe se refresca solo (ver `decisions-fase3.md`, *Real-time counter*). *Ver importe* del CLI desaparece: el importe está siempre en pantalla.
 - *Ayuda* abre un panel encima con lo que hace cada tecla y las tarifas vigentes, y un botón **Cerrar**.
-- El importe no cabe en más de 3 cifras enteras (999,99 €). Pendiente: decidir qué se muestra si se supera.
+- **Importe de 1.000 € o más (decidido 2026-09-23):** el visor tiene 3 cifras enteras, y a partir de 1.000 € pasa a **4 cifras en el mismo ancho**: los dígitos se estrechan para caber. El importe se ve siempre exacto, que es lo que importa al cobrar; lo habitual (menos de 1.000 €) sigue con el tamaño aprobado. A 0,05 €/s se llega a 1.000 € tras 5 h 33 min en movimiento; con la tarifa máxima (1 €/s), en menos de 17 min. Las posiciones sin cifra se ven apagadas, como en la maqueta (5,00 € muestra dos dígitos fantasma).
 
 ### 5. Total a cobrar — absorbida por la pantalla 3
 
