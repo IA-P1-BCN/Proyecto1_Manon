@@ -11,7 +11,7 @@ from __future__ import annotations
 import dataclasses
 import json
 import logging
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 import pytest
@@ -51,7 +51,11 @@ class TestIniciarCarrera:
 
     def test_devuelve_una_instantanea_de_la_carrera_nueva(self, servicio) -> None:
         assert servicio.iniciar_carrera() == InstantaneaCarrera(
-            id=1, estado=Estado.EN_MOVIMIENTO, importe=0.0
+            id=1,
+            estado=Estado.EN_MOVIMIENTO,
+            importe=0.0,
+            hora_inicio=datetime(2025, 6, 1, 8, 0, 0),
+            duracion=0,
         )
 
     def test_dos_veces_lanza_carrera_activa_error(self, servicio) -> None:
@@ -85,6 +89,19 @@ class TestEstadoActual:
         assert servicio.estado_actual() is None
 
 
+class TestDatosDelLateral:
+    """Lo que la pantalla del taxímetro enseña junto al importe (T9.13)."""
+
+    def test_la_instantanea_lleva_la_hora_de_inicio_y_la_duracion(
+        self, servicio, calendario
+    ) -> None:
+        servicio.iniciar_carrera()
+        calendario.avanzar(252)
+        ahora = servicio.estado_actual()
+        assert ahora.hora_inicio == datetime(2025, 6, 1, 8, 0, 0)
+        assert ahora.duracion == 252
+
+
 class TestCambiarEstado:
     """US-02 a través del servicio."""
 
@@ -107,12 +124,19 @@ class TestCambiarEstado:
 class TestFinalizarCarrera:
     """US-03 a través del servicio."""
 
-    def test_devuelve_el_total_y_que_se_guardo(self, servicio, reloj) -> None:
+    def test_devuelve_el_total_y_que_se_guardo(self, servicio, reloj, calendario) -> None:
         servicio.iniciar_carrera()
         reloj.avanzar(10)
+        calendario.avanzar(10)
         cerrada = servicio.finalizar_carrera()
         assert cerrada == CarreraCerrada(
-            carrera=InstantaneaCarrera(id=1, estado=Estado.EN_MOVIMIENTO, importe=0.50),
+            carrera=InstantaneaCarrera(
+                id=1,
+                estado=Estado.EN_MOVIMIENTO,
+                importe=0.50,
+                hora_inicio=datetime(2025, 6, 1, 8, 0, 0),
+                duracion=10,
+            ),
             guardada=True,
         )
 

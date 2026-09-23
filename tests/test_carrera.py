@@ -197,6 +197,23 @@ class TestCarreraFinalizadaFlag:
         assert carrera.finalizada is True
 
 
+class TestDuracion:
+    """Tiempo transcurrido, para mostrarlo en pantalla (Fase 3, T9.13)."""
+
+    def test_una_carrera_recien_iniciada_dura_cero(self, carrera: Carrera) -> None:
+        assert carrera.duracion() == 0
+
+    def test_en_curso_cuenta_hasta_ahora(self, carrera: Carrera, calendario) -> None:
+        calendario.avanzar(252)
+        assert carrera.duracion() == 252
+
+    def test_finalizada_se_queda_en_su_hora_de_fin(self, carrera: Carrera, calendario) -> None:
+        calendario.avanzar(60)
+        carrera.finalizar()
+        calendario.avanzar(600)
+        assert carrera.duracion() == 60
+
+
 class TestFinalizar:
     """US-03 / T3.1: cerrar la carrera y devolver el total a cobrar."""
 

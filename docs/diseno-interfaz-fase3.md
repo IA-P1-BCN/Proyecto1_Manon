@@ -179,6 +179,11 @@ Al confirmar *SÍ, FINALIZAR*:
 
 Primer arranque (todavía no hay carrera en esta sesión): visor a `0,00`, LIBRE encendida, rótulo *IMPORTE*.
 
+**Decidido (2026-09-23, T9.13):**
+- El total de la última carrera se ve mientras el conductor sigue en esta pantalla. Si vuelve a Inicio y entra otra vez, el visor arranca a `0,00`.
+- *CARRERA FINALIZADA* ocupa dos líneas: no cabe en una en la columna de 300 px.
+- **Si el histórico no se puede guardar**, el total se muestra igual (el cobro no depende del disco) y, en lugar de *Cobrar al pasajero*, aparece en ámbar «No guardada en el histórico: anota el total.». Es el mismo aviso que el CLI.
+
 **Por qué:** una pantalla separada con una tecla *Cobrado* añadía un toque por carrera sin aportar información nueva.
 
 ### 4. Conductor — carrera activa
@@ -279,4 +284,4 @@ Tabla de todos los textos que aparecen en pantalla (títulos, botones, errores, 
 ## Comportamiento — Pendiente
 
 - Cerrar la ventana con una carrera en curso: decidido, ver `flujo-fase3.md`, *Cerrar la ventana con una carrera en curso*.
-- Qué ve el usuario si no se puede guardar el histórico o las tarifas.
+- Qué ve el usuario si no se puede guardar el histórico: decidido, ver pantalla 3. Si no se pueden guardar las tarifas: pantalla 7, con el mensaje del CLI.

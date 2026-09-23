@@ -293,6 +293,17 @@ config/
 - **No redrawing on refresh.** `mostrar()` runs five times a second, so it only recolours segments; the polygons are rebuilt only when the digit count changes (3 ↔ 4).
 - The IMPORTE / TOTAL A COBRAR caption and the 200 ms refresh belong to the meter screen (T9.13), which reads `ServicioTaximetro.estado_actual()`.
 
+## The meter screen (T9.13)
+
+**As built (2026-09-23):** `gui/taximetro.py` → `PantallaTaximetro` implements screens 3 and 4 as one screen, LIBRE or OCUPADO. It is not called `Taximetro`, so it can't be confused with the domain class.
+
+- **The snapshot gained `hora_inicio` and `duracion`** for the sidebar. `duracion` comes from a new `Carrera.duracion()`, measured with the calendar like the `duracion_s` of the `carrera_finalizada` log: it is for display, not for charging. The rate shown (`0,05 €/s`) comes from `servicio.tarifas()`, which during a ride always equals the ride's own rate, because rates can't be changed with a ride in progress.
+- **Refresh:** a single `programar(200 ms)` loop while OCUPADO. It stops by itself when the meter is LIBRE, and every key press repaints at once. A test checks that chaining rides never leaves more than one pending timer.
+- **FINALIZAR closes the ride directly for now.** The SÍ/NO confirmation (T9.8) goes in front of `finalizar()`.
+- **Assumptions** (written into `diseno-interfaz-fase3.md`, screen 3): the last total stays on screen only while the driver stays on this screen; if the history can't be written, the total is shown anyway with «No guardada en el histórico: anota el total.».
+- The placeholder Inicio got a CONDUCTOR key so the screen can be reached before T9.7.
+- **Screenshots of every state** (LIBRE at start, OCUPADO, PARADO, ride finished, Ayuda) were compared with the mockup. They caught two layout bugs that the behaviour tests missed: «CARRERA FINALIZADA» was cut off, and Volver sat under Ayuda instead of above it. Both are now covered by tests, checked by putting each bug back on purpose.
+
 ## Two GUI test problems found and fixed during T9.6
 
 - **One Tk interpreter for the whole test session.** Creating and destroying a `Tk()` per test made Tk 9.0.4 on Windows (Python 3.14) abort now and then when creating the next one: `Windows fatal exception: code 0x80000003`, sometimes killing the pytest process. The test that created a second `Tk()` while the fixture's was alive made it much more likely (4/25 runs of `test_app.py`). It never showed on Linux CI. Now `tests/gui/conftest.py` has a session-scoped `Tk` and each test gets a fresh `Toplevel` as its window: 20/20 clean full runs, and the suite is twice as fast. For this, **`App.ejecutar()` uses `wait_window()` instead of `mainloop()`**. With the main window they behave the same, but `wait_window()` also returns when a `Toplevel` closes. The real program was checked: the window opens and `ejecutar()` returns on close.

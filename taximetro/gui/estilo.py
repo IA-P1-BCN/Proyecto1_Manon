@@ -32,6 +32,9 @@ TECLA_ENTRAR = 160
 TECLA_GUARDAR = 150
 CAMPO = 96  # alto de los campos de texto
 VISOR = 420  # alto del visor del taxímetro
+TECLA_TAXIMETRO = ALTO - 2 * MARGEN - VISOR - SEPARACION  # lo que queda bajo el visor: 308
+LAMPARA = 72  # alto de las lámparas OCUPADO / LIBRE
+AYUDA_ANCHO = 780  # panel de ayuda
 
 TEXTO_MIN = 24  # nada más pequeño en ninguna pantalla, ni siquiera la ayuda
 

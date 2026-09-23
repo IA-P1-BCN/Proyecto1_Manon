@@ -82,6 +82,16 @@ class Carrera:
         """True si la carrera ya está cerrada y no admite más cambios."""
         return self.hora_fin is not None
 
+    def duracion(self) -> float:
+        """Segundos desde `hora_inicio` hasta `hora_fin`, o hasta ahora si sigue en curso.
+
+        Se mide con el calendario, igual que la `duracion_s` del log de
+        `carrera_finalizada`: es un dato para mostrar, no para cobrar (el
+        importe se acumula con el reloj monótono).
+        """
+        fin = self.hora_fin if self.hora_fin is not None else self._calendario()
+        return (fin - self.hora_inicio).total_seconds()
+
     def _segundos_en_curso(self) -> float:
         """Segundos transcurridos en el tramo actual, sin cerrarlo."""
         return self._reloj() - self._inicio_tramo

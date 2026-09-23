@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 
 from taximetro.auth import Auth, CredencialesError
 from taximetro.carrera import Carrera, Estado
@@ -50,11 +51,17 @@ class AlmacenamientoError(Exception):
 
 @dataclass(frozen=True)
 class InstantaneaCarrera:
-    """Una foto de la carrera en un momento dado: lo que muestra la pantalla."""
+    """Una foto de la carrera en un momento dado: lo que muestra la pantalla.
+
+    `duracion` son los segundos desde `hora_inicio` hasta ahora, o hasta el
+    final si la carrera ya se cerró.
+    """
 
     id: int
     estado: Estado
     importe: float
+    hora_inicio: datetime
+    duracion: float
 
 
 @dataclass(frozen=True)
@@ -206,7 +213,11 @@ class ServicioTaximetro:
     def _instantanea(carrera: Carrera) -> InstantaneaCarrera:
         """Copia en datos lo que la interfaz necesita de una carrera."""
         return InstantaneaCarrera(
-            id=carrera.id, estado=carrera.estado, importe=carrera.importe_actual()
+            id=carrera.id,
+            estado=carrera.estado,
+            importe=carrera.importe_actual(),
+            hora_inicio=carrera.hora_inicio,
+            duracion=carrera.duracion(),
         )
 
     @staticmethod
