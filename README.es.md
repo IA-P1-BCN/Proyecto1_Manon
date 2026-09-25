@@ -19,6 +19,7 @@
 - [Cómo trabajo](#como-trabajo)
 - [Documentación](#documentacion)
 - [Autor](#autor)
+- [Licencia](#licencia)
 
 <a id="que-es"></a>
 ## ❓ ¿Qué es?
@@ -54,6 +55,7 @@ Es un proyecto de curso, construido por fases con una demo al final de cada una.
 | **Calidad** | ![Cobertura](https://img.shields.io/badge/cobertura-99.7%25-brightgreen) ![Tests](https://img.shields.io/badge/tests-635%20pasan-brightgreen) ![Umbral de cobertura](https://img.shields.io/badge/umbral%20de%20cobertura-%E2%89%A5%2090%25-blue) |
 | **Paquetes** | ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white) ![pytest](https://img.shields.io/badge/pytest-9.1.1-0A9EDC?logo=pytest&logoColor=white) ![pytest-cov](https://img.shields.io/badge/pytest--cov-7.1.0-0A9EDC?logo=pytest&logoColor=white) ![Dependencias de ejecución](https://img.shields.io/badge/dependencias%20de%20ejecuci%C3%B3n-ninguna-brightgreen) |
 | **Progreso** | ![Fase](https://img.shields.io/badge/fase-3%20de%204-orange) ![Issues cerradas](https://img.shields.io/github/issues-closed/IA-P1-BCN/Proyecto1_Manon?label=issues%20cerradas) ![PRs cerradas](https://img.shields.io/github/issues-pr-closed/IA-P1-BCN/Proyecto1_Manon?label=PRs%20cerradas) |
+| **Licencia** | ![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-green) |
 
 *La cobertura y el número de tests son una foto del 25/09/2026 (`pytest`); el CI, el último commit, las issues y las PRs se actualizan solos. La ejecución falla por debajo del 90 % de cobertura.*
 
@@ -165,3 +167,8 @@ Proyecto1_Manon/
 ## 👤 Autor
 
 **[Manon](https://github.com/ManonChab)**: diseño, código, tests y documentación.
+
+<a id="licencia"></a>
+## 📄 Licencia
+
+Publicado bajo la [licencia MIT](LICENSE): se puede usar, copiar, modificar y compartir, siempre que se mantenga el aviso de copyright.

@@ -19,6 +19,7 @@
 - [How I work](#how-i-work)
 - [Documentation](#documentation)
 - [Author](#author)
+- [License](#license)
 
 <a id="what-is-it"></a>
 ## ❓ What is it?
@@ -54,6 +55,7 @@ It is a course project, built in phases with a demo at the end of each. It is me
 | **Quality** | ![Coverage](https://img.shields.io/badge/coverage-99.7%25-brightgreen) ![Tests](https://img.shields.io/badge/tests-635%20passed-brightgreen) ![Coverage gate](https://img.shields.io/badge/coverage%20gate-%E2%89%A5%2090%25-blue) |
 | **Packages** | ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white) ![pytest](https://img.shields.io/badge/pytest-9.1.1-0A9EDC?logo=pytest&logoColor=white) ![pytest-cov](https://img.shields.io/badge/pytest--cov-7.1.0-0A9EDC?logo=pytest&logoColor=white) ![Runtime dependencies](https://img.shields.io/badge/runtime%20dependencies-none-brightgreen) |
 | **Progress** | ![Phase](https://img.shields.io/badge/phase-3%20of%204-orange) ![Issues closed](https://img.shields.io/github/issues-closed/IA-P1-BCN/Proyecto1_Manon) ![PRs merged](https://img.shields.io/github/issues-pr-closed/IA-P1-BCN/Proyecto1_Manon?label=PRs%20closed) |
+| **License** | ![License: MIT](https://img.shields.io/badge/license-MIT-green) |
 
 *Coverage and test count are a snapshot from 2026-09-25 (`pytest`); CI, last commit, issues and PRs update by themselves. The run fails below 90% coverage.*
 
@@ -167,3 +169,8 @@ Most design documents are in Spanish (they are client-facing); the `decisions-*`
 ## 👤 Author
 
 **[Manon](https://github.com/ManonChab)**: design, code, tests and documentation.
+
+<a id="license"></a>
+## 📄 License
+
+Released under the [MIT License](LICENSE): you can use, copy, modify and share it, as long as the copyright notice stays.
