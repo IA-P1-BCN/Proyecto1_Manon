@@ -1,0 +1,34 @@
+# Normalización de finales de línea (TTX-247).
+#
+# Sin este fichero, cada máquina decide según su `core.autocrlf` local, y un
+# clon en otro equipo puede producir diffs de ficheros enteros en los que lo
+# único que cambia son los finales de línea. Aquí queda fijado en el repo,
+# igual para todo el mundo.
+
+# Por defecto: git normaliza a LF al guardar en el repo y detecta binarios solo.
+* text=auto
+
+# Código y documentación: LF también en el directorio de trabajo.
+*.py    text eol=lf
+*.md    text eol=lf
+*.toml  text eol=lf
+*.txt   text eol=lf
+*.json  text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.cfg   text eol=lf
+*.ini   text eol=lf
+
+# Scripts de Windows: necesitan CRLF para ejecutarse correctamente.
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+*.ps1   text eol=crlf
+
+# Binarios: git no debe tocarlos nunca.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.zip   binary

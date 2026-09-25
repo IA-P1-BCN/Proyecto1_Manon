@@ -1,0 +1,30 @@
+# Configuración de herramientas del proyecto TTX-247.
+#
+# De momento solo configura pytest. No declara metadatos de paquete
+# ([project], build-system) porque el taxímetro no se distribuye como
+# librería: se ejecuta con `python -m taximetro.taximetro_app`.
+# Si en Fase 4 hiciera falta empaquetarlo, se añaden aquí.
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+
+# Añade la raíz del repo a sys.path para que los tests puedan hacer
+# `from taximetro.carrera import Carrera`.
+#
+# Sin esto, pytest solo pone `tests/` en sys.path y el paquete `taximetro`
+# no se encuentra: ModuleNotFoundError en cuanto un test importe el dominio.
+pythonpath = ["."]
+
+# Dónde buscar tests si se ejecuta `pytest` sin argumentos.
+testpaths = ["tests"]
+
+# Opciones que se aplican siempre, también en CI:
+#
+# --strict-markers   falla si un test usa un marcador no declarado, en vez de
+#                    ignorarlo en silencio (un `@pytest.mark.slwo` mal escrito
+#                    debe dar error, no pasar).
+# --cov=taximetro    mide la cobertura del paquete de dominio (no de tests/).
+# --cov-fail-under   umbral de calidad: por debajo del 90 %, `pytest` falla.
+#                    Va aquí y no solo en el workflow de CI para que el umbral
+#                    salte primero en la máquina de quien programa.
+addopts = "--strict-markers --cov=taximetro --cov-fail-under=90"
