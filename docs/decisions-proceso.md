@@ -69,6 +69,8 @@ Companion docs: `docs/decisions-fase1-scaffold.md` (code structure), `docs/flujo
 
 **Why:** T0.4 has been open since the start and the repo is deliverable #1, but a README written before the CLI exists would document commands that don't work yet. Minimal now keeps it honest; the expansion happens when there is something real to describe.
 
+**Update — 2026-09-25, shortened again for a different reader.** The expanded README grew to ~300 lines (full CLI transcript, menu table, tariff/history/password/log walkthroughs). The readers are now the teacher and other students, later recruiters — nobody uses it as a real taxímetro. It was cut to what they need: what the project is, phase status, how to run it in a minute, tests, architecture and key decisions, how the work is run, and an index into `docs/`. It also became bilingual: `README.md` in English (the default GitHub renders, and what recruiters read), `README.es.md` in Spanish, linked to each other by a line at the top of each — GitHub has no built-in README language switch, so a link is the standard way. This is the one exception to the *Language policy* above (which listed `README.md` as Spanish); the app, docstrings and the other client-facing docs stay Spanish. The per-feature detail was not deleted; it already lives in `flujo-fase*.md`, `decisions-fase*.md` and `demo-fase*.md`, so a change to behaviour is documented in one place only.
+
 ## Demo preparation
 
 **Decision:** a written demo script, `docs/demo-fase1.md` — the exact commands to type, the output each should produce and the requirement it proves — run live at real speed. No accelerated-clock flag in production code.
