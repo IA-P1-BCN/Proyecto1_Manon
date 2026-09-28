@@ -54,7 +54,7 @@ It is a course project, built in phases with a demo at the end of each. It is me
 | **Build** | ![CI](https://img.shields.io/github/actions/workflow/status/IA-P1-BCN/Proyecto1_Manon/tests.yml?branch=dev&label=CI&logo=githubactions&logoColor=white) ![Last commit](https://img.shields.io/github/last-commit/IA-P1-BCN/Proyecto1_Manon/dev) |
 | **Quality** | ![Coverage](https://img.shields.io/badge/coverage-99.7%25-brightgreen) ![Tests](https://img.shields.io/badge/tests-635%20passed-brightgreen) ![Coverage gate](https://img.shields.io/badge/coverage%20gate-%E2%89%A5%2090%25-blue) |
 | **Packages** | ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white) ![pytest](https://img.shields.io/badge/pytest-9.1.1-0A9EDC?logo=pytest&logoColor=white) ![pytest-cov](https://img.shields.io/badge/pytest--cov-7.1.0-0A9EDC?logo=pytest&logoColor=white) ![Runtime dependencies](https://img.shields.io/badge/runtime%20dependencies-none-brightgreen) |
-| **Progress** | ![Phase](https://img.shields.io/badge/phase-3%20of%204-orange) ![Issues closed](https://img.shields.io/github/issues-closed/IA-P1-BCN/Proyecto1_Manon) ![PRs merged](https://img.shields.io/github/issues-pr-closed/IA-P1-BCN/Proyecto1_Manon?label=PRs%20closed) |
+| **Progress** | ![Phase](https://img.shields.io/badge/phase-3%20of%203%20(final)-brightgreen) ![Issues closed](https://img.shields.io/github/issues-closed/IA-P1-BCN/Proyecto1_Manon) ![PRs merged](https://img.shields.io/github/issues-pr-closed/IA-P1-BCN/Proyecto1_Manon?label=PRs%20closed) |
 | **License** | ![License: MIT](https://img.shields.io/badge/license-MIT-green) |
 
 *Coverage and test count are a snapshot from 2026-09-25 (`pytest`); CI, last commit, issues and PRs update by themselves. The run fails below 90% coverage.*
@@ -64,9 +64,9 @@ It is a course project, built in phases with a demo at the end of each. It is me
 | 1 | Command-line MVP: start, stop/go and finish a ride, with the amount (US-01 to US-04) | ✅ Frozen in the `fase-1` branch for the demo |
 | 2 | Configurable fares, ride history and logs (US-05 to US-07) | ✅ |
 | 3 | Admin password, touch GUI and refactoring (US-08, US-09) | ✅ |
-| 4 | Database, REST API and one-command deploy | ⏳ Not started |
+| 4 | Database, REST API and one-command deploy | ❌ Dropped — scope closed at Phase 3, see below |
 
-Phases 1 to 3 are in the `dev` branch. The client's original brief is in [`docs/project-brief.md`](docs/project-brief.md) (Spanish); tasks are in [`Backlog.md`](Backlog.md) and on the [project board](https://github.com/orgs/IA-P1-BCN/projects/2).
+Phases 1 to 3 are in `main` and `dev`. Phase 4 was scoped out to spend the remaining course time reviewing the code, architecture and process instead — see [`docs/decisions-proceso.md`](docs/decisions-proceso.md) and [`docs/retro/`](docs/retro/). The client's original brief is in [`docs/project-brief.md`](docs/project-brief.md) (Spanish); tasks are in [`Backlog.md`](Backlog.md) and on the [project board](https://github.com/orgs/IA-P1-BCN/projects/2).
 
 <a id="how-can-i-try-it"></a>
 ## ▶️ How can I try it?
