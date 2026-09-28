@@ -8,7 +8,7 @@ Context and instructions for Claude Code working in this repository. Read at the
 
 ## Current phase
 
-**Project scope is closed at Fase 3** (2026-09-28). Fases 1–3 are done and all live in `dev` (2026-09-23) and in `main` (2026-09-25). Fase 3 (US-08 password, US-09 GUI, the `ServicioTaximetro` refactor) is complete and manually tested; its decisions are in `docs/decisions-fase3.md`. **Fase 1 stays frozen in the `fase-1` branch** for the demo (see *Git workflow*); `fase-2` and `fase-3` are frozen too, as reference points. **Fase 4 (API, DB, one-command deploy) is dropped, not deferred** — see `docs/decisions-proceso.md`, *Project scope closed at Fase 3*. Don't start API/DB/deploy work unless the user reopens that decision. The remaining work is a retro: reviewing the code, architecture and process built so far — see `docs/retro/`.
+**Project scope is closed at Fase 3** (2026-09-28). Fases 1–3 are done and all live in `dev` (2026-09-23) and in `main` (2026-09-25). Fase 3 (US-08 password, US-09 GUI, the `ServicioTaximetro` refactor) is complete and manually tested; its decisions are in `docs/decisions-fase3.md`. **Fase 1 stays frozen in the `fase-1` branch** for the demo (see *Git workflow*); `fase-2` and `fase-3` are frozen too, as reference points. **Fase 4 (API, DB, one-command deploy) is dropped, not deferred** — see `docs/decisions-proceso.md`, *Project scope closed at Fase 3*. Don't start API/DB/deploy work unless the user reopens that decision. The remaining work is a retro: reviewing the code, architecture and process built so far. It's kept as a personal, local-only log, not in this repo.
 
 ## Fare logic (do not guess — these are the real numbers)
 
