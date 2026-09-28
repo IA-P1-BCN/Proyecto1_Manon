@@ -53,7 +53,7 @@ class Tarifa:
 
     @staticmethod
     def _validar(parado: float, en_movimiento: float) -> None:
-        """Comprueba las reglas de `docs/decisions-fase2.md` (US-07, Validation)."""
+        """Comprueba las reglas de validación de las tarifas (US-07)."""
         for campo, valor in (("parado", parado), ("en_movimiento", en_movimiento)):
             # `bool` es subclase de `int`: un `true` en el JSON no es una tarifa.
             if isinstance(valor, bool) or not isinstance(valor, (int, float)):

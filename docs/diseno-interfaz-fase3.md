@@ -3,7 +3,6 @@
 Especificación visual de la interfaz gráfica del taxímetro (**US-09**) y de la pantalla de contraseña (**US-08**). Es la referencia con la que se comprueba cada pantalla al programarla, igual que [`flujo-fase1.md`](flujo-fase1.md) lo fue para el CLI.
 
 - Cómo se enlazan las pantallas: [`flujo-fase3.md`](flujo-fase3.md).
-- Por qué se decidió cada cosa: [`decisions-fase3.md`](decisions-fase3.md).
 - Requisitos del cliente: [`project-brief.md`](project-brief.md), sección *Fase 3*.
 
 **Cómo se rellena:** cada decisión visual se prueba primero en una maqueta HTML con el tamaño de una tablet. Solo cuando se aprueba se copia aquí. Las secciones marcadas **Pendiente** aún no están decididas.
@@ -18,9 +17,9 @@ Especificación visual de la interfaz gráfica del taxímetro (**US-09**) y de l
 | Botones grandes, interacción táctil cómoda | *Reglas de diseño táctil* |
 | Estado del taxi visible de un vistazo | *Colores y estados* |
 | Importe actualizado en tiempo real | *Pantalla de carrera activa* |
-| La interfaz no se bloquea nunca | *Comportamiento* (y `decisions-fase3.md`) |
+| La interfaz no se bloquea nunca | *Comportamiento* |
 | Acceso protegido por contraseña | *Pantalla de contraseña* |
-| La UI usa la lógica ya existente, sin duplicarla (US-09) | Fuera de este documento: `decisions-fase3.md`, *Structural refactor* |
+| La UI usa la lógica ya existente, sin duplicarla (US-09) | El refactor de `ServicioTaximetro` (fuera de este documento) |
 
 ---
 
@@ -156,7 +155,7 @@ Equivale al *menú de inicio* de la Fase 2. Aprobada el 2026-09-22.
 
 ### 2. Pantalla de contraseña (US-08)
 
-Aprobada el 2026-09-22. Solo protege al Administrador (ver `decisions-fase3.md`).
+Aprobada el 2026-09-22. Solo protege al Administrador.
 
 - Título *Administrador* con candado; campo **Contraseña** enmascarado (96 px de alto, texto 40 px), escrito con el teclado.
 - Tecla **ENTRAR** (160 px de alto, verde); Enter también entra.
@@ -215,7 +214,7 @@ Equivale a *CARRERA ACTIVA* de la Fase 2. Aprobada el 2026-09-22 (maqueta A, sin
 | Teclas (abajo) | **PARAR** / **ARRANCAR** (una sola tecla, siempre la acción contraria al estado actual, como en el CLI) y **FINALIZAR** (roja, con subtítulo "Termina y muestra el total") | ≈ 300 px de alto, mitad del ancho cada una, 24 px entre ellas |
 | Lateral | Nº de carrera, tiempo transcurrido, hora de inicio; botón **Ayuda** abajo | 240 px de ancho; botón 96 px de alto |
 
-- El importe se refresca solo (ver `decisions-fase3.md`, *Real-time counter*). *Ver importe* del CLI desaparece: el importe está siempre en pantalla.
+- El importe se refresca solo. *Ver importe* del CLI desaparece: el importe está siempre en pantalla.
 - *Ayuda* abre un panel encima con lo que hace cada tecla y las tarifas vigentes, y un botón **Cerrar**.
 - **Importe de 1.000 € o más (decidido 2026-09-23):** el visor tiene 3 cifras enteras, y a partir de 1.000 € pasa a **4 cifras en el mismo ancho**: los dígitos se estrechan para caber. El importe se ve siempre exacto, que es lo que importa al cobrar; lo habitual (menos de 1.000 €) sigue con el tamaño aprobado. A 0,05 €/s se llega a 1.000 € tras 5 h 33 min en movimiento; con la tarifa máxima (1 €/s), en menos de 17 min. Las posiciones sin cifra se ven apagadas, como en la maqueta (5,00 € muestra dos dígitos fantasma).
 

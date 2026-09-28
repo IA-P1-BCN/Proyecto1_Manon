@@ -26,7 +26,7 @@ class App:
 
     Es la única que conoce la ventana de tkinter. Las pantallas se piden unas a
     otras con `mostrar()`, y todas hablan con el mismo `servicio`, el que
-    también usa el CLI (`docs/decisions-fase3.md`, *Structural refactor*).
+    también usa el CLI.
 
     `raiz` se inyecta para los tests: le dan una ventana `Toplevel` oculta de
     un único intérprete Tk para toda la sesión, y procesan los eventos con

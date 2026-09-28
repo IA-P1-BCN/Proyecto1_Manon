@@ -1,13 +1,12 @@
 """Tests de estructura: el contrato de diseño acordado antes de implementar.
 
 No comprueban comportamiento (eso es cosa de US-01 a US-04), sino que la API
-pública es la que se decidió en `docs/decisions-fase1-scaffold.md`. Si alguien
+pública es la que se decidió para el proyecto. Si alguien
 renombra un método, le quita un parámetro inyectable o vuelve a poner el reloj
 de pared, estos tests fallan y la decisión se revisa a conciencia en vez de
 erosionarse sin querer.
 
-Desde la Fase 3 también vigilan la frontera entre las interfaces y el dominio
-(`docs/decisions-fase3.md`, *Structural refactor*).
+Desde la Fase 3 también vigilan la frontera entre las interfaces y el dominio.
 """
 
 from __future__ import annotations

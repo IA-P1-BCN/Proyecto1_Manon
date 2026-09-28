@@ -219,7 +219,7 @@ Mostrar el tablero: columna **Fase 2** completa, US-05, US-06 y US-07 cerradas.
 
 Dos cosas que decide el cliente y no el equipo. Anotar la respuesta:
 
-1. **Redondeo del medio céntimo.** Si una carrera sale a exactamente 0,625 €, hoy se cobra **0,62 €**: Python redondea el medio céntimo exacto al par. ¿Prefieren redondear siempre hacia arriba (0,63 €)? Es un cambio de una línea, pero cambia lo que paga el pasajero. Detalle en `docs/future-implementation-ideas.md`.
+1. **Redondeo del medio céntimo.** Si una carrera sale a exactamente 0,625 €, hoy se cobra **0,62 €**: Python redondea el medio céntimo exacto al par. ¿Prefieren redondear siempre hacia arriba (0,63 €)? Es un cambio de una línea, pero cambia lo que paga el pasajero.
 2. **Abrir el histórico en Excel.** `data/historial.csv` usa comas y punto decimal, el formato estándar. Un Excel configurado en español puede necesitar *Datos → Desde texto/CSV* para separar bien las columnas. ¿Les vale así, o prefieren punto y coma y coma decimal?
 
 ## Si algo falla

@@ -2,7 +2,7 @@
 
 Tablero: [IAS_P1_Taximetro_Manon](https://github.com/orgs/IA-P1-BCN/projects/2) · issues en [`IA-P1-BCN/Proyecto1_Manon`](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues).
 
-- **Columnas** (campo `Status`): `User Stories` · `Fase 1` · `Fase 2` · `Fase 3` · `Fase 4` — una por fase, como pide el cliente. `Fase 4` queda vacía: el alcance del proyecto se cerró en la Fase 3 (ver `docs/decisions-proceso.md`, *Project scope closed at Fase 3*).
+- **Columnas** (campo `Status`): `User Stories` · `Fase 1` · `Fase 2` · `Fase 3` · `Fase 4` — una por fase, como pide el cliente. `Fase 4` queda vacía: el alcance del proyecto se cerró en la Fase 3 (decisión registrada en notas personales, no en este repositorio).
 - **Progreso** (campo `Progreso`): `To Do` · `En curso` · `En review` · `Done` — el avance del día a día no se marca moviendo tarjetas entre fases.
 - **Prioridad**: `must`, `should`, `could`
 - **Tipo**: `epic`, `feature`, `tech-task`, `test`, `docs`
@@ -53,7 +53,7 @@ Tareas:
 
 **Diseño sugerido**: `Carrera.cambiar_estado(nuevo_estado)`; clase `Tarifa` con métodos `calcular_parado()` / `calcular_movimiento()`.
 
-> **Decisión tomada**: un único `Tarifa.calcular_importe(estado, segundos)` en lugar de un método por estado, para no duplicar el if/else de estado→tarifa en cada punto de llamada. La `Tarifa` la crea `Taximetro` y se la inyecta a cada `Carrera`. Ver `docs/decisions-fase1-scaffold.md`.
+> **Decisión tomada**: un único `Tarifa.calcular_importe(estado, segundos)` en lugar de un método por estado, para no duplicar el if/else de estado→tarifa en cada punto de llamada. La `Tarifa` la crea `Taximetro` y se la inyecta a cada `Carrera`.
 
 Tareas:
 - [x] **T2.1** Implementar `Carrera.cambiar_estado()` con máquina de estados simple (parado/movimiento) — `tech-task`, `must` — [#20](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/20) ✅
@@ -146,7 +146,7 @@ Tareas:
 
 *T7.3: `ConfigTarifas` se integra en `Taximetro`, no en `Tarifa`, como se decidió en la Fase 1: `Taximetro` construye la `Tarifa` y se la inyecta a cada `Carrera`. `Tarifa` solo valida sus valores.*
 
-*T7.5 a T7.7 no vienen del cliente: salen de la separación Conductor / Administrador decidida para la Fase 2 (ver `docs/decisions-fase2.md`). El menú de roles llega con US-07 porque es la primera historia que necesita el modo Administrador.*
+*T7.5 a T7.7 no vienen del cliente: salen de la separación Conductor / Administrador decidida para la Fase 2. El menú de roles llega con US-07 porque es la primera historia que necesita el modo Administrador.*
 
 ---
 
@@ -164,9 +164,9 @@ Tareas:
 - [x] **T8.4** Tests de autenticación (correcta/incorrecta) — `test`, `could` — [#47](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/47) ✅
 - [x] **T8.5** El Administrador del CLI también pide contraseña — `tech-task`, `could` — [#98](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/98) ✅
 
-*Contraseña, fallos y ubicación del hash: ver `docs/decisions-fase3.md`. No se programa cómo poner ni cambiar la contraseña; se simula que la gestiona el equipo técnico.*
+*Contraseña, fallos y ubicación del hash: decisión registrada aparte. No se programa cómo poner ni cambiar la contraseña; se simula que la gestiona el equipo técnico.*
 
-*T8.5 no viene del cliente: la interfaz gráfica y el CLI conviven (`docs/decisions-fase3.md`), así que un CLI sin contraseña sería una puerta trasera para cambiar las tarifas. La comprobación vive fuera de las dos interfaces.*
+*T8.5 no viene del cliente: la interfaz gráfica y el CLI conviven, así que un CLI sin contraseña sería una puerta trasera para cambiar las tarifas. La comprobación vive fuera de las dos interfaces.*
 
 ---
 
@@ -180,7 +180,7 @@ Tareas:
 *Nota: esta historia es "Could" y depende de que el backend (US-01 a US-04) esté estable primero.*
 
 Tareas:
-- [x] **T9.1** Spike técnico: elegir framework de UI — `tech-task`, `could` — [#48](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/48) ✅ *(se elige `tkinter`; alternativas y razones en `docs/decisions-fase3.md`)*
+- [x] **T9.1** Spike técnico: elegir framework de UI — `tech-task`, `could` — [#48](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/48) ✅ *(se elige `tkinter`; alternativas y razones registradas aparte)*
 - [x] **T9.2** Diseñar pantalla principal (botones grandes, tipografía táctil) — `tech-task`, `could` — [#49](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/49) ✅ *(y el resto de pantallas, en `docs/diseno-interfaz-fase3.md`)*
 - [x] **T9.3** Conectar la interfaz gráfica a `ServicioTaximetro` — `tech-task`, `could` — [#50](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/50) ✅
 - [x] **T9.4** Tests manuales/UX en dispositivo táctil — `test`, `could` — [#51](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/51) ✅ *(prueba manual superada el 2026-09-23)*
@@ -195,7 +195,7 @@ Tareas:
 - [x] **T9.13** Pantalla del taxímetro, LIBRE/OCUPADO, con el importe refrescado cada 200 ms — `feature`, `could` — [#103](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/103) ✅
 - [x] **T9.14** CI: pantalla virtual (`xvfb`) para los tests de la interfaz gráfica — `tech-task`, `could` — [#104](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/104) ✅
 
-*T9.5 a T9.14 salen de la sesión de diseño de la Fase 3 (ver `docs/decisions-fase3.md` y `docs/diseno-interfaz-fase3.md`), no del cliente. T9.9 es lo que hace falta para que la US-06 se siga cumpliendo con la interfaz gráfica: tkinter se traga las excepciones de los callbacks.*
+*T9.5 a T9.14 salen de la sesión de diseño de la Fase 3 (ver `docs/diseno-interfaz-fase3.md`), no del cliente. T9.9 es lo que hace falta para que la US-06 se siga cumpliendo con la interfaz gráfica: tkinter se traga las excepciones de los callbacks.*
 
 *T9.10 a T9.12 son la refactorización estructural que pide la Fase 3; van en US-09 porque su criterio es «se apoya en la lógica de backend ya existente sin duplicarla». Orden de trabajo de la fase: T9.10 → T9.11 → T9.12 (refactorización), después US-08, y por último el resto de US-09.*
 
@@ -249,7 +249,7 @@ Tareas de la revisión:
 ## EPIC P — Decisiones de la sesión previa a la implementación — [#62](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues/62)
 *Prioridad: Must — no deriva de una US, sino de la sesión de diseño anterior a escribir la lógica de Fase 1*
 
-Referencia: **`docs/decisions-fase1-scaffold.md`** (decisiones de código) y **`docs/decisions-proceso.md`** (decisiones de proceso).
+Referencia: decisiones de código y de proceso, registradas en notas personales (no en este repositorio).
 
 El andamiaje daba por decididas cosas que no lo estaban — de dónde sale la `Tarifa`, qué pasa al leer una carrera cerrada, cómo se testea el bucle CLI — y arrastraba una contradicción de formato entre documentos. Estas tareas lo corrigen antes de que el código las fije.
 

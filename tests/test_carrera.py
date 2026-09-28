@@ -52,7 +52,7 @@ class TestCarreraNueva:
 
     def test_la_distancia_es_un_marcador_de_posicion(self, carrera: Carrera) -> None:
         # El taxímetro cobra por tiempo, nunca por distancia. El atributo existe
-        # reservado para fases futuras; ver docs/decisions-fase1-scaffold.md.
+        # reservado para fases futuras.
         assert carrera.distancia == 0.0
 
 

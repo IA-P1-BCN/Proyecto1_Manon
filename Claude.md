@@ -8,7 +8,7 @@ Context and instructions for Claude Code working in this repository. Read at the
 
 ## Current phase
 
-**Project scope is closed at Fase 3** (2026-09-28). Fases 1–3 are done and all live in `dev` (2026-09-23) and in `main` (2026-09-25). Fase 3 (US-08 password, US-09 GUI, the `ServicioTaximetro` refactor) is complete and manually tested; its decisions are in `docs/decisions-fase3.md`. **Fase 1 stays frozen in the `fase-1` branch** for the demo (see *Git workflow*); `fase-2` and `fase-3` are frozen too, as reference points. **Fase 4 (API, DB, one-command deploy) is dropped, not deferred** — see `docs/decisions-proceso.md`, *Project scope closed at Fase 3*. Don't start API/DB/deploy work unless the user reopens that decision. The remaining work is a retro: reviewing the code, architecture and process built so far. It's kept as a personal, local-only log, not in this repo.
+**Project scope is closed at Fase 3** (2026-09-28). Fases 1–3 are done and all live in `dev` (2026-09-23) and in `main` (2026-09-25). Fase 3 (US-08 password, US-09 GUI, the `ServicioTaximetro` refactor) is complete and manually tested. **Fase 1 stays frozen in the `fase-1` branch** for the demo (see *Git workflow*); `fase-2` and `fase-3` are frozen too, as reference points. **Fase 4 (API, DB, one-command deploy) is dropped, not deferred.** Don't start API/DB/deploy work unless the user reopens that decision. The remaining work is a retro: reviewing the code, architecture and process built so far. It's kept as a personal, local-only log, not in this repo.
 
 ## Fare logic (do not guess — these are the real numbers)
 
@@ -23,17 +23,14 @@ Fare accrues continuously based on elapsed time in each state — not per km, no
 
 Before changing behaviour, check whether it was already decided:
 
-- **`docs/decisions-fase1-scaffold.md`** — structural decisions (what lives where, and why).
 - **`docs/flujo-fase1.md`** — authority on CLI behaviour: the command loop, menus per mode, error messages, Ctrl+C / EOF.
 - **`docs/flujo-fase2.md`** — what Fase 2 changes in the CLI: role menu, Admin fare change and history, Ctrl+C confirmation mid-ride (supersedes Fase 1's Ctrl+C rule).
-- **`docs/decisions-fase2.md`** — Fase 2 decisions: roles, fare config, history, logs, the `fase-2` branch.
-- **`docs/decisions-fase3.md`** — Fase 3 decisions: the `fase-3` branch, UI technology, real-time counter, password, refactor. Includes the work order and the Fase 4 replacement points.
 - **`docs/diseno-interfaz-fase3.md`** — authority on the GUI: device, touch rules, colours per state, every screen and its texts.
 - **`docs/flujo-fase3.md`** — how the GUI screens connect, and how each Fase 2 CLI rule maps onto them.
-- **`docs/decisions-proceso.md`** — how the project is run: language, git workflow, CI, coverage gate, board.
-- **`docs/future-implementation-ideas.md`** — ideas deliberately postponed; check before "improving" something that was dropped on purpose.
 - **`docs/demo-fase1.md`** / **`docs/demo-fase2.md`** — the scripts for each phase's client demo; keep them true to the real CLI output. `demo-fase2.md` also lists the open questions for the client.
 - **`docs/demo-fase3.md`** — the Fase 3 demo script (GUI, password, one logic for two interfaces).
+
+Structural/process decisions, per-phase rationale and postponed ideas are kept as personal working notes, not in this repo — ask the user if you need that context and don't have it.
 
 ## Structure (Fase 1 + Fase 2, Fase 3 so far)
 
@@ -112,8 +109,7 @@ Run `pytest` after every change. Don't call a task done with failing tests.
 - PEP 8, type hints on public methods, short docstrings on every class/public method.
 - One class per file, snake_case filename matching the class.
 - Domain vocabulary in Spanish for consistency with the user stories (`Carrera`, `iniciar_carrera`, `cambiar_estado`, `finalizar`); generic utility code can be English (`formato_euros`).
-- **Language:** the README is bilingual: `README.md` is English (default, for teachers, students and recruiters), `README.es.md` is its Spanish mirror; both link to each other at the top and must be kept in sync. Everything else the client or an evaluator reads is Spanish — `docs/project-brief.md`, `docs/flujo-fase1.md`, `docs/demo-fase1.md`, docstrings, CLI output, commit subjects. Internal working notes (`docs/decisions-*.md`, `docs/future-implementation-ideas.md`) may stay in English.
-- Keep the interface layers thin — they parse input and call `ServicioTaximetro`; no fare logic there. The CLI and everything under `taximetro/gui/` may import only `servicio_taximetro`, `logs` and `utils` from the package; `test_estructura.py` fails otherwise (T9.12).
+- **Language:** the README is bilingual: `README.md` is English (default, for teachers, students and recruiters), `README.es.md` is its Spanish mirror; both link to each other at the top and must be kept in sync. Everything else the client or an evaluator reads is Spanish — `docs/project-brief.md`, `docs/flujo-fase1.md`, `docs/demo-fase1.md`, docstrings, CLI output, commit subjects.- Keep the interface layers thin — they parse input and call `ServicioTaximetro`; no fare logic there. The CLI and everything under `taximetro/gui/` may import only `servicio_taximetro`, `logs` and `utils` from the package; `test_estructura.py` fails otherwise (T9.12).
 - Fase 1 requires no external libraries beyond the standard library (`time`, `datetime`) unless a specific later-phase story calls for one (justify any new dependency in the PR description, per the client's technical constraints).
 - Commits: [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/) format, referencing the story/task id, e.g. `feat(carrera): implement cambiar_estado (US-02)`.
 

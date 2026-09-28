@@ -37,7 +37,7 @@ class Auth:
     """La contraseña del Administrador, guardada como hash scrypt con sal.
 
     Poner o cambiar la contraseña es cosa del equipo técnico, fuera de la
-    aplicación (`docs/decisions-fase3.md`, *US-08*). Aquí solo se comprueba.
+    aplicación. Aquí solo se comprueba.
     """
 
     def __init__(self, ruta: Path = RUTA_POR_DEFECTO) -> None:
