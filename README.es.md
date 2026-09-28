@@ -54,7 +54,7 @@ Es un proyecto de curso, construido por fases con una demo al final de cada una.
 | **Compilación** | ![CI](https://img.shields.io/github/actions/workflow/status/IA-P1-BCN/Proyecto1_Manon/tests.yml?branch=dev&label=CI&logo=githubactions&logoColor=white) ![Último commit](https://img.shields.io/github/last-commit/IA-P1-BCN/Proyecto1_Manon/dev?label=%C3%BAltimo%20commit) |
 | **Calidad** | ![Cobertura](https://img.shields.io/badge/cobertura-99.7%25-brightgreen) ![Tests](https://img.shields.io/badge/tests-635%20pasan-brightgreen) ![Umbral de cobertura](https://img.shields.io/badge/umbral%20de%20cobertura-%E2%89%A5%2090%25-blue) |
 | **Paquetes** | ![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white) ![pytest](https://img.shields.io/badge/pytest-9.1.1-0A9EDC?logo=pytest&logoColor=white) ![pytest-cov](https://img.shields.io/badge/pytest--cov-7.1.0-0A9EDC?logo=pytest&logoColor=white) ![Dependencias de ejecución](https://img.shields.io/badge/dependencias%20de%20ejecuci%C3%B3n-ninguna-brightgreen) |
-| **Progreso** | ![Fase](https://img.shields.io/badge/fase-3%20de%204-orange) ![Issues cerradas](https://img.shields.io/github/issues-closed/IA-P1-BCN/Proyecto1_Manon?label=issues%20cerradas) ![PRs cerradas](https://img.shields.io/github/issues-pr-closed/IA-P1-BCN/Proyecto1_Manon?label=PRs%20cerradas) |
+| **Progreso** | ![Fase](https://img.shields.io/badge/fase-3%20de%203%20(final)-brightgreen) ![Issues cerradas](https://img.shields.io/github/issues-closed/IA-P1-BCN/Proyecto1_Manon?label=issues%20cerradas) ![PRs cerradas](https://img.shields.io/github/issues-pr-closed/IA-P1-BCN/Proyecto1_Manon?label=PRs%20cerradas) |
 | **Licencia** | ![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-green) |
 
 *La cobertura y el número de tests son una foto del 25/09/2026 (`pytest`); el CI, el último commit, las issues y las PRs se actualizan solos. La ejecución falla por debajo del 90 % de cobertura.*
@@ -64,9 +64,9 @@ Es un proyecto de curso, construido por fases con una demo al final de cada una.
 | 1 | MVP en línea de comandos: iniciar, parar/arrancar y finalizar carrera, con el importe (US-01 a US-04) | ✅ Congelada en la rama `fase-1` para la demo |
 | 2 | Tarifas configurables, histórico de carreras y logs (US-05 a US-07) | ✅ |
 | 3 | Contraseña de Administrador, interfaz gráfica táctil y refactorización (US-08, US-09) | ✅ |
-| 4 | Base de datos, API REST y despliegue con un comando | ⏳ Sin empezar |
+| 4 | Base de datos, API REST y despliegue con un comando | ❌ Descartada — alcance cerrado en la Fase 3, ver más abajo |
 
-Las fases 1 a 3 están en la rama `dev`. El encargo original del cliente está en [`docs/project-brief.md`](docs/project-brief.md); las tareas, en [`Backlog.md`](Backlog.md) y en el [tablero del proyecto](https://github.com/orgs/IA-P1-BCN/projects/2).
+Las fases 1 a 3 están en `main` y en `dev`. La Fase 4 se descartó para dedicar el tiempo de curso restante a revisar el código, la arquitectura y el proceso — ver [`docs/decisions-proceso.md`](docs/decisions-proceso.md) y [`docs/retro/`](docs/retro/). El encargo original del cliente está en [`docs/project-brief.md`](docs/project-brief.md); las tareas, en [`Backlog.md`](Backlog.md) y en el [tablero del proyecto](https://github.com/orgs/IA-P1-BCN/projects/2).
 
 <a id="como-puedo-probarlo"></a>
 ## ▶️ ¿Cómo puedo probarlo?
