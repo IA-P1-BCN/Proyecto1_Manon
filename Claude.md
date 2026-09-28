@@ -23,6 +23,7 @@ Fare accrues continuously based on elapsed time in each state — not per km, no
 
 Before changing behaviour, check whether it was already decided:
 
+- **`docs/arquitectura-del-codigo.md`** — file-by-file walkthrough of `taximetro/`: what each module does and how it works, kept in sync with the code.
 - **`docs/flujo-fase1.md`** — authority on CLI behaviour: the command loop, menus per mode, error messages, Ctrl+C / EOF.
 - **`docs/flujo-fase2.md`** — what Fase 2 changes in the CLI: role menu, Admin fare change and history, Ctrl+C confirmation mid-ride (supersedes Fase 1's Ctrl+C rule).
 - **`docs/diseno-interfaz-fase3.md`** — authority on the GUI: device, touch rules, colours per state, every screen and its texts.

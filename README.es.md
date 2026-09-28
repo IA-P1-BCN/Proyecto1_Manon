@@ -159,6 +159,7 @@ Proyecto1_Manon/
 |---|---|
 | El encargo del cliente | [`docs/project-brief.md`](docs/project-brief.md) |
 | Cómo se comporta cada interfaz | [`docs/flujo-fase1.md`](docs/flujo-fase1.md), [`flujo-fase2.md`](docs/flujo-fase2.md), [`flujo-fase3.md`](docs/flujo-fase3.md) y el diseño de pantallas [`diseno-interfaz-fase3.md`](docs/diseno-interfaz-fase3.md) |
+| El código, fichero a fichero | [`docs/arquitectura-del-codigo.md`](docs/arquitectura-del-codigo.md) |
 
 Las razones de diseño (por qué se hizo así, cómo se organiza el proyecto, qué se dejó para más adelante) se guardan como notas personales, no en este repositorio.
 
