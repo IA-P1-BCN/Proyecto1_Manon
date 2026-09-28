@@ -161,6 +161,7 @@ Most design documents are in Spanish (they are client-facing).
 |---|---|
 | The client's brief | [`docs/project-brief.md`](docs/project-brief.md) |
 | How each interface behaves | [`docs/flujo-fase1.md`](docs/flujo-fase1.md), [`flujo-fase2.md`](docs/flujo-fase2.md), [`flujo-fase3.md`](docs/flujo-fase3.md) and the screen design [`diseno-interfaz-fase3.md`](docs/diseno-interfaz-fase3.md) |
+| The code, file by file | [`docs/arquitectura-del-codigo.md`](docs/arquitectura-del-codigo.md) |
 
 Design rationale (why things were built this way, how the project is run, what was postponed) is kept as personal working notes, not in this repo.
 
