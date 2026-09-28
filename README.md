@@ -66,7 +66,7 @@ It is a course project, built in phases with a demo at the end of each. It is me
 | 3 | Admin password, touch GUI and refactoring (US-08, US-09) | ✅ |
 | 4 | Database, REST API and one-command deploy | ❌ Dropped — scope closed at Phase 3, see below |
 
-Phases 1 to 3 are in `main` and `dev`. Phase 4 was scoped out to spend the remaining course time reviewing the code, architecture and process instead — see [`docs/decisions-proceso.md`](docs/decisions-proceso.md) and [`docs/retro/`](docs/retro/). The client's original brief is in [`docs/project-brief.md`](docs/project-brief.md) (Spanish); tasks are in [`Backlog.md`](Backlog.md) and on the [project board](https://github.com/orgs/IA-P1-BCN/projects/2).
+Phases 1 to 3 are in `main` and `dev`. Phase 4 was scoped out to spend the remaining course time reviewing the code, architecture and process instead — see [`docs/decisions-proceso.md`](docs/decisions-proceso.md). That review is kept as a personal, local-only log, not in this repo. The client's original brief is in [`docs/project-brief.md`](docs/project-brief.md) (Spanish); tasks are in [`Backlog.md`](Backlog.md) and on the [project board](https://github.com/orgs/IA-P1-BCN/projects/2).
 
 <a id="how-can-i-try-it"></a>
 ## ▶️ How can I try it?

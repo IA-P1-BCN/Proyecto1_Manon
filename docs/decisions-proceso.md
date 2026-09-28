@@ -79,7 +79,9 @@ Companion docs: `docs/decisions-fase1-scaffold.md` (code structure), `docs/flujo
 
 ## Project scope closed at Fase 3 (2026-09-28)
 
-**Decision:** Fase 4 (relational DB, REST API, web panel, one-command deploy) is **dropped**, not deferred. The project's deliverable is Fases 1–3 as they stand in `main`: CLI + GUI, one domain, configurable fares, history, logs, password, all behind the `ServicioTaximetro` façade. The remaining course time goes to a retro — reviewing the code, the architecture and the process, not writing new features. See `docs/retro/`.
+**Decision:** Fase 4 (relational DB, REST API, web panel, one-command deploy) is **dropped**, not deferred. The project's deliverable is Fases 1–3 as they stand in `main`: CLI + GUI, one domain, configurable fares, history, logs, password, all behind the `ServicioTaximetro` façade. The remaining course time goes to a retro — reviewing the code, the architecture and the process, not writing new features.
+
+**The retro itself is not in this repo.** It's a personal log for getting better between projects, not a client- or evaluator-facing deliverable, so it's kept locally (`~/Desktop/Retro/`, outside any git remote) rather than committed here. Two were written and briefly lived in `docs/retro/` (PRs #128–133) before this decision, then moved out; the "consequence" note below still applies to everything else.
 
 **Why:** this is a course project on a fixed time budget, not a live client engagement. `dev` and `main` were promoted to hold Fases 1–3 (PR #127) specifically so `main` is a real, demoable release rather than the single placeholder commit it held before. A `Backlog.md` EPIC F4 (TF4.1–TF4.20) was drafted and then discarded unmerged when this decision was made — the seams it would have used (`Historial`, `ConfigTarifas`, `ServicioTaximetro`, all listed as Fase 4 replacement points in `decisions-fase3.md`) stay as documented architecture, proof the design supports the swap, without spending the remaining time building it.
 
