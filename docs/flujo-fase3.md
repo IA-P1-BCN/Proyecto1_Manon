@@ -2,7 +2,7 @@
 
 Cómo se enlazan las pantallas de la interfaz gráfica (**US-09**) y dónde entra la contraseña (**US-08**). La interfaz gráfica pasa a ser la principal; el CLI de [`flujo-fase2.md`](flujo-fase2.md) sigue existiendo como segunda forma de arrancar, con la contraseña también delante de su Administrador.
 
-Lo que se ve en cada pantalla está en [`diseno-interfaz-fase3.md`](diseno-interfaz-fase3.md); las razones de cada decisión, en [`decisions-fase3.md`](decisions-fase3.md).
+Lo que se ve en cada pantalla está en [`diseno-interfaz-fase3.md`](diseno-interfaz-fase3.md).
 
 ---
 

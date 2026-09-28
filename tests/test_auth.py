@@ -155,9 +155,9 @@ class TestFicheroVersionado:
         assert Auth().ruta == RUTA_POR_DEFECTO
 
     def test_es_legible_y_rechaza_una_contrasena_cualquiera(self) -> None:
-        # La contraseña de la demo no se escribe en los tests
-        # (`docs/decisions-fase3.md`): basta con que el fichero se pueda
-        # comprobar sin CredencialesError, y que no deje entrar a cualquiera.
+        # La contraseña de la demo no se escribe en los tests: basta con que
+        # el fichero se pueda comprobar sin CredencialesError, y que no deje
+        # entrar a cualquiera.
         assert Auth(self.RUTA).comprobar("no-es-la-contrasena") is False
 
     def test_usa_el_coste_real(self) -> None:

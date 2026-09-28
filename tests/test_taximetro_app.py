@@ -5,7 +5,7 @@ La sesión se guioniza: se le pasa una lista de opciones tecleadas como
 parchear `input`/`print` ni de leer stdout.
 
 El menú es numerado y los números son locales a cada modo (ver
-`docs/flujo-fase1.md` y `docs/decisions-fase2.md`):
+`docs/flujo-fase1.md`):
 
     Menú de inicio  1 Conductor · 2 Administrador · 3 Salir
     Sin carrera     1 Iniciar carrera · 2 Ayuda · 3 Volver

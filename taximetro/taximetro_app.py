@@ -109,12 +109,11 @@ class TaximetroApp:
     """Capa CLI: muestra los menús numerados y llama al ServicioTaximetro.
 
     Arranca en el menú de inicio, donde se elige perfil: Conductor (el bucle de
-    carreras de la Fase 1) o Administrador (las funciones de la Fase 2). Ver
-    `docs/decisions-fase2.md`.
+    carreras de la Fase 1) o Administrador (las funciones de la Fase 2).
 
-    Del dominio solo usa el servicio, el mismo que la interfaz gráfica
-    (`docs/decisions-fase3.md`, *Structural refactor*). Recibe datos, nunca
-    objetos vivos: para saber el importe de ahora hay que volver a preguntar.
+    Del dominio solo usa el servicio, el mismo que la interfaz gráfica.
+    Recibe datos, nunca objetos vivos: para saber el importe de ahora hay
+    que volver a preguntar.
 
     `entrada` y `salida` se inyectan para que los tests puedan guionizar una
     sesión completa (lista de opciones dentro, lista de líneas fuera) sin

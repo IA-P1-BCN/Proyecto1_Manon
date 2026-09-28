@@ -2,7 +2,7 @@
 
 Bucle de menú del CLI para el MVP de Fase 1, decidido antes de implementar. Cubre solo la visión del conductor: qué ve, qué teclea y qué hace la aplicación con ello. Las interioridades de las clases (`Carrera` / `Tarifa` / `Taximetro`) aparecen únicamente cuando explican una rama.
 
-Documentos relacionados: `docs/project-brief.md` (requisitos del cliente), `docs/decisions-fase1-scaffold.md` (decisiones estructurales), `docs/decisions-proceso.md` (decisiones de proceso), `docs/future-implementation-ideas.md` (ideas aplazadas).
+Documentos relacionados: `docs/project-brief.md` (requisitos del cliente).
 
 ---
 
@@ -132,7 +132,7 @@ A mitad de carrera **no** se comporta como Ctrl+C (mensaje y volver a preguntar)
 
 **Consecuencia para la implementación:** requiere un accesor de solo lectura en `Carrera` (`importe_actual()`) que devuelva `importe + tramo en curso` **sin mutar nada**. `cambiar_estado()` y `finalizar()` conservan su comportamiento de acumular y reiniciar. Equivocarse aquí — reiniciar la marca de tiempo en una lectura — cobraría de menos al pasajero en silencio, así que merece un test dedicado: *dos llamadas seguidas a `Ver importe`, luego `Finalizar carrera`, deben sumar lo mismo que finalizar a secas.*
 
-Sobre una carrera ya cerrada, `importe_actual()` devuelve el total congelado: no sigue acumulando (ver `docs/decisions-fase1-scaffold.md`).
+Sobre una carrera ya cerrada, `importe_actual()` devuelve el total congelado: no sigue acumulando.
 
 ### Opción `Ayuda`
 
@@ -154,7 +154,7 @@ El error queda prevenido en vez de reportado, que era el objetivo de fondo de aq
 
 **Decisión:** el importe se muestra después de cada opción elegida, no se refresca continuamente. Una pantalla que se actualiza sola queda aplazada a la GUI de Fase 3.
 
-**Por qué:** un contador permanentemente visible necesita un hilo en segundo plano que siga corriendo mientras `input()` está bloqueado, y los repintados del contador corrompen lo que el conductor esté escribiendo a medias — lo que a su vez empuja el CLI hacia lectura de teclas sueltas dependiente de plataforma (`msvcrt` en Windows, `termios` en el resto). Es mucha maquinaria de presentación para una fase cuyos requisitos solo piden un total correcto. Está registrado en `docs/future-implementation-ideas.md`; el modelo de acumulación por marcas de tiempo admite una pantalla en vivo sin cambios cuando una fase posterior la quiera.
+**Por qué:** un contador permanentemente visible necesita un hilo en segundo plano que siga corriendo mientras `input()` está bloqueado, y los repintados del contador corrompen lo que el conductor esté escribiendo a medias — lo que a su vez empuja el CLI hacia lectura de teclas sueltas dependiente de plataforma (`msvcrt` en Windows, `termios` en el resto). Es mucha maquinaria de presentación para una fase cuyos requisitos solo piden un total correcto. El modelo de acumulación por marcas de tiempo admite una pantalla en vivo sin cambios cuando una fase posterior la quiera.
 
 ---
 

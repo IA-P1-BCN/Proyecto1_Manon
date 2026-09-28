@@ -1,8 +1,8 @@
 """Fixtures compartidas por toda la batería de tests.
 
-El dominio recibe sus dos relojes por inyección (ver
-`docs/decisions-fase1-scaffold.md`), así que los tests nunca necesitan dormir
-tiempo real ni parchear el módulo `time`: avanzan el reloj a mano.
+El dominio recibe sus dos relojes por inyección, así que los tests nunca
+necesitan dormir tiempo real ni parchear el módulo `time`: avanzan el reloj
+a mano.
 """
 
 from __future__ import annotations

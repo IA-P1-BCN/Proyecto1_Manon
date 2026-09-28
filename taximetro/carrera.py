@@ -39,8 +39,7 @@ class Carrera:
 
     Usa dos relojes distintos, ambos inyectables: `reloj` mide el tiempo
     transcurrido para acumular el importe (monótono, nunca retrocede) y
-    `calendario` sella `hora_inicio` / `hora_fin`. Ver
-    `docs/decisions-fase1-scaffold.md`.
+    `calendario` sella `hora_inicio` / `hora_fin`.
     """
 
     def __init__(
