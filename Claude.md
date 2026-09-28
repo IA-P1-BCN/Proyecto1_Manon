@@ -23,7 +23,6 @@ Fare accrues continuously based on elapsed time in each state — not per km, no
 
 Before changing behaviour, check whether it was already decided:
 
-- **`docs/arquitectura-del-codigo.md`** — file-by-file walkthrough of `taximetro/`: what each module does and how it works, kept in sync with the code.
 - **`docs/flujo-fase1.md`** — authority on CLI behaviour: the command loop, menus per mode, error messages, Ctrl+C / EOF.
 - **`docs/flujo-fase2.md`** — what Fase 2 changes in the CLI: role menu, Admin fare change and history, Ctrl+C confirmation mid-ride (supersedes Fase 1's Ctrl+C rule).
 - **`docs/diseno-interfaz-fase3.md`** — authority on the GUI: device, touch rules, colours per state, every screen and its texts.
@@ -31,7 +30,7 @@ Before changing behaviour, check whether it was already decided:
 - **`docs/demo-fase1.md`** / **`docs/demo-fase2.md`** — the scripts for each phase's client demo; keep them true to the real CLI output. `demo-fase2.md` also lists the open questions for the client.
 - **`docs/demo-fase3.md`** — the Fase 3 demo script (GUI, password, one logic for two interfaces).
 
-Structural/process decisions, per-phase rationale and postponed ideas are kept as personal working notes, not in this repo — ask the user if you need that context and don't have it.
+Structural/process decisions, per-phase rationale and postponed ideas are kept as personal working notes, not in this repo — ask the user if you need that context and don't have it. A file-by-file code walkthrough also lives locally, gitignored, at `docs-local/arquitectura-del-codigo.md` (present if this checkout has it; not guaranteed on a fresh clone).
 
 ## Structure (Fase 1 + Fase 2, Fase 3 so far)
 
