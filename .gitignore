@@ -36,3 +36,7 @@ desktop.ini
 config/tarifas.json
 data/
 logs/
+
+# Notas personales guardadas en el propio proyecto, nunca en GitHub: para
+# consultarlas desde aquí en vez de en ~/Desktop/Retro/, pero sin publicarlas.
+docs-local/
