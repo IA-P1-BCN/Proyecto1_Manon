@@ -4,7 +4,7 @@ La interfaz gráfica y el CLI llaman a este servicio y a nada más del dominio.
 Todo lo que devuelve son datos (instantáneas congeladas, números,
 `ResumenDia`), nunca un `Carrera` o una `Tarifa` vivos: en la Fase 4 se
 sustituye por un cliente HTTP con los mismos métodos, y un cliente HTTP solo
-puede devolver datos. Ver `docs/decisions-fase3.md`, *Structural refactor*.
+puede devolver datos.
 
 Las excepciones que pueden salir de sus métodos forman parte del contrato y se
 importan desde aquí, igual que `Estado`, `ResumenDia` y `RegistroCarrera`.

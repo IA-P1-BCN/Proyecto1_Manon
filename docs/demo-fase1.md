@@ -14,7 +14,7 @@ Secuencia exacta para la demo en directo del MVP ante TaxiTech Solutions. Cada p
 
 ## Duración
 
-Unos 4 minutos. Los tramos son de ~20 segundos: suficiente para que los números se muevan de forma visible sin silencios incómodos. Se ejecuta a velocidad real, con las tarifas reales — no hay modo acelerado, y eso es deliberado (ver `docs/decisions-proceso.md`).
+Unos 4 minutos. Los tramos son de ~20 segundos: suficiente para que los números se muevan de forma visible sin silencios incómodos. Se ejecuta a velocidad real, con las tarifas reales — no hay modo acelerado, y eso es deliberado.
 
 ## Guion
 

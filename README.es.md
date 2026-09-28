@@ -66,7 +66,7 @@ Es un proyecto de curso, construido por fases con una demo al final de cada una.
 | 3 | Contraseña de Administrador, interfaz gráfica táctil y refactorización (US-08, US-09) | ✅ |
 | 4 | Base de datos, API REST y despliegue con un comando | ❌ Descartada — alcance cerrado en la Fase 3, ver más abajo |
 
-Las fases 1 a 3 están en `main` y en `dev`. La Fase 4 se descartó para dedicar el tiempo de curso restante a revisar el código, la arquitectura y el proceso — ver [`docs/decisions-proceso.md`](docs/decisions-proceso.md). Esa revisión se guarda como un registro personal en local, no en este repositorio. El encargo original del cliente está en [`docs/project-brief.md`](docs/project-brief.md); las tareas, en [`Backlog.md`](Backlog.md) y en el [tablero del proyecto](https://github.com/orgs/IA-P1-BCN/projects/2).
+Las fases 1 a 3 están en `main` y en `dev`. La Fase 4 se descartó para dedicar el tiempo de curso restante a revisar el código, la arquitectura y el proceso — esa revisión se guarda como un registro personal en local, no en este repositorio. El encargo original del cliente está en [`docs/project-brief.md`](docs/project-brief.md); las tareas, en [`Backlog.md`](Backlog.md) y en el [tablero del proyecto](https://github.com/orgs/IA-P1-BCN/projects/2).
 
 <a id="como-puedo-probarlo"></a>
 ## ▶️ ¿Cómo puedo probarlo?
@@ -159,9 +159,8 @@ Proyecto1_Manon/
 |---|---|
 | El encargo del cliente | [`docs/project-brief.md`](docs/project-brief.md) |
 | Cómo se comporta cada interfaz | [`docs/flujo-fase1.md`](docs/flujo-fase1.md), [`flujo-fase2.md`](docs/flujo-fase2.md), [`flujo-fase3.md`](docs/flujo-fase3.md) y el diseño de pantallas [`diseno-interfaz-fase3.md`](docs/diseno-interfaz-fase3.md) |
-| Por qué se hizo así | [`decisions-fase1-scaffold.md`](docs/decisions-fase1-scaffold.md), [`decisions-fase2.md`](docs/decisions-fase2.md), [`decisions-fase3.md`](docs/decisions-fase3.md) |
-| Cómo se organiza el proyecto | [`docs/decisions-proceso.md`](docs/decisions-proceso.md) |
-| Qué se dejó para más adelante | [`docs/future-implementation-ideas.md`](docs/future-implementation-ideas.md) |
+
+Las razones de diseño (por qué se hizo así, cómo se organiza el proyecto, qué se dejó para más adelante) se guardan como notas personales, no en este repositorio.
 
 <a id="autor"></a>
 ## 👤 Autor

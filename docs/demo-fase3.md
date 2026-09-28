@@ -198,5 +198,5 @@ Más de 600 tests en verde y 99 % de cobertura, incluidos los de la interfaz gr�
 ## Lo que queda por decir
 
 - **Pantalla táctil real (T9.4).** La interfaz está diseñada con reglas táctiles (zonas de 88 px, texto de 24 px como mínimo) y se ha probado en un portátil al tamaño de una tablet. **Falta probarla en una tablet de verdad.**
-- **Teclado en pantalla.** Para la contraseña y las tarifas se usa el teclado físico. En una tablet sin teclado haría falta un teclado en pantalla, que tkinter no abre solo (`docs/decisions-fase3.md`, *Password entry*).
+- **Teclado en pantalla.** Para la contraseña y las tarifas se usa el teclado físico. En una tablet sin teclado haría falta un teclado en pantalla, que tkinter no abre solo.
 - **Fase 4.** La interfaz gráfica sigue siendo la aplicación de a bordo. El panel web para el responsable de flota será otra interfaz sobre la API.

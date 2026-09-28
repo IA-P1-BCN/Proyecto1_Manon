@@ -2,7 +2,7 @@
 
 Cómo cambia el CLI en la Fase 2. Se añade un **menú de inicio** que separa dos perfiles, Conductor y Administrador, y se revisa qué hace `Ctrl+C` durante una carrera. Este documento cubre la **US-07** (tarifas configurables) y la **US-05** (histórico de carreras).
 
-Todo lo que no aparece aquí sigue igual que en [`flujo-fase1.md`](flujo-fase1.md): iniciar, parar/arrancar, ver importe, finalizar, ayuda y opción no válida. Las razones de cada decisión están en [`decisions-fase2.md`](decisions-fase2.md).
+Todo lo que no aparece aquí sigue igual que en [`flujo-fase1.md`](flujo-fase1.md): iniciar, parar/arrancar, ver importe, finalizar, ayuda y opción no válida.
 
 ---
 

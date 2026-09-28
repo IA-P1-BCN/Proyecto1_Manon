@@ -19,7 +19,7 @@ class TestFormatoEspanol:
 
     def test_nunca_deja_un_punto_decimal(self) -> None:
         # El andamiaje original escribía '12.34€'; el conductor lee precios con
-        # coma. Ver docs/decisions-fase1-scaffold.md.
+        # coma.
         assert "." not in formato_euros(1234.5)
 
     def test_lleva_el_simbolo_del_euro_al_final(self) -> None:

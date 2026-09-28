@@ -66,7 +66,7 @@ It is a course project, built in phases with a demo at the end of each. It is me
 | 3 | Admin password, touch GUI and refactoring (US-08, US-09) | ✅ |
 | 4 | Database, REST API and one-command deploy | ❌ Dropped — scope closed at Phase 3, see below |
 
-Phases 1 to 3 are in `main` and `dev`. Phase 4 was scoped out to spend the remaining course time reviewing the code, architecture and process instead — see [`docs/decisions-proceso.md`](docs/decisions-proceso.md). That review is kept as a personal, local-only log, not in this repo. The client's original brief is in [`docs/project-brief.md`](docs/project-brief.md) (Spanish); tasks are in [`Backlog.md`](Backlog.md) and on the [project board](https://github.com/orgs/IA-P1-BCN/projects/2).
+Phases 1 to 3 are in `main` and `dev`. Phase 4 was scoped out to spend the remaining course time reviewing the code, architecture and process instead — that review is kept as a personal, local-only log, not in this repo. The client's original brief is in [`docs/project-brief.md`](docs/project-brief.md) (Spanish); tasks are in [`Backlog.md`](Backlog.md) and on the [project board](https://github.com/orgs/IA-P1-BCN/projects/2).
 
 <a id="how-can-i-try-it"></a>
 ## ▶️ How can I try it?
@@ -155,15 +155,14 @@ Proyecto1_Manon/
 <a id="documentation"></a>
 ## 📚 Documentation
 
-Most design documents are in Spanish (they are client-facing); the `decisions-*` notes are in English.
+Most design documents are in Spanish (they are client-facing).
 
 | For | Where |
 |---|---|
 | The client's brief | [`docs/project-brief.md`](docs/project-brief.md) |
 | How each interface behaves | [`docs/flujo-fase1.md`](docs/flujo-fase1.md), [`flujo-fase2.md`](docs/flujo-fase2.md), [`flujo-fase3.md`](docs/flujo-fase3.md) and the screen design [`diseno-interfaz-fase3.md`](docs/diseno-interfaz-fase3.md) |
-| Why it was done this way | [`decisions-fase1-scaffold.md`](docs/decisions-fase1-scaffold.md), [`decisions-fase2.md`](docs/decisions-fase2.md), [`decisions-fase3.md`](docs/decisions-fase3.md) |
-| How the project is run | [`docs/decisions-proceso.md`](docs/decisions-proceso.md) |
-| What was postponed | [`docs/future-implementation-ideas.md`](docs/future-implementation-ideas.md) |
+
+Design rationale (why things were built this way, how the project is run, what was postponed) is kept as personal working notes, not in this repo.
 
 <a id="author"></a>
 ## 👤 Author
