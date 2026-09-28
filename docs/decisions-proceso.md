@@ -76,3 +76,13 @@ Companion docs: `docs/decisions-fase1-scaffold.md` (code structure), `docs/flujo
 **Decision:** a written demo script, `docs/demo-fase1.md` — the exact commands to type, the output each should produce and the requirement it proves — run live at real speed. No accelerated-clock flag in production code.
 
 **Why:** the live demo is a deliverable for every phase, and with €/second rates an unrehearsed ride is minutes of dead air. A `--demo` flag with a 10× clock was considered and rejected: it is production code that exists only for the demo, and it shows the client amounts that aren't real. Waiting ~20 seconds per tramo is enough to show the numbers moving, and the injected clocks already make the *tests* fast, which is where speed actually matters.
+
+## Project scope closed at Fase 3 (2026-09-28)
+
+**Decision:** Fase 4 (relational DB, REST API, web panel, one-command deploy) is **dropped**, not deferred. The project's deliverable is Fases 1–3 as they stand in `main`: CLI + GUI, one domain, configurable fares, history, logs, password, all behind the `ServicioTaximetro` façade. The remaining course time goes to a retro — reviewing the code, the architecture and the process, not writing new features. See `docs/retro/`.
+
+**Why:** this is a course project on a fixed time budget, not a live client engagement. `dev` and `main` were promoted to hold Fases 1–3 (PR #127) specifically so `main` is a real, demoable release rather than the single placeholder commit it held before. A `Backlog.md` EPIC F4 (TF4.1–TF4.20) was drafted and then discarded unmerged when this decision was made — the seams it would have used (`Historial`, `ConfigTarifas`, `ServicioTaximetro`, all listed as Fase 4 replacement points in `decisions-fase3.md`) stay as documented architecture, proof the design supports the swap, without spending the remaining time building it.
+
+**What doesn't change:** the Fase 3 decisions that were written *anticipating* Fase 4 (the replacement-points table in `decisions-fase3.md`, the "known limit" notes on API auth and polling rate) are left as-is. They're accurate design rationale — evidence the seams exist on purpose — even though nothing will be built against them here.
+
+**Consequence:** `README.md` / `README.es.md`'s phase table and badges, and `Backlog.md`'s board description, reflect "3 of 3 (final)" rather than "3 of 4, Fase 4 not started". The GitHub Projects board keeps its `Fase 4` column (the client's board spec asked for one column per phase in the brief), left empty.

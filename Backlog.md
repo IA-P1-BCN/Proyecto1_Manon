@@ -2,7 +2,7 @@
 
 Tablero: [IAS_P1_Taximetro_Manon](https://github.com/orgs/IA-P1-BCN/projects/2) · issues en [`IA-P1-BCN/Proyecto1_Manon`](https://github.com/IA-P1-BCN/Proyecto1_Manon/issues).
 
-- **Columnas** (campo `Status`): `User Stories` · `Fase 1` · `Fase 2` · `Fase 3` · `Fase 4` — una por fase, como pide el cliente.
+- **Columnas** (campo `Status`): `User Stories` · `Fase 1` · `Fase 2` · `Fase 3` · `Fase 4` — una por fase, como pide el cliente. `Fase 4` queda vacía: el alcance del proyecto se cerró en la Fase 3 (ver `docs/decisions-proceso.md`, *Project scope closed at Fase 3*).
 - **Progreso** (campo `Progreso`): `To Do` · `En curso` · `En review` · `Done` — el avance del día a día no se marca moviendo tarjetas entre fases.
 - **Prioridad**: `must`, `should`, `could`
 - **Tipo**: `epic`, `feature`, `tech-task`, `test`, `docs`
