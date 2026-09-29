@@ -30,21 +30,27 @@ Before changing behaviour, check whether it was already decided:
 
 Structural/process decisions, per-phase rationale and postponed ideas are kept as personal working notes, not in this repo — ask the user if you need that context and don't have it. **Demo scripts, retros and any other doc that isn't meant to be published go in `Docs/`, at the root of the project folder — the sibling of `App/`, outside this repo.** Never add them under `App/docs/`. The file-by-file code walkthrough (architecture and role per folder) is `Docs/arquitectura-del-codigo.md`, outside this repo; keep it in step with the code when names or mechanisms change.
 
-## Structure (Fase 1 + Fase 2, Fase 3 so far)
+## Structure (grouped in four layers: domain, application, infrastructure, interfaces)
 
 ```
 taximetro/
     __init__.py
-    auth.py             # Auth: scrypt check against config/credenciales.json (Fase 3, US-08)
-    carrera.py          # Carrera: id, hora_inicio, hora_fin, estado, distancia, importe
-    tarifa.py           # Tarifa: rate lookup + accrual calculation; validates its rates
-    config_tarifas.py   # ConfigTarifas: load/save config/tarifas.json (Fase 2, US-07)
-    historial.py        # Historial: append-only CSV of finished rides (Fase 2, US-05)
-    logs.py             # configurar_logs(): rotating logs/taximetro.log, called only from __main__ (US-06)
-    taximetro.py        # Taximetro: owns the Tarifa and the active Carrera
-    servicio_taximetro.py  # ServicioTaximetro: the façade the interfaces use (Fase 3, T9.10)
     __main__.py         # python -m taximetro → the GUI
-    gui/                # tkinter GUI (Fase 3, US-09): app.py (App: window + screen switching),
+    utils.py            # formato_euros()
+    domain/             # pure business rules
+        carrera.py      # Carrera: id, hora_inicio, hora_fin, estado, distancia, importe
+        tarifa.py       # Tarifa: rate lookup + accrual calculation; validates its rates
+    application/        # use cases and the façade
+        taximetro.py    # Taximetro: owns the Tarifa and the active Carrera
+        servicio_taximetro.py  # ServicioTaximetro: the façade the interfaces use (Fase 3, T9.10)
+    infrastructure/     # disk and logs
+        auth.py         # Auth: scrypt check against config/credenciales.json (Fase 3, US-08)
+        config_tarifas.py  # ConfigTarifas: load/save config/tarifas.json (Fase 2, US-07)
+        historial.py    # Historial: append-only CSV of finished rides (Fase 2, US-05)
+        logs.py         # configurar_logs(): rotating logs/taximetro.log, called only from __main__ (US-06)
+    interfaces/         # the two ways to use the meter
+        taximetro_app.py  # TaximetroApp: CLI loop, prints usage on startup, no docs required to use it
+        gui/            # tkinter GUI (Fase 3, US-09): app.py (App: window + screen switching),
                         # pantalla.py (Pantalla base: timers cancelled on leave), estilo.py (theme:
                         # sizes, colours, px fonts ≥ 24), tecla.py (Tecla: touch key ≥ 88 px),
                         # visor.py (Visor: 7-segment amount, digits from formato_euros),
@@ -53,8 +59,6 @@ taximetro/
                         # inicio.py, contrasena.py, administrador.py, tarifas.py, historico.py (screens 1, 2, 6-8),
                         # franja.py (top strip), iconos.py (icons drawn on a Canvas)
                         # one module per screen
-    taximetro_app.py    # TaximetroApp: CLI loop, prints usage on startup, no docs required to use it
-    utils.py            # formato_euros()
 tests/
     conftest.py         # shared fixtures: fake reloj / calendario
     test_estructura.py  # design contract: the agreed public API still exists
@@ -107,7 +111,7 @@ Run `pytest` after every change. Don't call a task done with failing tests.
 - PEP 8, type hints on public methods, short docstrings on every class/public method.
 - One class per file, snake_case filename matching the class.
 - Domain vocabulary in Spanish for consistency with the user stories (`Carrera`, `iniciar_carrera`, `cambiar_estado`, `finalizar`); generic utility code can be English (`formato_euros`).
-- **Language:** the README is bilingual: `README.md` is English (default, for teachers, students and recruiters), `README.es.md` is its Spanish mirror; both link to each other at the top and must be kept in sync. Everything else the client or an evaluator reads is Spanish — `docs/project-brief.md`, `docs/flujo-fase1.md`, docstrings, CLI output, commit subjects.- Keep the interface layers thin — they parse input and call `ServicioTaximetro`; no fare logic there. The CLI and everything under `taximetro/gui/` may import only `servicio_taximetro`, `logs` and `utils` from the package; `test_estructura.py` fails otherwise (T9.12).
+- **Language:** the README is bilingual: `README.md` is English (default, for teachers, students and recruiters), `README.es.md` is its Spanish mirror; both link to each other at the top and must be kept in sync. Everything else the client or an evaluator reads is Spanish — `docs/project-brief.md`, `docs/flujo-fase1.md`, docstrings, CLI output, commit subjects.- Keep the interface layers thin — they parse input and call `ServicioTaximetro`; no fare logic there. Everything under `taximetro/interfaces/` (the CLI and the GUI) may import only `application.servicio_taximetro`, `infrastructure.logs` and `utils` from the package; `test_estructura.py` fails otherwise (T9.12).
 - Fase 1 requires no external libraries beyond the standard library (`time`, `datetime`) unless a specific later-phase story calls for one (justify any new dependency in the PR description, per the client's technical constraints).
 - Commits: [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/) format, referencing the story/task id, e.g. `feat(carrera): implement cambiar_estado (US-02)`.
 

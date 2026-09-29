@@ -112,26 +112,30 @@ The GUI tests open real windows (CI provides a display with `xvfb-run`) and chec
 
 ```
 Proyecto1_Manon/
-├── taximetro/                    # the application
-│   ├── carrera.py                # a ride, its state and its amount
-│   ├── tarifa.py                 # € per second by state, validated
-│   ├── taximetro.py              # active ride, fare and injected clocks
-│   ├── config_tarifas.py         # fares in config/tarifas.json
-│   ├── historial.py              # finished rides in data/historial.csv
-│   ├── auth.py                   # password checked against a scrypt hash
-│   ├── logs.py                   # logs/taximetro.log with rotation
-│   ├── servicio_taximetro.py     # the only thing both interfaces use
-│   ├── taximetro_app.py          # CLI interface
-│   ├── utils.py                  # euro formatting
-│   ├── __main__.py               # python -m taximetro → the GUI
-│   └── gui/                      # tkinter GUI, one screen per module
-├── tests/                        # one file per module (tests/gui/ for the GUI)
-├── config/                       # fare file format, password salt + hash
-├── docs/                         # brief, flows, design, decisions, demo scripts
-├── .github/workflows/tests.yml   # CI: pytest + coverage
-├── Backlog.md                    # tasks, linked to the GitHub issues
-├── pyproject.toml                # pytest and coverage settings
-└── requirements-dev.txt          # test dependencies
+├── taximetro/                        # the application, in four layers
+│   ├── domain/                       # pure business rules
+│   │   ├── carrera.py                # a ride, its state and its amount
+│   │   └── tarifa.py                 # € per second by state, validated
+│   ├── application/                  # use cases
+│   │   ├── taximetro.py              # active ride, fare and injected clocks
+│   │   └── servicio_taximetro.py     # the only thing both interfaces use
+│   ├── infrastructure/               # disk and logs
+│   │   ├── config_tarifas.py         # fares in config/tarifas.json
+│   │   ├── historial.py              # finished rides in data/historial.csv
+│   │   ├── auth.py                   # password checked against a scrypt hash
+│   │   └── logs.py                   # logs/taximetro.log with rotation
+│   ├── interfaces/                   # the two ways to use it
+│   │   ├── taximetro_app.py          # CLI interface
+│   │   └── gui/                      # tkinter GUI, one screen per module
+│   ├── utils.py                      # euro formatting
+│   └── __main__.py                   # python -m taximetro → the GUI
+├── tests/                            # one file per module (tests/gui/ for the GUI)
+├── config/                           # fare file format, password salt + hash
+├── docs/                             # brief, flows and design
+├── .github/workflows/tests.yml       # CI: pytest + coverage
+├── Backlog.md                        # tasks, linked to the GitHub issues
+├── pyproject.toml                    # pytest and coverage settings
+└── requirements-dev.txt              # test dependencies
 ```
 
 <a id="design-decisions"></a>
