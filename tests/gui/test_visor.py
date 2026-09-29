@@ -1,12 +1,12 @@
-"""Tests de `taximetro.gui.visor.Visor`: el importe en 7 segmentos (T9.6)."""
+"""Tests de `taximetro.interfaces.gui.visor.Visor`: el importe en 7 segmentos (T9.6)."""
 
 from __future__ import annotations
 
 import pytest
 
-from taximetro.gui import estilo
-from taximetro.gui import visor as modulo
-from taximetro.gui.visor import Visor
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui import visor as modulo
+from taximetro.interfaces.gui.visor import Visor
 from taximetro.utils import formato_euros
 
 

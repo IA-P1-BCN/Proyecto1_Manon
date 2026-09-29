@@ -1,4 +1,4 @@
-"""Tests de `taximetro.gui.tecla.Tecla`: la tecla táctil (T9.5)."""
+"""Tests de `taximetro.interfaces.gui.tecla.Tecla`: la tecla táctil (T9.5)."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from taximetro.gui import estilo
-from taximetro.gui.tecla import Tecla
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.tecla import Tecla
 
 
 @pytest.fixture

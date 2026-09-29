@@ -1,4 +1,4 @@
-"""Tests de `taximetro.gui.estilo`: el tema de la interfaz (T9.5).
+"""Tests de `taximetro.interfaces.gui.estilo`: el tema de la interfaz (T9.5).
 
 Fijan las reglas táctiles del diseño y los colores aprobados, para que un
 cambio de tema no las rompa sin que nadie se entere.
@@ -10,8 +10,8 @@ import re
 
 import pytest
 
-from taximetro.gui import estilo
-from taximetro.servicio_taximetro import Estado
+from taximetro.interfaces.gui import estilo
+from taximetro.application.servicio_taximetro import Estado
 
 HEX = re.compile(r"^#[0-9a-f]{6}$")
 

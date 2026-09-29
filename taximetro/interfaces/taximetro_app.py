@@ -7,8 +7,8 @@ import logging
 import sys
 from typing import Callable
 
-from taximetro.logs import campos, configurar_logs
-from taximetro.servicio_taximetro import (
+from taximetro.infrastructure.logs import campos, configurar_logs
+from taximetro.application.servicio_taximetro import (
     AlmacenamientoError,
     Estado,
     InstantaneaCarrera,
@@ -19,10 +19,10 @@ from taximetro.servicio_taximetro import (
 )
 from taximetro.utils import formato_euros
 
-# Nombre fijo, no `__name__`: con `python -m taximetro.taximetro_app` este
+# Nombre fijo, no `__name__`: con `python -m taximetro.interfaces.taximetro_app` este
 # módulo se llama `__main__`, y su logger quedaría fuera de `taximetro`, sin
 # el handler del fichero. Sus WARNING acabarían en la consola del conductor.
-logger = logging.getLogger("taximetro.taximetro_app")
+logger = logging.getLogger("taximetro.interfaces.taximetro_app")
 
 # Cada menú es una tupla de opciones y la posición manda: el número que se
 # teclea es el índice + 1. Reordenar una tupla renumera ese menú.

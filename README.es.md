@@ -81,7 +81,7 @@ source .venv/bin/activate              # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt    # solo hace falta para los tests
 
 python -m taximetro                    # interfaz gráfica
-python -m taximetro.taximetro_app      # CLI
+python -m taximetro.interfaces.taximetro_app      # CLI
 pytest                                 # los tests
 ```
 

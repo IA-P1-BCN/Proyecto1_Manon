@@ -1,4 +1,4 @@
-"""Tests de `taximetro.servicio_taximetro.ServicioTaximetro` (T9.10).
+"""Tests de `taximetro.application.servicio_taximetro.ServicioTaximetro` (T9.10).
 
 El servicio es la fachada que comparten la interfaz gráfica y el CLI. Además
 de que cada método haga lo que dice, se comprueba lo que lo hace sustituible
@@ -16,10 +16,10 @@ from pathlib import Path
 
 import pytest
 
-from taximetro.auth import Auth, CredencialesError
-from taximetro.config_tarifas import ConfigTarifas
-from taximetro.historial import Historial
-from taximetro.servicio_taximetro import (
+from taximetro.infrastructure.auth import Auth, CredencialesError
+from taximetro.infrastructure.config_tarifas import ConfigTarifas
+from taximetro.infrastructure.historial import Historial
+from taximetro.application.servicio_taximetro import (
     AlmacenamientoError,
     CarreraActivaError,
     CarreraCerrada,
@@ -31,7 +31,7 @@ from taximetro.servicio_taximetro import (
     TarifaInvalidaError,
     TarifasVigentes,
 )
-from taximetro.taximetro import Taximetro
+from taximetro.application.taximetro import Taximetro
 
 
 @pytest.fixture

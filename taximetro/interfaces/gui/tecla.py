@@ -6,8 +6,8 @@ import tkinter as tk
 import tkinter.font as tkfont
 from typing import Callable
 
-from taximetro.gui import estilo, iconos
-from taximetro.gui.estilo import Variante
+from taximetro.interfaces.gui import estilo, iconos
+from taximetro.interfaces.gui.estilo import Variante
 
 
 class Tecla(tk.Frame):

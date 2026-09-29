@@ -15,17 +15,17 @@ from pathlib import Path
 
 import pytest
 
-from taximetro.gui import estilo
-from taximetro.gui.administrador import Administrador
-from taximetro.gui.app import App
-from taximetro.gui.contrasena import Contrasena
-from taximetro.gui.historico import Historico
-from taximetro.gui.inicio import Inicio
-from taximetro.gui.tarifas import CambiarTarifas
-from taximetro.gui.taximetro import PantallaTaximetro
-from taximetro.historial import Historial
-from taximetro.servicio_taximetro import ServicioTaximetro
-from taximetro.taximetro import Taximetro
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.administrador import Administrador
+from taximetro.interfaces.gui.app import App
+from taximetro.interfaces.gui.contrasena import Contrasena
+from taximetro.interfaces.gui.historico import Historico
+from taximetro.interfaces.gui.inicio import Inicio
+from taximetro.interfaces.gui.tarifas import CambiarTarifas
+from taximetro.interfaces.gui.taximetro import PantallaTaximetro
+from taximetro.infrastructure.historial import Historial
+from taximetro.application.servicio_taximetro import ServicioTaximetro
+from taximetro.application.taximetro import Taximetro
 
 
 ANCHAS = ("Verdana", "DejaVu Sans")  # más anchas que Segoe UI: lo que cabe con ellas, cabe

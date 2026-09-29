@@ -2,14 +2,14 @@
 #
 # De momento solo configura pytest. No declara metadatos de paquete
 # ([project], build-system) porque el taxímetro no se distribuye como
-# librería: se ejecuta con `python -m taximetro.taximetro_app`.
+# librería: se ejecuta con `python -m taximetro.interfaces.taximetro_app`.
 # Si en Fase 4 hiciera falta empaquetarlo, se añaden aquí.
 
 [tool.pytest.ini_options]
 minversion = "9.0"
 
 # Añade la raíz del repo a sys.path para que los tests puedan hacer
-# `from taximetro.carrera import Carrera`.
+# `from taximetro.domain.carrera import Carrera`.
 #
 # Sin esto, pytest solo pone `tests/` en sys.path y el paquete `taximetro`
 # no se encuentra: ModuleNotFoundError en cuanto un test importe el dominio.

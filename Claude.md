@@ -98,7 +98,7 @@ One test file per module (GUI ones under `tests/gui/`). Fase 4 adds `api/` and a
 - Tests: `pytest` (coverage and the 90% gate are in `pyproject.toml`'s `addopts`, so a bare `pytest` enforces them)
 - Coverage detail: `pytest --cov-report=term-missing`
 - Run the GUI: `python -m taximetro`
-- Run the CLI: `python -m taximetro.taximetro_app`
+- Run the CLI: `python -m taximetro.interfaces.taximetro_app`
 
 Run `pytest` after every change. Don't call a task done with failing tests.
 

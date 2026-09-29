@@ -1,4 +1,4 @@
-"""Tests de `taximetro.auth.Auth` (US-08: T8.1, T8.2, T8.4).
+"""Tests de `taximetro.infrastructure.auth.Auth` (US-08: T8.1, T8.2, T8.4).
 
 Los ficheros de prueba usan un scrypt barato (`n` pequeño) para no gastar
 50 ms en cada test; el coste va guardado en el fichero, igual que en el real.
@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from taximetro.auth import Auth, CredencialesError, RUTA_POR_DEFECTO
+from taximetro.infrastructure.auth import Auth, CredencialesError, RUTA_POR_DEFECTO
 
 CONTRASENA = "clave-de-prueba"
 BARATO = {"n": 2**4, "r": 8, "p": 1}

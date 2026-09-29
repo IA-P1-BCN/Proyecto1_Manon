@@ -1,4 +1,4 @@
-"""Tests de `taximetro.historial.Historial` (US-05 / T5.1, T5.2, T5.4).
+"""Tests de `taximetro.infrastructure.historial.Historial` (US-05 / T5.1, T5.2, T5.4).
 
 Cada test escribe en su propia carpeta temporal (`tmp_path`): ninguno toca el
 `data/historial.csv` del repo.
@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from taximetro.carrera import Carrera
-from taximetro.historial import COLUMNAS, RUTA_POR_DEFECTO, Historial
-from taximetro.tarifa import Tarifa
+from taximetro.domain.carrera import Carrera
+from taximetro.infrastructure.historial import COLUMNAS, RUTA_POR_DEFECTO, Historial
+from taximetro.domain.tarifa import Tarifa
 from taximetro.utils import formato_euros
 
 HOY = date(2025, 6, 1)  # la fecha de CalendarioFalso

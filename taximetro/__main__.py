@@ -1,11 +1,11 @@
 """`python -m taximetro`: arranca la interfaz gráfica (Fase 3, US-09).
 
-El CLI sigue disponible con `python -m taximetro.taximetro_app`.
+El CLI sigue disponible con `python -m taximetro.interfaces.taximetro_app`.
 """
 
-from taximetro.gui.app import App
-from taximetro.logs import configurar_logs
-from taximetro.servicio_taximetro import ServicioTaximetro
+from taximetro.interfaces.gui.app import App
+from taximetro.infrastructure.logs import configurar_logs
+from taximetro.application.servicio_taximetro import ServicioTaximetro
 
 
 def main() -> None:

@@ -20,9 +20,9 @@ from typing import Callable
 
 import pytest
 
-from taximetro.gui.app import App
-from taximetro.servicio_taximetro import ServicioTaximetro
-from taximetro.taximetro import Taximetro
+from taximetro.interfaces.gui.app import App
+from taximetro.application.servicio_taximetro import ServicioTaximetro
+from taximetro.application.taximetro import Taximetro
 
 
 @pytest.fixture(scope="session")

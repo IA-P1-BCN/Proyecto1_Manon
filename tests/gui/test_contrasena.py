@@ -1,16 +1,16 @@
-"""Tests de `taximetro.gui.contrasena.Contrasena`: la pantalla 2 (US-08, T9.7)."""
+"""Tests de `taximetro.interfaces.gui.contrasena.Contrasena`: la pantalla 2 (US-08, T9.7)."""
 
 from __future__ import annotations
 
 import pytest
 
-from taximetro.gui import estilo
-from taximetro.gui.administrador import Administrador
-from taximetro.gui.app import App
-from taximetro.gui.contrasena import INCORRECTA, NO_DISPONIBLE, VACIA, Contrasena
-from taximetro.gui.inicio import Inicio
-from taximetro.servicio_taximetro import ServicioTaximetro
-from taximetro.taximetro import Taximetro
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.administrador import Administrador
+from taximetro.interfaces.gui.app import App
+from taximetro.interfaces.gui.contrasena import INCORRECTA, NO_DISPONIBLE, VACIA, Contrasena
+from taximetro.interfaces.gui.inicio import Inicio
+from taximetro.application.servicio_taximetro import ServicioTaximetro
+from taximetro.application.taximetro import Taximetro
 
 CONTRASENA = "clave-de-prueba"
 
