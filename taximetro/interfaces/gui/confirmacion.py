@@ -6,6 +6,7 @@ import tkinter as tk
 from typing import Callable
 
 from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.pantalla import Pantalla
 from taximetro.interfaces.gui.tecla import Tecla
 
 
@@ -25,11 +26,12 @@ class Confirmacion(tk.Frame):
             self, bg=estilo.PANEL, highlightthickness=3, highlightbackground=estilo.ROJA.borde
         )
         panel.place(relx=0.5, rely=0.5, anchor=tk.CENTER, width=estilo.CONFIRMACION_ANCHO)
-        margen = 48
+        margen = estilo.px(48)
         self.pregunta = tk.Label(
             panel, font=estilo.FUENTE_TITULO, bg=estilo.PANEL, fg=estilo.TEXTO,
-            anchor=tk.W, justify=tk.LEFT, wraplength=estilo.CONFIRMACION_ANCHO - 2 * margen,
+            anchor=tk.W, justify=tk.LEFT,
         )
+        Pantalla.ajustar_al_ancho(self.pregunta)
         self.pregunta.pack(fill=tk.X, padx=margen, pady=(margen, estilo.SEPARACION))
         fila = tk.Frame(panel, bg=estilo.PANEL)
         fila.pack(fill=tk.X, padx=margen)
@@ -40,15 +42,20 @@ class Confirmacion(tk.Frame):
         self.importe = tk.Label(
             fila, font=estilo.FUENTE_DETALLE_IMPORTE, bg=estilo.PANEL, fg=estilo.LED_ROJO
         )
-        self.importe.pack(side=tk.LEFT, padx=(12, 0))
+        self.importe.pack(side=tk.LEFT, padx=(estilo.px(12), 0))
 
         teclas = tk.Frame(panel, bg=estilo.PANEL)
-        teclas.pack(fill=tk.X, padx=margen, pady=(40, margen))
+        teclas.pack(fill=tk.X, padx=margen, pady=(estilo.px(40), margen))
         comunes = {"alto": estilo.TECLA_CONFIRMAR, "fuente": estilo.FUENTE_TECLA_CONFIRMAR}
         self.si = Tecla(teclas, "SÍ", lambda: None, variante=estilo.ROJA, **comunes)
-        self.si.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, estilo.SEPARACION // 2))
         self.no = Tecla(teclas, "NO, SEGUIR", lambda: None, variante=estilo.GRIS, **comunes)
-        self.no.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(estilo.SEPARACION // 2, 0))
+        mitad = estilo.SEPARACION // 2
+        if estilo.VERTICAL_ACTIVA:  # sin ancho para dos teclas grandes: SÍ arriba y NO abajo
+            self.si.pack(fill=tk.X, pady=(0, mitad))
+            self.no.pack(fill=tk.X, pady=(mitad, 0))
+        else:
+            self.si.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, mitad))
+            self.no.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(mitad, 0))
 
     @property
     def abierta(self) -> bool:

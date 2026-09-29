@@ -23,13 +23,13 @@ class PantallaConDatos(Pantalla):
 
 
 class TestVentana:
-    """La ventana con el tamaño de una tablet de 10" en horizontal."""
+    """La ventana, a 1280 × 800 (una tablet de 10" en horizontal) al abrirse."""
 
     def test_lleva_el_titulo_del_taximetro(self, app: App) -> None:
         assert app.raiz.title() == estilo.TITULO
 
-    def test_nunca_es_mas_pequena_que_la_tablet(self, app: App) -> None:
-        assert app.raiz.minsize() == (estilo.ANCHO, estilo.ALTO)
+    def test_no_se_puede_encoger_mas_de_lo_que_cabe(self, app: App) -> None:
+        assert app.raiz.minsize() == estilo.TAMANO_MIN[estilo.HORIZONTAL]
 
     def test_arranca_en_la_pantalla_de_inicio(self, app: App) -> None:
         assert isinstance(app.pantalla, Inicio)

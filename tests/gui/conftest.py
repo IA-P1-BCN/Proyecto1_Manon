@@ -20,9 +20,20 @@ from typing import Callable
 
 import pytest
 
+from taximetro.interfaces.gui import estilo
 from taximetro.interfaces.gui.app import App
 from taximetro.application.servicio_taximetro import ServicioTaximetro
 from taximetro.application.taximetro import Taximetro
+
+
+@pytest.fixture(autouse=True)
+def tema_de_referencia() -> None:
+    """Cada test parte del tema a 1280 × 800.
+
+    `estilo` guarda la escala y la disposición actuales en variables del módulo:
+    un test que redimensiona la ventana las dejaría cambiadas para el siguiente.
+    """
+    estilo.aplicar(estilo.ANCHO, estilo.ALTO, forzar=True)
 
 
 @pytest.fixture(scope="session")

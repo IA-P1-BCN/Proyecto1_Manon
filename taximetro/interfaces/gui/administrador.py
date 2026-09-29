@@ -33,22 +33,33 @@ class Administrador(Pantalla):
 
         tejas = tk.Frame(principal, bg=estilo.FONDO)
         tejas.pack(fill=tk.BOTH, expand=True, pady=(estilo.SEPARACION, 0))
-        tejas.columnconfigure((0, 1), weight=1, uniform="teja")
         comunes = {"variante": estilo.GRIS, "alto": estilo.TEJA, "fuente": estilo.FUENTE_TEJA,
-                   "tamano_icono": 80}
+                   "tamano_icono": estilo.px(80)}
         self.tarifas = Tecla(
             tejas, "CAMBIAR TARIFAS", self.abrir_tarifas, icono="tarifas",
             subtitulo="Los €/s de cada estado,\ndesde la próxima carrera", **comunes,
         )
-        self.tarifas.grid(row=0, column=0, sticky="ew", padx=(0, estilo.SEPARACION // 2))
         self.historico = Tecla(
             tejas, "VER HISTÓRICO", self.abrir_historico, icono="historico",
             subtitulo="Carreras terminadas hoy\ny total de caja", **comunes,
         )
-        self.historico.grid(row=0, column=1, sticky="ew", padx=(estilo.SEPARACION // 2, 0))
+        self._colocar_tejas(tejas)
 
         self.volver = self.tecla_lateral(lateral, "Volver", self.volver_a_inicio)
-        self.volver.pack(side=tk.BOTTOM, fill=tk.X)
+        self.colocar_lateral(self.volver, side=tk.BOTTOM, fill=tk.X)
+
+    def _colocar_tejas(self, tejas: tk.Frame) -> None:
+        """Las dos tejas a partes iguales: una junto a otra, o una encima de otra en vertical."""
+        mitad = estilo.SEPARACION // 2
+        if estilo.VERTICAL_ACTIVA:
+            tejas.columnconfigure(0, weight=1)
+            tejas.rowconfigure((0, 1), weight=1, uniform="teja")
+            self.tarifas.grid(row=0, column=0, sticky="nsew", pady=(0, mitad))
+            self.historico.grid(row=1, column=0, sticky="nsew", pady=(mitad, 0))
+            return
+        tejas.columnconfigure((0, 1), weight=1, uniform="teja")
+        self.tarifas.grid(row=0, column=0, sticky="ew", padx=(0, mitad))
+        self.historico.grid(row=0, column=1, sticky="ew", padx=(mitad, 0))
 
     def abrir_tarifas(self) -> None:
         """CAMBIAR TARIFAS: al formulario de tarifas."""

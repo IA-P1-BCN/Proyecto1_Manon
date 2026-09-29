@@ -27,10 +27,56 @@ Especificación visual de la interfaz gráfica del taxímetro (**US-09**) y de l
 
 **Decidido:** la interfaz se ejecuta en un portátil (desarrollo y demo), dentro de una ventana con el tamaño de una **tablet de 10" en horizontal**. Todo se diseña con reglas táctiles: se pulsa con el dedo, no se hace clic con el ratón.
 
-**Resolución de referencia: 1280 × 800 px, horizontal.** Es la más habitual en tablets de 10" y cabe en la pantalla de un portátil sin desplazamiento.
+**Resolución de referencia: 1280 × 800 px, horizontal.** Es la más habitual en tablets de 10" y cabe en la pantalla de un portátil sin desplazamiento. Todas las medidas de este documento están dadas a ese tamaño.
+
+### Adaptación al tamaño de la ventana
+
+**Decidido (2026-09-29):** la interfaz se adapta a la ventana. La ventana se puede redimensionar y maximizar, y también cabe en una tablet en vertical. Esto responde a la pregunta que había quedado abierta («¿debe funcionar también en móvil?»), con un límite: una ventana de menos de 560 px de ancho, como la de un móvil, queda fuera, porque a ese ancho no caben los mínimos de abajo.
+
+**Dos disposiciones**
+
+| Disposición | Referencia | Qué cambia |
+|---|---|---|
+| **Horizontal** | 1280 × 800 | La de siempre: zona principal a la izquierda y columna lateral de 240 px a la derecha |
+| **Vertical** | 720 × 1280 | El lateral pasa a una fila de teclas debajo; lo que iba en columnas se apila |
+
+**Qué escala se aplica.** Cada disposición da la escala a la que cabe su referencia entera en la ventana; gana la que da la mayor, y en un empate la horizontal. La escala se redondea **hacia abajo** a pasos de 0,05 (para que nunca sobre contenido) y se limita a **0,75 – 2,5**. Con la ventana de la tablet la escala es 1,0 y no cambia nada de lo descrito en las pantallas.
+
+**Lo que nunca se escala hacia abajo** (las reglas táctiles de arriba valen a cualquier tamaño):
+
+| Mínimo | Valor |
+|---|---|
+| Zona táctil de cualquier botón o campo | 88 px |
+| Botones principales | 120 px de alto |
+| Texto | 24 px |
+| Separación entre botones | 24 px |
+
+**Tamaño mínimo de la ventana.** Por debajo de estos tamaños los mínimos de arriba ya no caben. Como una ventana no puede ser a la vez estrecha (vertical) y baja (horizontal), el mínimo **sigue a la disposición activa**:
+
+| Disposición | Ventana mínima |
+|---|---|
+| Horizontal | 960 × 640 |
+| Vertical | 560 × 1000 |
+
+**Qué cambia en vertical**
+
+- Las teclas del lateral (Volver, Ayuda, Salir, ▲ ▼…) se reparten una fila debajo, a partes iguales.
+- Inicio y Administrador: las dos tejas se apilan (en Inicio, CONDUCTOR ocupa dos tercios de la altura), y la franja pone el título arriba y las tarifas debajo.
+- Taxímetro: las lámparas van una junto a otra, el importe debajo del estado, los datos (Carrera, Tiempo, Inicio) en una fila bajo el visor y PARAR / ARRANCAR encima de FINALIZAR.
+- Cambiar tarifas: la etiqueta de cada campo va encima de él, y la nota «Coma o punto» encima de GUARDAR.
+- Histórico: el resumen y el total del día van uno encima del otro, y caben 8 filas en vez de 6.
+- Confirmación (SÍ / NO): SÍ arriba y NO abajo, a todo el ancho. Con la ventana estrecha, dos teclas grandes lado a lado no dejan sitio al texto. NO queda abajo, cerca de donde está FINALIZAR, que es lo que se buscaba con la posición de NO en horizontal.
+
+**Con la ventana pequeña en horizontal** (escala menor que 1), la teja ADMINISTRADOR pasa de un tercio a dos quintos del ancho: «ADMINISTRADOR» a 24 px, el mínimo, no cabe en un tercio.
+
+**Al cambiar de tamaño**
+
+- La pantalla se **rehace** cuando la ventana deja de moverse (150 ms), no en cada píxel del arrastre.
+- **Nada de lo que hay delante del conductor cambia:** la carrera sigue y el importe no se altera (viven en el servicio, no en la pantalla); un panel SÍ / NO abierto sigue abierto y **con el importe que se congeló al pulsar FINALIZAR**, no el de ese momento; también se conservan el panel de ayuda, el total a cobrar, lo tecleado (contraseña, tarifas), los avisos y la página del histórico.
+- Una ventana propia se abre a 1280 × 800, o a lo que quepa si la pantalla es más pequeña; en una pantalla vertical, a la referencia vertical.
 
 Pendiente:
-- ¿Debe funcionar también en móvil (la US-09 dice "móvil o tablet")?
+- Probar la interfaz vertical en una tablet real: hoy solo la comprueban los tests de geometría (`tests/gui/test_cabe.py`).
 
 ## Reglas de diseño táctil
 

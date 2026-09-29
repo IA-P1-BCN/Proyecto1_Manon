@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import tkinter as tk
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from taximetro.interfaces.gui import estilo
 from taximetro.interfaces.gui.tecla import Tecla
@@ -35,11 +35,15 @@ class Pantalla(tk.Frame):
         return self.app.servicio
 
     def columnas(self) -> tuple[tk.Frame, tk.Frame]:
-        """El esqueleto común: columna principal y lateral de 240 px a la derecha.
+        """El esqueleto común: la zona principal y el lateral con las acciones secundarias.
 
-        Todas las pantallas lo comparten, para que las acciones secundarias
-        (Volver, Ayuda, Salir…) estén siempre en el mismo sitio.
+        En horizontal, el lateral es una columna de 240 px a la derecha; en
+        vertical, una fila de teclas debajo. Todas las pantallas lo comparten,
+        para que Volver, Ayuda, Salir… estén siempre en el mismo sitio. Las
+        teclas del lateral se colocan con `colocar_lateral()`.
         """
+        if estilo.VERTICAL_ACTIVA:
+            return self._columnas_verticales()
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, minsize=estilo.LATERAL)
         self.rowconfigure(0, weight=1)
@@ -50,14 +54,73 @@ class Pantalla(tk.Frame):
         lateral.pack_propagate(False)
         return principal, lateral
 
+    def _columnas_verticales(self) -> tuple[tk.Frame, tk.Frame]:
+        """La zona principal arriba y, debajo, la fila del lateral."""
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        principal = tk.Frame(self, bg=estilo.FONDO)
+        principal.grid(row=0, column=0, sticky="nsew", padx=estilo.MARGEN, pady=(estilo.MARGEN, 0))
+        lateral = tk.Frame(self, bg=estilo.FONDO, height=estilo.LATERAL)
+        lateral.grid(row=1, column=0, sticky="ew", padx=estilo.MARGEN, pady=estilo.MARGEN)
+        lateral.pack_propagate(False)
+        lateral.grid_propagate(False)
+        return principal, lateral
+
+    def colocar_lateral(self, tecla: Tecla, **empaquetado: Any) -> None:
+        """Coloca una tecla del lateral: en una columna (`empaquetado`, como `pack`) o en la fila.
+
+        En horizontal se apila con las opciones de `pack` que pasa cada pantalla.
+        En vertical las teclas se reparten la fila de abajo a partes iguales,
+        de izquierda a derecha en el orden en que se colocan.
+        """
+        if not estilo.VERTICAL_ACTIVA:
+            tecla.pack(**empaquetado)
+            return
+        fila = tecla.master
+        columna = len(fila.grid_slaves())
+        fila.columnconfigure(columna, weight=1, uniform="lateral")
+        tecla.grid(row=0, column=columna, sticky="nsew", padx=(estilo.SEPARACION if columna else 0, 0))
+
+    @staticmethod
+    def ajustar_al_ancho(etiqueta: tk.Label) -> None:
+        """Hace que el texto de `etiqueta` salte de línea al llegar al borde de su hueco.
+
+        Una etiqueta de tkinter no parte sola el texto: se sale de la pantalla
+        o lo corta. Así el mensaje más largo cabe en cualquier ancho de ventana.
+        La etiqueta pide solo un carácter de ancho (si no, pediría el del texto
+        entero y ensancharía a su padre antes de que nadie lo partiera) y ocupa
+        el hueco que le den: colócala con `fill=tk.X`.
+        """
+        etiqueta.configure(width=1)
+        etiqueta.bind(
+            "<Configure>",
+            lambda evento: etiqueta.configure(wraplength=max(1, evento.width - 8)),
+            add="+",
+        )
+
+    def guardar_ui(self) -> dict[str, Any]:
+        """Lo que la pantalla tiene que recordar si la ventana cambia de tamaño y se rehace.
+
+        Lo que vive en el servicio (la carrera, el importe congelado, las tarifas)
+        no se guarda aquí: sigue donde estaba. Solo lo que hay en los widgets:
+        lo tecleado, un aviso, un panel abierto. Por defecto, nada.
+        """
+        return {}
+
+    def restaurar_ui(self, estado: dict[str, Any]) -> None:
+        """Vuelve a poner en la pantalla nueva lo que devolvió `guardar_ui()` en la vieja."""
+
     def panel(self, principal: tk.Frame, padx: int, pady: int) -> tk.Frame:
-        """El panel con borde de la columna principal; devuelve su interior."""
+        """El panel con borde de la columna principal; devuelve su interior.
+
+        `padx` y `pady` son los márgenes a escala 1: aquí se escalan.
+        """
         marco = tk.Frame(
             principal, bg=estilo.PANEL, highlightthickness=3, highlightbackground=estilo.VISOR_BORDE
         )
         marco.pack(fill=tk.BOTH, expand=True)
         interior = tk.Frame(marco, bg=estilo.PANEL)
-        interior.pack(fill=tk.BOTH, expand=True, padx=padx, pady=pady)
+        interior.pack(fill=tk.BOTH, expand=True, padx=estilo.px(padx), pady=estilo.px(pady))
         return interior
 
     def tecla_lateral(self, padre: tk.Misc, texto: str, comando: Callable[[], None]) -> Tecla:
