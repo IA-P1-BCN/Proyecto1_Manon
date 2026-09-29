@@ -1,10 +1,14 @@
-"""Franja: la cabecera en estilo visor de Inicio y Administrador (T9.7)."""
+"""Franja: la cabecera en estilo visor de Inicio y Administrador."""
 
 from __future__ import annotations
 
 import tkinter as tk
 
 from taximetro.gui import estilo, iconos
+
+MARGEN_LATERAL = 32  # a los lados de la franja y entre el título y lo que lo rodea
+TAMANO_ICONO = 44
+HUECO_ICONO = 16  # entre el icono y el título
 
 
 class Franja(tk.Frame):
@@ -23,26 +27,29 @@ class Franja(tk.Frame):
         )
         self.pack_propagate(False)
         if icono is not None:
-            lienzo = tk.Canvas(self, width=44, height=44, bg=estilo.VISOR_FONDO, highlightthickness=0)
-            iconos.dibujar(lienzo, icono, 44, estilo.LED_ROJO)
-            lienzo.pack(side=tk.LEFT, padx=(32, 0))
+            lienzo = tk.Canvas(
+                self, width=TAMANO_ICONO, height=TAMANO_ICONO,
+                bg=estilo.VISOR_FONDO, highlightthickness=0,
+            )
+            iconos.dibujar(lienzo, icono, TAMANO_ICONO, estilo.LED_ROJO)
+            lienzo.pack(side=tk.LEFT, padx=(MARGEN_LATERAL, 0))
         self.titulo = tk.Label(
             self, text=titulo, font=estilo.FUENTE_MARCA, bg=estilo.VISOR_FONDO, fg=estilo.LED_ROJO
         )
-        self.titulo.pack(side=tk.LEFT, padx=(16 if icono else 32, 0))
+        self.titulo.pack(side=tk.LEFT, padx=(HUECO_ICONO if icono else MARGEN_LATERAL, 0))
         self.texto = tk.Label(
             self, font=estilo.FUENTE_ETIQUETA, bg=estilo.VISOR_FONDO, fg=estilo.TEXTO_SECUNDARIO,
             justify=tk.RIGHT,
         )
-        self.texto.pack(side=tk.RIGHT, padx=32)
-        self._izquierda = (32 + 44 + 16) if icono is not None else 32
+        self.texto.pack(side=tk.RIGHT, padx=MARGEN_LATERAL)
+        self._izquierda = MARGEN_LATERAL + (TAMANO_ICONO + HUECO_ICONO if icono is not None else 0)
         self.bind("<Configure>", lambda _evento: self._ajustar(), add="+")
 
     def _ajustar(self) -> None:
         """El ancho del texto: lo que queda a la derecha del título."""
         libre = (
             self.winfo_width() - 2 * int(self.cget("highlightthickness"))
-            - self._izquierda - self.titulo.winfo_reqwidth() - 2 * 32 - estilo.SEPARACION
+            - self._izquierda - self.titulo.winfo_reqwidth() - 2 * MARGEN_LATERAL - estilo.SEPARACION
         )
         if libre > 0:
             self.texto.configure(wraplength=libre)

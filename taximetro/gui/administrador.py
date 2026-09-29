@@ -1,4 +1,4 @@
-"""Administrador: el menú de gestión (T9.7).
+"""Administrador: el menú de gestión.
 
 Pantalla 6 de `docs/diseno-interfaz-fase3.md`: la misma estructura que Inicio,
 con las tejas CAMBIAR TARIFAS y VER HISTÓRICO. Solo se llega tras la
@@ -51,11 +51,13 @@ class Administrador(Pantalla):
         self.volver.pack(side=tk.BOTTOM, fill=tk.X)
 
     def abrir_tarifas(self) -> None:
+        """CAMBIAR TARIFAS: al formulario de tarifas."""
         from taximetro.gui.tarifas import CambiarTarifas
 
         self.app.mostrar(CambiarTarifas)
 
     def abrir_historico(self) -> None:
+        """VER HISTÓRICO: a la tabla de las carreras de hoy."""
         from taximetro.gui.historico import Historico
 
         self.app.mostrar(Historico)

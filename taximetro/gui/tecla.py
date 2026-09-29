@@ -1,4 +1,4 @@
-"""Tecla: la tecla táctil de la interfaz gráfica (T9.5)."""
+"""Tecla: la tecla táctil de la interfaz gráfica."""
 
 from __future__ import annotations
 
@@ -55,7 +55,12 @@ class Tecla(tk.Frame):
         self.pack_propagate(False)  # el alto lo decide la tecla, no su texto
         self.comando = comando
         self._pulsada = False
+        self._montar_contenido(fuente, icono, tamano_icono)
+        self._enlazar_pulsacion()
+        self.configurar(titulo=titulo, subtitulo=subtitulo, variante=variante)
 
+    def _montar_contenido(self, fuente: estilo.Fuente, icono: str | None, tamano_icono: int) -> None:
+        """Icono (si lo hay), título y subtítulo, centrados en vertical."""
         # Un marco interior centra título y subtítulo en vertical.
         self._centro = tk.Frame(self)
         self._centro.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
@@ -74,14 +79,14 @@ class Tecla(tk.Frame):
         )
         self.bind("<Configure>", lambda _evento: self._ajustar(), add="+")
 
+    def _enlazar_pulsacion(self) -> None:
+        """Pulsar en cualquier parte de la tecla (o de lo que hay dentro) es pulsarla."""
         widgets = [self, self._centro, self._titulo, self._subtitulo]
         if self._icono is not None:
             widgets.append(self._icono)
         for widget in widgets:
             widget.bind("<ButtonPress-1>", self._al_pulsar)
             widget.bind("<ButtonRelease-1>", self._al_soltar)
-
-        self.configurar(titulo=titulo, subtitulo=subtitulo, variante=variante)
 
     @property
     def titulo(self) -> str:
@@ -124,7 +129,7 @@ class Tecla(tk.Frame):
             return  # aún sin colocar: se ajusta en cuanto tenga tamaño (<Configure>)
         for etiqueta, clave in ((self._titulo, "titulo"), (self._subtitulo, "subtitulo")):
             familia, tamano, peso = self._fuentes[clave]
-            etiqueta.configure(font=cabe(etiqueta, etiqueta.cget("text"), familia, -tamano, peso, ancho))
+            etiqueta.configure(font=fuente_que_cabe(etiqueta, etiqueta.cget("text"), familia, -tamano, peso, ancho))
 
     def _pintar(self) -> None:
         """Aplica los colores de la variante, más claros mientras se pulsa."""
@@ -163,7 +168,7 @@ class Tecla(tk.Frame):
         )
 
 
-def cabe(widget: tk.Misc, texto: str, familia: str, px: int, peso: str, ancho: int) -> estilo.Fuente:
+def fuente_que_cabe(widget: tk.Misc, texto: str, familia: str, px: int, peso: str, ancho: int) -> estilo.Fuente:
     """La fuente más grande, desde `px` hasta `estilo.TEXTO_MIN`, en la que `texto` cabe en `ancho`.
 
     Mide cada línea con la fuente real del sistema. Si ni al mínimo cabe, se

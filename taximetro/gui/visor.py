@@ -1,4 +1,4 @@
-"""Visor: el importe en dígitos de 7 segmentos, como un taxímetro clásico (T9.6)."""
+"""Visor: el importe en dígitos de 7 segmentos, como un taxímetro clásico."""
 
 from __future__ import annotations
 

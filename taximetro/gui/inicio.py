@@ -1,4 +1,4 @@
-"""Inicio: la primera pantalla, elección de perfil (T9.7).
+"""Inicio: la primera pantalla, elección de perfil.
 
 Pantalla 1 de `docs/diseno-interfaz-fase3.md`: franja con las tarifas
 vigentes, teja CONDUCTOR (la acción diaria, dos tercios del ancho) y teja

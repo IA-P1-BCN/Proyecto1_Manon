@@ -87,7 +87,7 @@ pytest                                 # the tests
 
 Run it from the repository root: fares, history and logs are stored in `config/`, `data/` and `logs/` relative to it. To enter as Administrator, the demo password is **`taxi`**.
 
-For a guided tour with what to press and what you should see, there are demo scripts (in Spanish): [phase 1](docs/demo-fase1.md), [phase 2](docs/demo-fase2.md) and [phase 3](docs/demo-fase3.md). The GUI tests open real windows (CI provides a display with `xvfb-run`) and check that no screen cuts off a text or pushes anything out of place.
+The GUI tests open real windows (CI provides a display with `xvfb-run`) and check that no screen cuts off a text or pushes anything out of place.
 
 <a id="how-its-built"></a>
 ## 🏗️ How it's built

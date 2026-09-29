@@ -1,4 +1,4 @@
-"""PantallaTaximetro: el taxímetro del conductor, LIBRE u OCUPADO (T9.13).
+"""PantallaTaximetro: el taxímetro del conductor, LIBRE u OCUPADO.
 
 Pantallas 3 y 4 de `docs/diseno-interfaz-fase3.md`, que son una sola: el
 taxímetro pasa de OCUPADO a LIBRE y vuelta, como uno real. Se llama
@@ -56,10 +56,6 @@ class PantallaTaximetro(Pantalla):
         self.confirmacion = Confirmacion(self)  # la última: queda por encima de todo
         self._pintar()
 
-    # ------------------------------------------------------------------
-    # Acciones
-    # ------------------------------------------------------------------
-
     def iniciar(self) -> None:
         """INICIAR CARRERA: la carrera nace en movimiento, como en el CLI."""
         self.servicio.iniciar_carrera()
@@ -76,7 +72,7 @@ class PantallaTaximetro(Pantalla):
         self._pintar()
 
     def pedir_finalizar(self) -> None:
-        """FINALIZAR: congela el importe y pregunta antes de cerrar (T9.8).
+        """FINALIZAR: congela el importe y pregunta antes de cerrar.
 
         Un toque sin querer con el coche en marcha cerraría una carrera que no
         se puede reabrir. Lo que se cobra es lo de este instante, no lo que se
@@ -86,7 +82,7 @@ class PantallaTaximetro(Pantalla):
         self.confirmacion.abrir(
             pregunta=f"¿Finalizar la carrera nº {congelada.id}?",
             importe=formato_euros(congelada.importe),
-            si="SÍ, FINALIZAR",
+            texto_si="SÍ, FINALIZAR",
             al_si=self._confirmar_finalizar,
             al_no=self.seguir,
         )
@@ -127,7 +123,7 @@ class PantallaTaximetro(Pantalla):
             pregunta=f"Vas a salir del programa con la carrera nº {congelada.id} en curso.",
             importe=formato_euros(congelada.importe),
             # En dos líneas: en una, a 48 px, no cabe en media tecla (507 px de 457).
-            si="SÍ, FINALIZAR\nY SALIR",
+            texto_si="SÍ, FINALIZAR\nY SALIR",
             al_si=self._finalizar_y_salir,
             al_no=self.seguir,
         )
@@ -164,10 +160,6 @@ class PantallaTaximetro(Pantalla):
     def cerrar_ayuda(self) -> None:
         """Quita el panel de ayuda."""
         self._ayuda.place_forget()
-
-    # ------------------------------------------------------------------
-    # Pintar
-    # ------------------------------------------------------------------
 
     def _pintar(self) -> None:
         """Pone la pantalla en LIBRE u OCUPADO según el servicio."""
@@ -259,10 +251,6 @@ class PantallaTaximetro(Pantalla):
         """
         tarifas = self.servicio.tarifas()
         return formato_euros(tarifas.parado if estado is Estado.PARADO else tarifas.en_movimiento)
-
-    # ------------------------------------------------------------------
-    # Montaje
-    # ------------------------------------------------------------------
 
     def _montar_visor(self, padre: tk.Frame) -> None:
         """El visor negro: lámparas, estado y tarifa a la izquierda; importe a la derecha."""

@@ -20,7 +20,7 @@ RUTA_POR_DEFECTO = Path("config") / "credenciales.json"
 
 # Coste de scrypt: unos 16 MB de memoria y ~50 ms por comprobación. Se guarda
 # junto al hash, así que subirlo más adelante no invalida la contraseña actual.
-N, R, P = 2**14, 8, 1
+SCRYPT_N, SCRYPT_R, SCRYPT_P = 2**14, 8, 1
 BYTES_SAL = 16
 BYTES_HASH = 32
 MEMORIA_MAXIMA = 64 * 1024 * 1024  # holgada para N, R, P; frena un fichero absurdo
@@ -58,20 +58,7 @@ class Auth:
         siquiera si es incorrecta: suele ser una errata de la buena.
         """
         try:
-            datos = json.loads(self._ruta.read_text(encoding="utf-8"))
-            if datos["algoritmo"] != "scrypt":
-                raise ValueError(f"algoritmo desconocido: {datos['algoritmo']!r}")
-            esperado = bytes.fromhex(datos["hash"])
-            if not esperado:
-                raise ValueError("hash vacío")
-            calculado = _scrypt(
-                contrasena,
-                sal=bytes.fromhex(datos["sal"]),
-                n=datos["n"],
-                r=datos["r"],
-                p=datos["p"],
-                largo=len(esperado),
-            )
+            esperado, calculado = self._hash_esperado_y_calculado(contrasena)
         except (OSError, ValueError, KeyError, TypeError, OverflowError) as error:
             # ValueError cubre el JSON mal formado, el hexadecimal roto y los
             # parámetros que scrypt rechaza (incluido pasarse de memoria);
@@ -87,9 +74,27 @@ class Auth:
         # respuesta no da pistas sobre el hash.
         return hmac.compare_digest(calculado, esperado)
 
+    def _hash_esperado_y_calculado(self, contrasena: str) -> tuple[bytes, bytes]:
+        """El hash guardado en el fichero y el de `contrasena` con sus parámetros."""
+        datos = json.loads(self._ruta.read_text(encoding="utf-8"))
+        if datos["algoritmo"] != "scrypt":
+            raise ValueError(f"algoritmo desconocido: {datos['algoritmo']!r}")
+        esperado = bytes.fromhex(datos["hash"])
+        if not esperado:
+            raise ValueError("hash vacío")
+        calculado = _scrypt(
+            contrasena,
+            sal=bytes.fromhex(datos["sal"]),
+            n=datos["n"],
+            r=datos["r"],
+            p=datos["p"],
+            largo=len(esperado),
+        )
+        return esperado, calculado
+
     @staticmethod
     def generar_credenciales(
-        contrasena: str, n: int = N, r: int = R, p: int = P
+        contrasena: str, n: int = SCRYPT_N, r: int = SCRYPT_R, p: int = SCRYPT_P
     ) -> dict[str, object]:
         """El contenido del fichero de credenciales para `contrasena`.
 

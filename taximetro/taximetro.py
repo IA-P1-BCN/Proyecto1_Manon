@@ -87,7 +87,7 @@ class Taximetro:
 
     @property
     def tarifa(self) -> Tarifa:
-        """Las tarifas vigentes, para que la capa CLI pueda mostrarlas."""
+        """Las tarifas vigentes."""
         return self._tarifa
 
     def cambiar_tarifa(self, tarifa: Tarifa) -> None:

@@ -1,7 +1,7 @@
-"""Contrasena: la contraseña antes del Administrador (US-08, T9.7).
+"""Contrasena: la contraseña antes del Administrador (US-08).
 
 Pantalla 2 de `docs/diseno-interfaz-fase3.md`. La comprobación es del
-servicio, el mismo que usa el CLI (T8.3); aquí solo se teclea y se avisa.
+servicio, el mismo que usa el CLI; aquí solo se teclea y se avisa.
 """
 
 from __future__ import annotations
@@ -29,13 +29,16 @@ class Contrasena(Pantalla):
         """Monta la pantalla con el cursor ya en el campo."""
         super().__init__(app)
         principal, lateral = self.columnas()
-        panel = tk.Frame(
-            principal, bg=estilo.PANEL, highlightthickness=3, highlightbackground=estilo.VISOR_BORDE
-        )
-        panel.pack(fill=tk.BOTH, expand=True)
-        interior = tk.Frame(panel, bg=estilo.PANEL)
-        interior.pack(fill=tk.BOTH, expand=True, padx=64, pady=56)
+        interior = self.panel(principal, padx=64, pady=56)
+        self._montar_cabecera(interior)
+        self._montar_campo(interior)
+        self._montar_mensaje_y_entrar(interior)
+        self.cancelar = self.tecla_lateral(lateral, "Cancelar", self.volver_a_inicio)
+        self.cancelar.pack(side=tk.BOTTOM, fill=tk.X)
+        self.campo.focus_set()
 
+    def _montar_cabecera(self, interior: tk.Frame) -> None:
+        """El candado y el título."""
         cabecera = tk.Frame(interior, bg=estilo.PANEL)
         cabecera.pack(fill=tk.X)
         lienzo = tk.Canvas(cabecera, width=56, height=56, bg=estilo.PANEL, highlightthickness=0)
@@ -46,6 +49,8 @@ class Contrasena(Pantalla):
             bg=estilo.PANEL, fg=estilo.TEXTO,
         ).pack(side=tk.LEFT, padx=(20, 0))
 
+    def _montar_campo(self, interior: tk.Frame) -> None:
+        """La etiqueta y el campo enmascarado, con su marco."""
         tk.Label(
             interior, text="Contraseña", font=estilo.FUENTE_TEXTO,
             bg=estilo.PANEL, fg=estilo.TEXTO_SECUNDARIO, anchor=tk.W,
@@ -63,6 +68,9 @@ class Contrasena(Pantalla):
         self.campo.pack(fill=tk.BOTH, expand=True, padx=24)
         self.campo.bind("<Return>", lambda _evento: self.entrar())
         self.campo.bind("<Key>", self._al_teclear)
+
+    def _montar_mensaje_y_entrar(self, interior: tk.Frame) -> None:
+        """La línea de avisos y la tecla ENTRAR."""
         # Con ajuste de línea: el mensaje más largo no cabe en una con todas las fuentes.
         self.mensaje = tk.Label(
             interior, font=estilo.FUENTE_MENSAJE, bg=estilo.PANEL,
@@ -74,10 +82,6 @@ class Contrasena(Pantalla):
             interior, "ENTRAR", self.entrar, variante=estilo.VERDE, alto=estilo.TECLA_ENTRAR
         )
         self.entrar_tecla.pack(side=tk.BOTTOM, fill=tk.X)
-
-        self.cancelar = self.tecla_lateral(lateral, "Cancelar", self.volver_a_inicio)
-        self.cancelar.pack(side=tk.BOTTOM, fill=tk.X)
-        self.campo.focus_set()
 
     def entrar(self) -> None:
         """ENTRAR o Enter: comprueba la contraseña con el servicio."""
