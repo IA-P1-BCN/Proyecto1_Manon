@@ -22,7 +22,7 @@ class ConfigTarifas:
 
     Solo sabe de ficheros; las reglas de qué es una tarifa válida viven en
     `Tarifa`. Un técnico puede editar el fichero a mano (US-07) y el
-    Administrador lo reescribe desde el menú (T7.6).
+    Administrador lo reescribe desde el menú.
     """
 
     def __init__(self, ruta: Path = RUTA_POR_DEFECTO) -> None:

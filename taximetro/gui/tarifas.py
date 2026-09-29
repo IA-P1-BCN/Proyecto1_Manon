@@ -1,4 +1,4 @@
-"""CambiarTarifas: los €/s de cada estado, desde la próxima carrera (T9.7).
+"""CambiarTarifas: los €/s de cada estado, desde la próxima carrera.
 
 Pantalla 7 de `docs/diseno-interfaz-fase3.md`. Las reglas de qué es una
 tarifa válida son del dominio (`Tarifa`), no de la pantalla; aquí solo se
@@ -38,13 +38,16 @@ class CambiarTarifas(Pantalla):
         """Monta el formulario con las tarifas vigentes ya escritas."""
         super().__init__(app)
         principal, lateral = self.columnas()
-        panel = tk.Frame(
-            principal, bg=estilo.PANEL, highlightthickness=3, highlightbackground=estilo.VISOR_BORDE
-        )
-        panel.pack(fill=tk.BOTH, expand=True)
-        interior = tk.Frame(panel, bg=estilo.PANEL)
-        interior.pack(fill=tk.BOTH, expand=True, padx=56, pady=40)
+        interior = self.panel(principal, padx=56, pady=40)
+        self._montar_titulo(interior)
+        self._montar_campos(interior)
+        self._montar_mensaje_y_guardar(interior)
+        self._montar_ayuda(lateral)
+        self._pintar_vigentes()
+        self.campos["parado"].focus_set()
 
+    def _montar_titulo(self, interior: tk.Frame) -> None:
+        """El título y la línea con las tarifas vigentes."""
         tk.Label(
             interior, text="Cambiar tarifas", font=estilo.FUENTE_TITULO,
             bg=estilo.PANEL, fg=estilo.TEXTO, anchor=tk.W,
@@ -55,6 +58,8 @@ class CambiarTarifas(Pantalla):
         )
         self.vigentes.pack(fill=tk.X, pady=(estilo.SEPARACION, 0))
 
+    def _montar_campos(self, interior: tk.Frame) -> None:
+        """Una fila por estado: etiqueta, campo con la tarifa vigente y «€/s»."""
         formulario = tk.Frame(interior, bg=estilo.PANEL)
         formulario.pack(fill=tk.X, pady=(32, 0))
         tarifas = self.servicio.tarifas()
@@ -65,32 +70,40 @@ class CambiarTarifas(Pantalla):
             ("en_movimiento", "En movimiento", tarifas.en_movimiento, estilo.LED_VERDE),
         )
         for fila, (nombre, etiqueta, valor, color) in enumerate(filas):
-            tk.Label(
-                formulario, text=etiqueta, font=estilo.FUENTE_ETIQUETA_CAMPO,
-                bg=estilo.PANEL, fg=estilo.TEXTO, anchor=tk.W, width=18,
-            ).grid(row=fila, column=0, sticky="w", pady=10)
-            marco = tk.Frame(
-                formulario, width=260, height=estilo.CAMPO, bg=estilo.VISOR_FONDO,
-                highlightthickness=3, highlightbackground=estilo.CAMPO_BORDE,
-            )
-            marco.grid(row=fila, column=1, padx=estilo.SEPARACION, pady=10)
-            marco.pack_propagate(False)
-            # El color del estado que representa, como en el taxímetro.
-            campo = tk.Entry(
-                marco, font=estilo.FUENTE_CAMPO, justify=tk.RIGHT, relief=tk.FLAT,
-                bg=estilo.VISOR_FONDO, fg=color, insertbackground=color,
-            )
-            campo.insert(0, a_texto(valor))
-            campo.pack(fill=tk.BOTH, expand=True, padx=24)
-            campo.bind("<Return>", lambda _evento: self.guardar())
-            campo.bind("<Key>", self._al_teclear)
-            tk.Label(
-                formulario, text="€/s", font=estilo.FUENTE_ETIQUETA_CAMPO,
-                bg=estilo.PANEL, fg=estilo.TEXTO_SECUNDARIO,
-            ).grid(row=fila, column=2, sticky="w")
-            self.campos[nombre] = campo
-            self._marcos[nombre] = marco
+            self._montar_fila(formulario, fila, nombre, etiqueta, valor, color)
 
+    def _montar_fila(
+        self, formulario: tk.Frame, fila: int, nombre: str, etiqueta: str, valor: float, color: str
+    ) -> None:
+        """Una fila del formulario; deja el campo y su marco en `campos` y `_marcos`."""
+        tk.Label(
+            formulario, text=etiqueta, font=estilo.FUENTE_ETIQUETA_CAMPO,
+            bg=estilo.PANEL, fg=estilo.TEXTO, anchor=tk.W, width=18,
+        ).grid(row=fila, column=0, sticky="w", pady=10)
+        marco = tk.Frame(
+            formulario, width=260, height=estilo.CAMPO, bg=estilo.VISOR_FONDO,
+            highlightthickness=3, highlightbackground=estilo.CAMPO_BORDE,
+        )
+        marco.grid(row=fila, column=1, padx=estilo.SEPARACION, pady=10)
+        marco.pack_propagate(False)
+        # El color del estado que representa, como en el taxímetro.
+        campo = tk.Entry(
+            marco, font=estilo.FUENTE_CAMPO, justify=tk.RIGHT, relief=tk.FLAT,
+            bg=estilo.VISOR_FONDO, fg=color, insertbackground=color,
+        )
+        campo.insert(0, a_texto(valor))
+        campo.pack(fill=tk.BOTH, expand=True, padx=24)
+        campo.bind("<Return>", lambda _evento: self.guardar())
+        campo.bind("<Key>", self._al_teclear)
+        tk.Label(
+            formulario, text="€/s", font=estilo.FUENTE_ETIQUETA_CAMPO,
+            bg=estilo.PANEL, fg=estilo.TEXTO_SECUNDARIO,
+        ).grid(row=fila, column=2, sticky="w")
+        self.campos[nombre] = campo
+        self._marcos[nombre] = marco
+
+    def _montar_mensaje_y_guardar(self, interior: tk.Frame) -> None:
+        """La línea de avisos y la tecla GUARDAR."""
         self.mensaje = tk.Label(
             interior, font=estilo.FUENTE_MENSAJE, bg=estilo.PANEL, anchor=tk.W,
             justify=tk.LEFT, wraplength=820,
@@ -101,6 +114,8 @@ class CambiarTarifas(Pantalla):
         )
         self.guardar_tecla.pack(side=tk.BOTTOM, fill=tk.X)
 
+    def _montar_ayuda(self, lateral: tk.Frame) -> None:
+        """La columna lateral: cómo escribir el número y la tecla Volver."""
         ayuda = tk.Frame(lateral, bg=estilo.PANEL, highlightthickness=2, highlightbackground=estilo.PANEL_BORDE)
         ayuda.pack(fill=tk.X)
         tk.Label(
@@ -110,11 +125,14 @@ class CambiarTarifas(Pantalla):
         self.volver = self.tecla_lateral(lateral, "Volver", self.volver_a_administrador)
         self.volver.pack(side=tk.BOTTOM, fill=tk.X)
 
-        self._pintar_vigentes()
-        self.campos["parado"].focus_set()
-
     def guardar(self) -> None:
         """GUARDAR o Enter: valida, guarda y aplica. Si algo falla, no cambia nada."""
+        valores = self._leer_valores()
+        if valores is not None:
+            self._aplicar(valores)
+
+    def _leer_valores(self) -> dict[str, float] | None:
+        """Los números tecleados, o None (con el error ya mostrado) si alguno no lo es."""
         valores: dict[str, float] = {}
         for nombre, campo in self.campos.items():
             tecleado = campo.get().strip()
@@ -128,7 +146,11 @@ class CambiarTarifas(Pantalla):
                     f"«{tecleado}» no es un número. Escribe, por ejemplo, 0,03. {NADA_GUARDADO}",
                     (nombre,),
                 )
-                return
+                return None
+        return valores
+
+    def _aplicar(self, valores: dict[str, float]) -> None:
+        """Pide al servicio el cambio y enseña el resultado o el error."""
         try:
             nuevas = self.servicio.cambiar_tarifas(valores["parado"], valores["en_movimiento"])
         except TarifaInvalidaError as error:

@@ -1,4 +1,4 @@
-"""Iconos de la interfaz, dibujados con trazos en un `Canvas` (T9.7).
+"""Iconos de la interfaz, dibujados con trazos en un `Canvas`.
 
 Los mismos de la maqueta aprobada (taxi, candado, tarifas, histórico), en una
 cuadrícula de 24 × 24 que se escala al tamaño pedido. Con trazos y no con

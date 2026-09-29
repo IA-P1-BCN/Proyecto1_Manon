@@ -50,6 +50,16 @@ class Pantalla(tk.Frame):
         lateral.pack_propagate(False)
         return principal, lateral
 
+    def panel(self, principal: tk.Frame, padx: int, pady: int) -> tk.Frame:
+        """El panel con borde de la columna principal; devuelve su interior."""
+        marco = tk.Frame(
+            principal, bg=estilo.PANEL, highlightthickness=3, highlightbackground=estilo.VISOR_BORDE
+        )
+        marco.pack(fill=tk.BOTH, expand=True)
+        interior = tk.Frame(marco, bg=estilo.PANEL)
+        interior.pack(fill=tk.BOTH, expand=True, padx=padx, pady=pady)
+        return interior
+
     def tecla_lateral(self, padre: tk.Misc, texto: str, comando: Callable[[], None]) -> Tecla:
         """Una tecla del lateral (Volver, Ayuda, Salir…), sin colocar."""
         return Tecla(

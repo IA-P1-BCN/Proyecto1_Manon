@@ -1,4 +1,4 @@
-"""El tema de la interfaz gráfica: medidas, colores y fuentes (T9.5).
+"""El tema de la interfaz gráfica: medidas, colores y fuentes.
 
 tkinter no tiene CSS: este módulo hace su papel. Todos los valores salen de la
 maqueta aprobada y de `docs/diseno-interfaz-fase3.md`, y ninguna pantalla lleva
@@ -14,10 +14,6 @@ from dataclasses import dataclass
 from taximetro.servicio_taximetro import Estado
 
 TITULO = "Taxímetro TTX-247"
-
-# ----------------------------------------------------------------------
-# Medidas (px)
-# ----------------------------------------------------------------------
 
 ANCHO, ALTO = 1280, 800
 MARGEN = 24  # borde de la ventana
@@ -42,10 +38,6 @@ FILA = 64  # filas del histórico
 FILAS_HISTORICO = 6  # las que caben a la vez; ▲ ▼ para el resto
 
 TEXTO_MIN = 24  # nada más pequeño en ninguna pantalla, ni siquiera la ayuda
-
-# ----------------------------------------------------------------------
-# Colores
-# ----------------------------------------------------------------------
 
 FONDO = "#1c1c1c"  # oscuro: no deslumbra de noche
 PANEL = "#141414"  # recuadros del lateral y pantallas de Administrador
@@ -127,10 +119,6 @@ def aclarar(color: str, cuanto: float = 0.18) -> str:
     rgb = [int(color[i : i + 2], 16) for i in (1, 3, 5)]
     return "#" + "".join(f"{round(c + (255 - c) * cuanto):02x}" for c in rgb)
 
-
-# ----------------------------------------------------------------------
-# Fuentes
-# ----------------------------------------------------------------------
 
 # Las del sistema, como la maqueta: tkinter no carga fuentes propias con
 # facilidad. Si falta, Tk pone la suya por defecto.

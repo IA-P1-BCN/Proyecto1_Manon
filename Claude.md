@@ -27,10 +27,8 @@ Before changing behaviour, check whether it was already decided:
 - **`docs/flujo-fase2.md`** — what Fase 2 changes in the CLI: role menu, Admin fare change and history, Ctrl+C confirmation mid-ride (supersedes Fase 1's Ctrl+C rule).
 - **`docs/diseno-interfaz-fase3.md`** — authority on the GUI: device, touch rules, colours per state, every screen and its texts.
 - **`docs/flujo-fase3.md`** — how the GUI screens connect, and how each Fase 2 CLI rule maps onto them.
-- **`docs/demo-fase1.md`** / **`docs/demo-fase2.md`** — the scripts for each phase's client demo; keep them true to the real CLI output. `demo-fase2.md` also lists the open questions for the client.
-- **`docs/demo-fase3.md`** — the Fase 3 demo script (GUI, password, one logic for two interfaces).
 
-Structural/process decisions, per-phase rationale and postponed ideas are kept as personal working notes, not in this repo — ask the user if you need that context and don't have it. A file-by-file code walkthrough also lives locally, gitignored, at `docs-local/arquitectura-del-codigo.md` (present if this checkout has it; not guaranteed on a fresh clone).
+Structural/process decisions, per-phase rationale and postponed ideas are kept as personal working notes, not in this repo — ask the user if you need that context and don't have it. **Demo scripts, retros and any other doc that isn't meant to be published go in `Docs/`, at the root of the project folder — the sibling of `App/`, outside this repo.** Never add them under `App/docs/`. The file-by-file code walkthrough (architecture and role per folder) is `Docs/arquitectura-del-codigo.md`, outside this repo; keep it in step with the code when names or mechanisms change.
 
 ## Structure (Fase 1 + Fase 2, Fase 3 so far)
 
@@ -109,7 +107,7 @@ Run `pytest` after every change. Don't call a task done with failing tests.
 - PEP 8, type hints on public methods, short docstrings on every class/public method.
 - One class per file, snake_case filename matching the class.
 - Domain vocabulary in Spanish for consistency with the user stories (`Carrera`, `iniciar_carrera`, `cambiar_estado`, `finalizar`); generic utility code can be English (`formato_euros`).
-- **Language:** the README is bilingual: `README.md` is English (default, for teachers, students and recruiters), `README.es.md` is its Spanish mirror; both link to each other at the top and must be kept in sync. Everything else the client or an evaluator reads is Spanish — `docs/project-brief.md`, `docs/flujo-fase1.md`, `docs/demo-fase1.md`, docstrings, CLI output, commit subjects.- Keep the interface layers thin — they parse input and call `ServicioTaximetro`; no fare logic there. The CLI and everything under `taximetro/gui/` may import only `servicio_taximetro`, `logs` and `utils` from the package; `test_estructura.py` fails otherwise (T9.12).
+- **Language:** the README is bilingual: `README.md` is English (default, for teachers, students and recruiters), `README.es.md` is its Spanish mirror; both link to each other at the top and must be kept in sync. Everything else the client or an evaluator reads is Spanish — `docs/project-brief.md`, `docs/flujo-fase1.md`, docstrings, CLI output, commit subjects.- Keep the interface layers thin — they parse input and call `ServicioTaximetro`; no fare logic there. The CLI and everything under `taximetro/gui/` may import only `servicio_taximetro`, `logs` and `utils` from the package; `test_estructura.py` fails otherwise (T9.12).
 - Fase 1 requires no external libraries beyond the standard library (`time`, `datetime`) unless a specific later-phase story calls for one (justify any new dependency in the PR description, per the client's technical constraints).
 - Commits: [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/) format, referencing the story/task id, e.g. `feat(carrera): implement cambiar_estado (US-02)`.
 

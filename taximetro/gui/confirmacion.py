@@ -1,4 +1,4 @@
-"""Confirmacion: el panel SÍ / NO que tapa la pantalla (T9.8)."""
+"""Confirmacion: el panel SÍ / NO que tapa la pantalla."""
 
 from __future__ import annotations
 
@@ -59,14 +59,14 @@ class Confirmacion(tk.Frame):
         self,
         pregunta: str,
         importe: str,
-        si: str,
+        texto_si: str,
         al_si: Callable[[], None],
         al_no: Callable[[], None],
     ) -> None:
         """Muestra la pregunta con el importe (ya formateado) y las acciones de cada tecla."""
         self.pregunta.configure(text=pregunta)
         self.importe.configure(text=importe)
-        self.si.configurar(titulo=si)
+        self.si.configurar(titulo=texto_si)
         self.si.comando = al_si
         self.no.comando = al_no
         self.place(relx=0, rely=0, relwidth=1, relheight=1)
