@@ -10,7 +10,7 @@ Todo lo que no aparece aquí sigue igual que en [`flujo-fase1.md`](flujo-fase1.m
 
 ```mermaid
 flowchart TD
-    START(["Arranque: python -m taximetro.taximetro_app"]) --> CONF["Leer config/tarifas.json<br/>(si falta, se crea; si no es válido, tarifas por defecto)"]
+    START(["Arranque: python -m taximetro.interfaces.taximetro_app"]) --> CONF["Leer config/tarifas.json<br/>(si falta, se crea; si no es válido, tarifas por defecto)"]
     CONF --> HIST["Leer data/historial.csv:<br/>la numeración sigue desde la última carrera"]
     HIST --> BANNER["Mostrar banner:<br/>tarifas vigentes y opciones de cada perfil"]
     BANNER --> INICIO

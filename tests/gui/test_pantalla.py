@@ -1,4 +1,4 @@
-"""Tests de `taximetro.gui.pantalla.Pantalla`: la base de las pantallas (T9.3).
+"""Tests de `taximetro.interfaces.gui.pantalla.Pantalla`: la base de las pantallas (T9.3).
 
 Lo importante son los temporizadores: el refresco del importe cada 200 ms
 (T9.13) no puede seguir llamando a una pantalla que ya no está.
@@ -6,8 +6,8 @@ Lo importante son los temporizadores: el refresco del importe cada 200 ms
 
 from __future__ import annotations
 
-from taximetro.gui.app import App
-from taximetro.gui.pantalla import Pantalla
+from taximetro.interfaces.gui.app import App
+from taximetro.interfaces.gui.pantalla import Pantalla
 
 
 class Vacia(Pantalla):

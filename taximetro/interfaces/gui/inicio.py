@@ -11,16 +11,16 @@ import logging
 import tkinter as tk
 from typing import TYPE_CHECKING
 
-from taximetro.gui import estilo
-from taximetro.gui.franja import Franja
-from taximetro.gui.pantalla import Pantalla
-from taximetro.gui.tecla import Tecla
-from taximetro.logs import campos
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.franja import Franja
+from taximetro.interfaces.gui.pantalla import Pantalla
+from taximetro.interfaces.gui.tecla import Tecla
+from taximetro.infrastructure.logs import campos
 
 if TYPE_CHECKING:
-    from taximetro.gui.app import App
+    from taximetro.interfaces.gui.app import App
 
-logger = logging.getLogger("taximetro.gui")
+logger = logging.getLogger("taximetro.interfaces.gui")
 
 
 class Inicio(Pantalla):
@@ -57,14 +57,14 @@ class Inicio(Pantalla):
 
     def abrir_taximetro(self) -> None:
         """CONDUCTOR: el taxímetro, sin contraseña."""
-        from taximetro.gui.taximetro import PantallaTaximetro
+        from taximetro.interfaces.gui.taximetro import PantallaTaximetro
 
         logger.info("perfil_elegido %s", campos(perfil="conductor"))
         self.app.mostrar(PantallaTaximetro)
 
     def pedir_contrasena(self) -> None:
         """ADMINISTRADOR: primero la contraseña (US-08)."""
-        from taximetro.gui.contrasena import Contrasena
+        from taximetro.interfaces.gui.contrasena import Contrasena
 
         logger.info("perfil_elegido %s", campos(perfil="administrador"))
         self.app.mostrar(Contrasena)

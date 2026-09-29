@@ -1,4 +1,4 @@
-"""Tests de `taximetro.gui.tarifas.CambiarTarifas`: la pantalla 7 (T9.7).
+"""Tests de `taximetro.interfaces.gui.tarifas.CambiarTarifas`: la pantalla 7 (T9.7).
 
 Los mensajes son los del CLI (`flujo-fase2.md`); las reglas, las de `Tarifa`.
 """
@@ -9,13 +9,13 @@ from pathlib import Path
 
 import pytest
 
-from taximetro.config_tarifas import ConfigTarifas
-from taximetro.gui import estilo
-from taximetro.gui.administrador import Administrador
-from taximetro.gui.app import App
-from taximetro.gui.tarifas import NO_ESCRITO, CambiarTarifas
-from taximetro.servicio_taximetro import ServicioTaximetro, TarifasVigentes
-from taximetro.taximetro import Taximetro
+from taximetro.infrastructure.config_tarifas import ConfigTarifas
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.administrador import Administrador
+from taximetro.interfaces.gui.app import App
+from taximetro.interfaces.gui.tarifas import NO_ESCRITO, CambiarTarifas
+from taximetro.application.servicio_taximetro import ServicioTaximetro, TarifasVigentes
+from taximetro.application.taximetro import Taximetro
 
 
 @pytest.fixture

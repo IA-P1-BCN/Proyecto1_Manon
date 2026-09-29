@@ -11,7 +11,7 @@ from __future__ import annotations
 import sys
 from dataclasses import dataclass
 
-from taximetro.servicio_taximetro import Estado
+from taximetro.application.servicio_taximetro import Estado
 
 TITULO = "Taxímetro TTX-247"
 

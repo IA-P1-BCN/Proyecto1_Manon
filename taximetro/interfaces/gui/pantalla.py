@@ -5,13 +5,13 @@ from __future__ import annotations
 import tkinter as tk
 from typing import TYPE_CHECKING, Callable
 
-from taximetro.gui import estilo
-from taximetro.gui.tecla import Tecla
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.tecla import Tecla
 from taximetro.utils import formato_euros
 
 if TYPE_CHECKING:
-    from taximetro.gui.app import App
-    from taximetro.servicio_taximetro import ServicioTaximetro
+    from taximetro.interfaces.gui.app import App
+    from taximetro.application.servicio_taximetro import ServicioTaximetro
 
 
 class Pantalla(tk.Frame):

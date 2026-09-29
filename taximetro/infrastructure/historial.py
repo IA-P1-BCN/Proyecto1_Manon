@@ -9,10 +9,10 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from taximetro.logs import campos
+from taximetro.infrastructure.logs import campos
 
 if TYPE_CHECKING:
-    from taximetro.carrera import Carrera
+    from taximetro.domain.carrera import Carrera
 
 logger = logging.getLogger(__name__)
 

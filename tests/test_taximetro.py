@@ -1,4 +1,4 @@
-"""Tests de `taximetro.taximetro.Taximetro`.
+"""Tests de `taximetro.application.taximetro.Taximetro`.
 
 Cubre el inicio de carreras y la validación de "no hay carrera activa"
 (US-01 / T1.2, T1.4).
@@ -12,11 +12,11 @@ from pathlib import Path
 
 import pytest
 
-from taximetro.carrera import Carrera, Estado
-from taximetro.config_tarifas import ConfigTarifas
-from taximetro.historial import Historial
-from taximetro.tarifa import Tarifa
-from taximetro.taximetro import CarreraActivaError, SinCarreraError, Taximetro
+from taximetro.domain.carrera import Carrera, Estado
+from taximetro.infrastructure.config_tarifas import ConfigTarifas
+from taximetro.infrastructure.historial import Historial
+from taximetro.domain.tarifa import Tarifa
+from taximetro.application.taximetro import CarreraActivaError, SinCarreraError, Taximetro
 
 
 @pytest.fixture

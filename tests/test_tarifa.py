@@ -1,4 +1,4 @@
-"""Tests de `taximetro.tarifa.Tarifa` (US-02 / T2.2).
+"""Tests de `taximetro.domain.tarifa.Tarifa` (US-02 / T2.2).
 
 Las tarifas son el dinero que paga el pasajero: se comprueban contra los
 valores del briefing, no contra lo que diga el código.
@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import pytest
 
-from taximetro.carrera import Estado
-from taximetro.tarifa import Tarifa, TarifaInvalidaError
+from taximetro.domain.carrera import Estado
+from taximetro.domain.tarifa import Tarifa, TarifaInvalidaError
 
 
 @pytest.fixture

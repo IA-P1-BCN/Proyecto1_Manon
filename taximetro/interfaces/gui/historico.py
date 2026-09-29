@@ -11,16 +11,16 @@ import logging
 import tkinter as tk
 from typing import TYPE_CHECKING
 
-from taximetro.gui import estilo
-from taximetro.gui.pantalla import Pantalla
-from taximetro.logs import campos
-from taximetro.servicio_taximetro import AlmacenamientoError, RegistroCarrera
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.pantalla import Pantalla
+from taximetro.infrastructure.logs import campos
+from taximetro.application.servicio_taximetro import AlmacenamientoError, RegistroCarrera
 from taximetro.utils import formato_euros
 
 if TYPE_CHECKING:
-    from taximetro.gui.app import App
+    from taximetro.interfaces.gui.app import App
 
-logger = logging.getLogger("taximetro.gui")
+logger = logging.getLogger("taximetro.interfaces.gui")
 
 SIN_CARRERAS = "No hay carreras terminadas hoy."
 ILEGIBLE = "No se pudo leer el histórico."
@@ -85,7 +85,7 @@ class Historico(Pantalla):
 
     def volver_a_administrador(self) -> None:
         """Volver: al menú de Administrador."""
-        from taximetro.gui.administrador import Administrador
+        from taximetro.interfaces.gui.administrador import Administrador
 
         self.app.mostrar(Administrador)
 

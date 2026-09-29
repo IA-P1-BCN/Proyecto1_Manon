@@ -7,16 +7,16 @@ import tkinter as tk
 from types import TracebackType
 from typing import Any
 
-from taximetro.gui import estilo
-from taximetro.gui.inicio import Inicio
-from taximetro.gui.pantalla import Pantalla
-from taximetro.gui.tecla import Tecla
-from taximetro.logs import campos
-from taximetro.servicio_taximetro import ServicioTaximetro
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.inicio import Inicio
+from taximetro.interfaces.gui.pantalla import Pantalla
+from taximetro.interfaces.gui.tecla import Tecla
+from taximetro.infrastructure.logs import campos
+from taximetro.application.servicio_taximetro import ServicioTaximetro
 
 # Nombre fijo, no `__name__`, igual que en el CLI: un logger bajo `taximetro`
 # llega al fichero de logs también cuando el módulo se ejecuta como `__main__`.
-logger = logging.getLogger("taximetro.gui")
+logger = logging.getLogger("taximetro.interfaces.gui")
 
 ERROR_INESPERADO = "Ha ocurrido un error inesperado. Si se repite, avisa al equipo técnico."
 

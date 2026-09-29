@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from taximetro.carrera import Estado
+from taximetro.domain.carrera import Estado
 
 # Tope de cordura, en €/s: una tarifa por encima casi siempre es un despiste
 # (euros por minuto tecleados en un campo de euros por segundo).

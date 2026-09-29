@@ -8,11 +8,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Callable
 
-from taximetro.carrera import Carrera
-from taximetro.config_tarifas import ConfigTarifas
-from taximetro.historial import Historial, ResumenDia
-from taximetro.logs import campos
-from taximetro.tarifa import Tarifa
+from taximetro.domain.carrera import Carrera
+from taximetro.infrastructure.config_tarifas import ConfigTarifas
+from taximetro.infrastructure.historial import Historial, ResumenDia
+from taximetro.infrastructure.logs import campos
+from taximetro.domain.tarifa import Tarifa
 
 logger = logging.getLogger(__name__)
 

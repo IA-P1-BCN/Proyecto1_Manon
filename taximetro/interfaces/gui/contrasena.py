@@ -9,13 +9,13 @@ from __future__ import annotations
 import tkinter as tk
 from typing import TYPE_CHECKING
 
-from taximetro.gui import estilo, iconos
-from taximetro.gui.pantalla import Pantalla
-from taximetro.gui.tecla import Tecla
-from taximetro.servicio_taximetro import AlmacenamientoError
+from taximetro.interfaces.gui import estilo, iconos
+from taximetro.interfaces.gui.pantalla import Pantalla
+from taximetro.interfaces.gui.tecla import Tecla
+from taximetro.application.servicio_taximetro import AlmacenamientoError
 
 if TYPE_CHECKING:
-    from taximetro.gui.app import App
+    from taximetro.interfaces.gui.app import App
 
 VACIA = "Escribe la contraseña."
 INCORRECTA = "Contraseña incorrecta. Inténtalo de nuevo."
@@ -96,7 +96,7 @@ class Contrasena(Pantalla):
             self._error(NO_DISPONIBLE)
             return
         if correcta:
-            from taximetro.gui.administrador import Administrador
+            from taximetro.interfaces.gui.administrador import Administrador
 
             self.app.mostrar(Administrador)
             return
@@ -105,7 +105,7 @@ class Contrasena(Pantalla):
 
     def volver_a_inicio(self) -> None:
         """Cancelar: a Inicio."""
-        from taximetro.gui.inicio import Inicio
+        from taximetro.interfaces.gui.inicio import Inicio
 
         self.app.mostrar(Inicio)
 

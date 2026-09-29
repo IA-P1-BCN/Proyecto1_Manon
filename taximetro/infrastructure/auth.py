@@ -9,7 +9,7 @@ import logging
 import secrets
 from pathlib import Path
 
-from taximetro.logs import campos
+from taximetro.infrastructure.logs import campos
 
 logger = logging.getLogger(__name__)
 

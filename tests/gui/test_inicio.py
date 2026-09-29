@@ -1,12 +1,12 @@
-"""Tests de `taximetro.gui.inicio.Inicio`: elección de perfil (T9.7)."""
+"""Tests de `taximetro.interfaces.gui.inicio.Inicio`: elección de perfil (T9.7)."""
 
 from __future__ import annotations
 
-from taximetro.gui import estilo
-from taximetro.gui.app import App
-from taximetro.gui.contrasena import Contrasena
-from taximetro.gui.inicio import Inicio
-from taximetro.gui.taximetro import PantallaTaximetro
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.app import App
+from taximetro.interfaces.gui.contrasena import Contrasena
+from taximetro.interfaces.gui.inicio import Inicio
+from taximetro.interfaces.gui.taximetro import PantallaTaximetro
 
 
 def test_la_franja_ensena_las_tarifas_vigentes(app: App) -> None:

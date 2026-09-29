@@ -12,19 +12,19 @@ import logging
 import tkinter as tk
 from typing import TYPE_CHECKING
 
-from taximetro.gui import estilo
-from taximetro.gui.confirmacion import Confirmacion
-from taximetro.gui.pantalla import Pantalla
-from taximetro.gui.tecla import Tecla
-from taximetro.gui.visor import Visor
-from taximetro.logs import campos
-from taximetro.servicio_taximetro import CarreraCerrada, Estado, InstantaneaCarrera
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.confirmacion import Confirmacion
+from taximetro.interfaces.gui.pantalla import Pantalla
+from taximetro.interfaces.gui.tecla import Tecla
+from taximetro.interfaces.gui.visor import Visor
+from taximetro.infrastructure.logs import campos
+from taximetro.application.servicio_taximetro import CarreraCerrada, Estado, InstantaneaCarrera
 from taximetro.utils import formato_euros
 
 if TYPE_CHECKING:
-    from taximetro.gui.app import App
+    from taximetro.interfaces.gui.app import App
 
-logger = logging.getLogger("taximetro.gui")
+logger = logging.getLogger("taximetro.interfaces.gui")
 
 REFRESCO_MS = 200  # un céntimo a 0,05 €/s: el visor nunca se salta uno
 SIN_DATO = "—"
@@ -147,7 +147,7 @@ class PantallaTaximetro(Pantalla):
 
     def volver(self) -> None:
         """Volver a la pantalla de inicio (solo existe sin carrera)."""
-        from taximetro.gui.inicio import Inicio  # Inicio también importa esta pantalla
+        from taximetro.interfaces.gui.inicio import Inicio  # Inicio también importa esta pantalla
 
         self.app.mostrar(Inicio)
 

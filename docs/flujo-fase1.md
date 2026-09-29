@@ -10,7 +10,7 @@ Documentos relacionados: `docs/project-brief.md` (requisitos del cliente).
 
 ```mermaid
 flowchart TD
-    START(["Arranque: python -m taximetro.taximetro_app"]) --> BANNER["Mostrar banner:<br/>qué es, cómo se usa, tarifas vigentes"]
+    START(["Arranque: python -m taximetro.interfaces.taximetro_app"]) --> BANNER["Mostrar banner:<br/>qué es, cómo se usa, tarifas vigentes"]
     BANNER --> MODO{"¿Hay carrera activa?"}
 
     %% ============ MODO INACTIVO ============

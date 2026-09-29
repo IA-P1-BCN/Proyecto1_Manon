@@ -96,7 +96,7 @@ Usados en la pantalla de carrera activa (aprobada):
 
 **Decidido (2026-09-23, T9.5): el estado nunca se comunica solo con el color.** Cada estado lleva siempre su nombre al lado (*EN MOVIMIENTO* en verde, *PARADO* en ámbar), y las lámparas llevan escrito OCUPADO / LIBRE. La pareja color + texto está definida junta en el tema (`estilo.ESTADOS`), así que una pantalla no puede usar una sin la otra.
 
-Los demás colores (paneles, bordes, mensajes, lámparas apagadas, teclas) salen de la maqueta aprobada y están todos en `taximetro/gui/estilo.py`.
+Los demás colores (paneles, bordes, mensajes, lámparas apagadas, teclas) salen de la maqueta aprobada y están todos en `taximetro/interfaces/gui/estilo.py`.
 
 Pendiente:
 - Modo día / modo noche (se conduce de noche).

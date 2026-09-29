@@ -1,4 +1,4 @@
-"""Tests de `taximetro.logs` (US-06 / T6.1, T6.3, T6.4).
+"""Tests de `taximetro.infrastructure.logs` (US-06 / T6.1, T6.3, T6.4).
 
 Cada test escribe en su propia carpeta temporal y deja el logger `taximetro`
 como lo encontró: un handler olvidado seguiría escribiendo en los tests
@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from taximetro.auth import Auth
-from taximetro.logs import (
+from taximetro.infrastructure.auth import Auth
+from taximetro.infrastructure.logs import (
     COPIAS,
     LOGGER_RAIZ,
     RUTA_POR_DEFECTO,
@@ -47,11 +47,11 @@ def ruta(tmp_path: Path) -> Path:
 class TestConfigurarLogs:
     def test_escribe_los_eventos_del_paquete_en_el_fichero(self, ruta: Path) -> None:
         handler = configurar_logs(ruta)
-        logging.getLogger("taximetro.carrera").info("carrera_iniciada carrera=1")
+        logging.getLogger("taximetro.domain.carrera").info("carrera_iniciada carrera=1")
         handler.flush()
         linea = ruta.read_text(encoding="utf-8").strip()
         assert re.fullmatch(
-            r"\d{4}-\d\d-\d\d \d\d:\d\d:\d\d INFO taximetro\.carrera carrera_iniciada carrera=1",
+            r"\d{4}-\d\d-\d\d \d\d:\d\d:\d\d INFO taximetro\.domain\.carrera carrera_iniciada carrera=1",
             linea,
         )
 
@@ -130,7 +130,7 @@ class TestLoggersDelPaquete:
             encoding="utf-8",
         )
         resultado = subprocess.run(
-            [sys.executable, "-m", "taximetro.taximetro_app"],
+            [sys.executable, "-m", "taximetro.interfaces.taximetro_app"],
             input="2\nclave-de-prueba\n1\nabc\n3\n3\n",
             capture_output=True,
             text=True,
@@ -141,6 +141,6 @@ class TestLoggersDelPaquete:
         )
         log = (tmp_path / "logs" / "taximetro.log").read_text(encoding="utf-8")
         assert "aplicacion_iniciada" in log
-        assert "WARNING taximetro.taximetro_app tarifa_rechazada" in log
+        assert "WARNING taximetro.interfaces.taximetro_app tarifa_rechazada" in log
         assert "aplicacion_cerrada motivo=salir" in log
         assert "tarifa_rechazada" not in resultado.stderr  # nada en la consola

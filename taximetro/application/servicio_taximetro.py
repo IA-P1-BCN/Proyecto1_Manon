@@ -16,13 +16,13 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 
-from taximetro.auth import Auth, CredencialesError
-from taximetro.carrera import Carrera, Estado
-from taximetro.config_tarifas import ConfigTarifas
-from taximetro.historial import Historial, RegistroCarrera, ResumenDia
-from taximetro.logs import campos
-from taximetro.tarifa import Tarifa, TarifaInvalidaError
-from taximetro.taximetro import CarreraActivaError, SinCarreraError, Taximetro
+from taximetro.infrastructure.auth import Auth, CredencialesError
+from taximetro.domain.carrera import Carrera, Estado
+from taximetro.infrastructure.config_tarifas import ConfigTarifas
+from taximetro.infrastructure.historial import Historial, RegistroCarrera, ResumenDia
+from taximetro.infrastructure.logs import campos
+from taximetro.domain.tarifa import Tarifa, TarifaInvalidaError
+from taximetro.application.taximetro import CarreraActivaError, SinCarreraError, Taximetro
 
 logger = logging.getLogger(__name__)
 

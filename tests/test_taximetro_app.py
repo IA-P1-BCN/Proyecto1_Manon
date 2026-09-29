@@ -25,12 +25,12 @@ from typing import Iterable
 
 import pytest
 
-from taximetro.config_tarifas import ConfigTarifas
-from taximetro.historial import Historial
-from taximetro.servicio_taximetro import ServicioTaximetro
-from taximetro.taximetro import Taximetro
-from taximetro.auth import CredencialesError
-from taximetro.taximetro_app import (
+from taximetro.infrastructure.config_tarifas import ConfigTarifas
+from taximetro.infrastructure.historial import Historial
+from taximetro.application.servicio_taximetro import ServicioTaximetro
+from taximetro.application.taximetro import Taximetro
+from taximetro.infrastructure.auth import CredencialesError
+from taximetro.interfaces.taximetro_app import (
     CONTRASENA_INCORRECTA,
     CREDENCIALES_NO_DISPONIBLES,
     DESCRIPCIONES,

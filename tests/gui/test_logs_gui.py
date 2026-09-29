@@ -12,15 +12,15 @@ from pathlib import Path
 
 import pytest
 
-from taximetro.gui.administrador import Administrador
-from taximetro.gui.app import ERROR_INESPERADO, App
-from taximetro.gui.contrasena import Contrasena
-from taximetro.gui.historico import Historico
-from taximetro.gui.tarifas import CambiarTarifas
-from taximetro.gui.taximetro import PantallaTaximetro
-from taximetro.historial import Historial
-from taximetro.servicio_taximetro import ServicioTaximetro
-from taximetro.taximetro import Taximetro
+from taximetro.interfaces.gui.administrador import Administrador
+from taximetro.interfaces.gui.app import ERROR_INESPERADO, App
+from taximetro.interfaces.gui.contrasena import Contrasena
+from taximetro.interfaces.gui.historico import Historico
+from taximetro.interfaces.gui.tarifas import CambiarTarifas
+from taximetro.interfaces.gui.taximetro import PantallaTaximetro
+from taximetro.infrastructure.historial import Historial
+from taximetro.application.servicio_taximetro import ServicioTaximetro
+from taximetro.application.taximetro import Taximetro
 
 
 def aspa(app: App) -> None:
