@@ -1,10 +1,12 @@
-"""Nada se recorta ni se sale de su sitio, en ninguna pantalla (T9.7).
+"""Nada se recorta ni se sale de su sitio, en ninguna pantalla ni a ningún tamaño.
 
 Una etiqueta de tkinter no ajusta su texto: si no cabe, se corta sin avisar.
 Los tests de comportamiento no lo ven, porque el texto sigue ahí. Este test
-muestra cada pantalla a 1280 × 800 y mira la geometría que calcula Tk: ningún
-widget más ancho que su texto pide, y ninguno fuera de su padre. Encontró
-«SÍ, FINALIZAR Y SALIR», que en una línea no cabía en su tecla.
+muestra cada pantalla en una rejilla de tamaños de ventana (la tablet de
+1280 × 800, más grandes, más pequeñas y en vertical) y mira la geometría que
+calcula Tk: ningún widget más ancho que su texto pide, ninguno fuera de su
+padre, y ninguna pantalla que pida más sitio del que tiene la ventana.
+Encontró «SÍ, FINALIZAR Y SALIR», que en una línea no cabía en su tecla.
 """
 
 from __future__ import annotations
@@ -30,6 +32,17 @@ from taximetro.application.taximetro import Taximetro
 
 ANCHAS = ("Verdana", "DejaVu Sans")  # más anchas que Segoe UI: lo que cabe con ellas, cabe
 
+# Tamaños de ventana (ancho, alto): la tablet, mayores, menores y en vertical.
+TAMANOS = [
+    (1280, 800), (1600, 1000), (1920, 1080), (1024, 660), estilo.TAMANO_MIN[estilo.HORIZONTAL],
+    (720, 1280), (800, 1000), (640, 1100), estilo.TAMANO_MIN[estilo.VERTICAL],
+]
+
+
+@pytest.fixture(params=TAMANOS, ids=lambda t: f"{t[0]}x{t[1]}")
+def tamano(request) -> tuple[int, int]:
+    return request.param
+
 
 @pytest.fixture(params=["sistema", "ancha"])
 def fuente(request, interprete, monkeypatch: pytest.MonkeyPatch) -> str:
@@ -52,22 +65,33 @@ def fuente(request, interprete, monkeypatch: pytest.MonkeyPatch) -> str:
 
 
 @pytest.fixture
-def app(raiz, fuente, tmp_path: Path, reloj, calendario) -> App:
-    """Una App visible, a tamaño de tablet, con 9 carreras en el histórico."""
+def app(raiz, fuente, tamano, tmp_path: Path, reloj, calendario) -> App:
+    """Una App visible, al tamaño que toque, con 9 carreras en el histórico."""
     taximetro = Taximetro(historial=Historial(tmp_path / "h.csv"), reloj=reloj, calendario=calendario)
     servicio = ServicioTaximetro(taximetro)
     for _ in range(9):
         servicio.iniciar_carrera()
         servicio.finalizar_carrera()
-    raiz.geometry(f"{estilo.ANCHO}x{estilo.ALTO}+0+0")
+    aplicacion = App(servicio, raiz=raiz)
+    raiz.maxsize(4000, 4000)  # por defecto, Windows no deja pasar del tamaño de la pantalla
+    raiz.geometry(f"{tamano[0]}x{tamano[1]}+0+0")
     raiz.deiconify()
-    return App(servicio, raiz=raiz)
+    raiz.update()
+    # Lo que la ventana mide de verdad: si el sistema no la dejó crecer, se prueba a ese tamaño.
+    aplicacion.adaptar(raiz.winfo_width(), raiz.winfo_height())
+    return aplicacion
 
 
 def desbordes(app: App) -> list[str]:
     """Lo que se recorta o se sale de su padre en la pantalla actual."""
     app.raiz.update()
     problemas: list[str] = []
+    pantalla = app.pantalla
+    if pantalla.winfo_reqwidth() > app.raiz.winfo_width() + 1 or pantalla.winfo_reqheight() > app.raiz.winfo_height() + 1:
+        problemas.append(
+            f"la pantalla pide {pantalla.winfo_reqwidth()}x{pantalla.winfo_reqheight()} "
+            f"y la ventana mide {app.raiz.winfo_width()}x{app.raiz.winfo_height()}"
+        )
 
     def recorrer(widget: tk.Misc) -> None:
         if not widget.winfo_ismapped():

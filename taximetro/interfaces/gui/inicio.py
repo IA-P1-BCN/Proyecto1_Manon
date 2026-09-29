@@ -37,23 +37,37 @@ class Inicio(Pantalla):
 
         tejas = tk.Frame(principal, bg=estilo.FONDO)
         tejas.pack(fill=tk.BOTH, expand=True, pady=(estilo.SEPARACION, 0))
-        tejas.columnconfigure(0, weight=2, uniform="teja")
-        tejas.columnconfigure(1, weight=1, uniform="teja")
         self.conductor = Tecla(
             tejas, "CONDUCTOR", self.abrir_taximetro, variante=estilo.VERDE,
-            alto=estilo.TEJA, subtitulo="Abrir el taxímetro",
+            alto=estilo.TEJA_PRINCIPAL, subtitulo="Abrir el taxímetro",
             fuente=estilo.FUENTE_TEJA_PRINCIPAL, icono="taxi",
         )
-        self.conductor.grid(row=0, column=0, sticky="ew", padx=(0, estilo.SEPARACION // 2))
         self.administrador = Tecla(
             tejas, "ADMINISTRADOR", self.pedir_contrasena, variante=estilo.GRIS,
-            alto=estilo.TEJA, subtitulo="Tarifas e histórico\ncon contraseña",
-            fuente=estilo.FUENTE_TEJA_ESTRECHA, icono="candado", tamano_icono=72,
+            alto=estilo.TEJA_SECUNDARIA, subtitulo="Tarifas e histórico\ncon contraseña",
+            fuente=estilo.FUENTE_TEJA_ESTRECHA, icono="candado", tamano_icono=estilo.px(72),
         )
-        self.administrador.grid(row=0, column=1, sticky="ew", padx=(estilo.SEPARACION // 2, 0))
+        self._colocar_tejas(tejas)
 
         self.salir = self.tecla_lateral(lateral, "Salir", app.cerrar)
-        self.salir.pack(side=tk.BOTTOM, fill=tk.X)
+        self.colocar_lateral(self.salir, side=tk.BOTTOM, fill=tk.X)
+
+    def _colocar_tejas(self, tejas: tk.Frame) -> None:
+        """CONDUCTOR (dos tercios) y ADMINISTRADOR (uno): lado a lado, o apiladas en vertical."""
+        mitad = estilo.SEPARACION // 2
+        if estilo.VERTICAL_ACTIVA:
+            tejas.columnconfigure(0, weight=1)
+            tejas.rowconfigure(0, weight=2)  # sin `uniform`: obligaría a sumar más de lo que se pide
+            tejas.rowconfigure(1, weight=1)
+            self.conductor.grid(row=0, column=0, sticky="nsew", pady=(0, mitad))
+            self.administrador.grid(row=1, column=0, sticky="nsew", pady=(mitad, 0))
+            return
+        # Con la ventana pequeña, «ADMINISTRADOR» (24 px como mínimo) no cabe en un tercio.
+        peso_conductor, peso_administrador = (2, 1) if estilo.ESCALA >= 1 else (3, 2)
+        tejas.columnconfigure(0, weight=peso_conductor, uniform="teja")
+        tejas.columnconfigure(1, weight=peso_administrador, uniform="teja")
+        self.conductor.grid(row=0, column=0, sticky="ew", padx=(0, mitad))
+        self.administrador.grid(row=0, column=1, sticky="ew", padx=(mitad, 0))
 
     def abrir_taximetro(self) -> None:
         """CONDUCTOR: el taxímetro, sin contraseña."""

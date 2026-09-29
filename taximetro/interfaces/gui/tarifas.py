@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import tkinter as tk
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from taximetro.interfaces.gui import estilo
 from taximetro.interfaces.gui.pantalla import Pantalla
@@ -37,12 +37,14 @@ class CambiarTarifas(Pantalla):
     def __init__(self, app: App) -> None:
         """Monta el formulario con las tarifas vigentes ya escritas."""
         super().__init__(app)
+        # El aviso a la vista (texto, campos culpables, si es de «guardado»), o None.
+        self._aviso_actual: tuple[str, tuple[str, ...], bool] | None = None
         principal, lateral = self.columnas()
-        interior = self.panel(principal, padx=56, pady=40)
+        interior = self.panel(principal, padx=56, pady=28)
         self._montar_titulo(interior)
         self._montar_campos(interior)
         self._montar_mensaje_y_guardar(interior)
-        self._montar_ayuda(lateral)
+        self._montar_ayuda(interior, lateral)
         self._pintar_vigentes()
         self.campos["parado"].focus_set()
 
@@ -54,14 +56,15 @@ class CambiarTarifas(Pantalla):
         ).pack(fill=tk.X)
         self.vigentes = tk.Label(
             interior, font=estilo.FUENTE_TECLA_SUBTITULO, bg=estilo.PANEL,
-            fg=estilo.TEXTO_SECUNDARIO, anchor=tk.W,
+            fg=estilo.TEXTO_SECUNDARIO, anchor=tk.W, justify=tk.LEFT,
         )
+        self.ajustar_al_ancho(self.vigentes)
         self.vigentes.pack(fill=tk.X, pady=(estilo.SEPARACION, 0))
 
     def _montar_campos(self, interior: tk.Frame) -> None:
         """Una fila por estado: etiqueta, campo con la tarifa vigente y «€/s»."""
         formulario = tk.Frame(interior, bg=estilo.PANEL)
-        formulario.pack(fill=tk.X, pady=(32, 0))
+        formulario.pack(fill=tk.X, pady=(estilo.px(20), 0))
         tarifas = self.servicio.tarifas()
         self.campos: dict[str, tk.Entry] = {}
         self._marcos: dict[str, tk.Frame] = {}
@@ -75,16 +78,27 @@ class CambiarTarifas(Pantalla):
     def _montar_fila(
         self, formulario: tk.Frame, fila: int, nombre: str, etiqueta: str, valor: float, color: str
     ) -> None:
-        """Una fila del formulario; deja el campo y su marco en `campos` y `_marcos`."""
-        tk.Label(
+        """Una fila del formulario; deja el campo y su marco en `campos` y `_marcos`.
+
+        En horizontal, la etiqueta va a la izquierda del campo; en vertical no
+        hay sitio para eso y va encima.
+        """
+        vertical = estilo.VERTICAL_ACTIVA
+        pady = estilo.px(6)
+        etiqueta_campo = tk.Label(
             formulario, text=etiqueta, font=estilo.FUENTE_ETIQUETA_CAMPO,
-            bg=estilo.PANEL, fg=estilo.TEXTO, anchor=tk.W, width=18,
-        ).grid(row=fila, column=0, sticky="w", pady=10)
+            bg=estilo.PANEL, fg=estilo.TEXTO, anchor=tk.W, width=0 if vertical else 18,
+        )
+        # Vertical: dos filas por campo (etiqueta y campo); horizontal: una.
+        fila_etiqueta, fila_campo = (2 * fila, 2 * fila + 1) if vertical else (fila, fila)
+        etiqueta_campo.grid(row=fila_etiqueta, column=0, columnspan=2 if vertical else 1,
+                            sticky="w", pady=(pady, 0) if vertical else pady)
         marco = tk.Frame(
-            formulario, width=260, height=estilo.CAMPO, bg=estilo.VISOR_FONDO,
+            formulario, width=estilo.px(260), height=estilo.CAMPO, bg=estilo.VISOR_FONDO,
             highlightthickness=3, highlightbackground=estilo.CAMPO_BORDE,
         )
-        marco.grid(row=fila, column=1, padx=estilo.SEPARACION, pady=10)
+        marco.grid(row=fila_campo, column=0 if vertical else 1,
+                   padx=(0 if vertical else estilo.SEPARACION, estilo.SEPARACION), pady=pady)
         marco.pack_propagate(False)
         # El color del estado que representa, como en el taxímetro.
         campo = tk.Entry(
@@ -92,13 +106,13 @@ class CambiarTarifas(Pantalla):
             bg=estilo.VISOR_FONDO, fg=color, insertbackground=color,
         )
         campo.insert(0, a_texto(valor))
-        campo.pack(fill=tk.BOTH, expand=True, padx=24)
+        campo.pack(fill=tk.BOTH, expand=True, padx=estilo.px(24))
         campo.bind("<Return>", lambda _evento: self.guardar())
         campo.bind("<Key>", self._al_teclear)
         tk.Label(
             formulario, text="€/s", font=estilo.FUENTE_ETIQUETA_CAMPO,
             bg=estilo.PANEL, fg=estilo.TEXTO_SECUNDARIO,
-        ).grid(row=fila, column=2, sticky="w")
+        ).grid(row=fila_campo, column=1 if vertical else 2, sticky="w")
         self.campos[nombre] = campo
         self._marcos[nombre] = marco
 
@@ -106,24 +120,33 @@ class CambiarTarifas(Pantalla):
         """La línea de avisos y la tecla GUARDAR."""
         self.mensaje = tk.Label(
             interior, font=estilo.FUENTE_MENSAJE, bg=estilo.PANEL, anchor=tk.W,
-            justify=tk.LEFT, wraplength=820,
+            justify=tk.LEFT,
         )
+        self.ajustar_al_ancho(self.mensaje)
         self.mensaje.pack(fill=tk.X, pady=(estilo.SEPARACION, 0))
         self.guardar_tecla = Tecla(
             interior, "GUARDAR", self.guardar, variante=estilo.VERDE, alto=estilo.TECLA_GUARDAR
         )
         self.guardar_tecla.pack(side=tk.BOTTOM, fill=tk.X)
 
-    def _montar_ayuda(self, lateral: tk.Frame) -> None:
-        """La columna lateral: cómo escribir el número y la tecla Volver."""
-        ayuda = tk.Frame(lateral, bg=estilo.PANEL, highlightthickness=2, highlightbackground=estilo.PANEL_BORDE)
-        ayuda.pack(fill=tk.X)
-        tk.Label(
-            ayuda, text="Coma o punto:\n0,03 o 0.03", font=estilo.FUENTE_ETIQUETA,
+    def _montar_ayuda(self, interior: tk.Frame, lateral: tk.Frame) -> None:
+        """Cómo escribir el número (en el lateral; en vertical, sobre GUARDAR) y la tecla Volver."""
+        if estilo.VERTICAL_ACTIVA:
+            ayuda = tk.Frame(interior, bg=estilo.PANEL, highlightthickness=2, highlightbackground=estilo.PANEL_BORDE)
+            ayuda.pack(side=tk.BOTTOM, fill=tk.X, pady=(0, estilo.SEPARACION))
+        else:
+            ayuda = tk.Frame(lateral, bg=estilo.PANEL, highlightthickness=2, highlightbackground=estilo.PANEL_BORDE)
+            ayuda.pack(fill=tk.X)
+        # En una columna estrecha el salto de línea ayuda; en vertical, sobra: ocuparía otra línea.
+        nota = tk.Label(
+            ayuda, text="Coma o punto: 0,03 o 0.03" if estilo.VERTICAL_ACTIVA else "Coma o punto:\n0,03 o 0.03",
+            font=estilo.FUENTE_ETIQUETA,
             bg=estilo.PANEL, fg=estilo.TEXTO_SECUNDARIO, justify=tk.LEFT, anchor=tk.W,
-        ).pack(fill=tk.X, padx=16, pady=16)
+        )
+        self.ajustar_al_ancho(nota)
+        nota.pack(fill=tk.X, padx=estilo.px(16), pady=estilo.px(16))
         self.volver = self.tecla_lateral(lateral, "Volver", self.volver_a_administrador)
-        self.volver.pack(side=tk.BOTTOM, fill=tk.X)
+        self.colocar_lateral(self.volver, side=tk.BOTTOM, fill=tk.X)
 
     def guardar(self) -> None:
         """GUARDAR o Enter: valida, guarda y aplica. Si algo falla, no cambia nada."""
@@ -169,14 +192,36 @@ class CambiarTarifas(Pantalla):
             self._error(NO_ESCRITO, ())
             return
         self._pintar_vigentes()
-        self.mensaje.configure(
-            text=(
-                f"Tarifas guardadas: parado {a_texto(nuevas.parado)} €/s · "
-                f"en movimiento {a_texto(nuevas.en_movimiento)} €/s. "
-                "Se aplican desde la próxima carrera."
-            ),
-            fg=estilo.MENSAJE_OK,
+        self._avisar_guardado(
+            f"Tarifas guardadas: parado {a_texto(nuevas.parado)} €/s · "
+            f"en movimiento {a_texto(nuevas.en_movimiento)} €/s. "
+            "Se aplican desde la próxima carrera."
         )
+
+    def _avisar_guardado(self, texto: str) -> None:
+        """Mensaje en verde: las tarifas nuevas ya están en uso."""
+        self._aviso_actual = (texto, (), True)
+        self.mensaje.configure(text=texto, fg=estilo.MENSAJE_OK)
+
+    def guardar_ui(self) -> dict[str, Any]:
+        """Lo tecleado y el aviso que se ve, para que sobrevivan a un cambio de tamaño."""
+        return {
+            "valores": {nombre: campo.get() for nombre, campo in self.campos.items()},
+            "aviso": self._aviso_actual,
+        }
+
+    def restaurar_ui(self, estado: dict[str, Any]) -> None:
+        """Vuelve a poner lo tecleado y el aviso, con los campos culpables marcados."""
+        for nombre, valor in estado["valores"].items():
+            self.campos[nombre].delete(0, tk.END)
+            self.campos[nombre].insert(0, valor)
+        if estado["aviso"] is None:
+            return
+        texto, culpables, guardado = estado["aviso"]
+        if guardado:
+            self._avisar_guardado(texto)
+        else:
+            self._error(texto, culpables)
 
     def volver_a_administrador(self) -> None:
         """Volver: al menú de Administrador, sin guardar."""
@@ -189,6 +234,7 @@ class CambiarTarifas(Pantalla):
 
     def _error(self, texto: str, culpables: tuple[str, ...]) -> None:
         """Mensaje en rojo y el borde de los campos culpables en rojo."""
+        self._aviso_actual = (texto, culpables, False)
         self.mensaje.configure(text=texto, fg=estilo.MENSAJE_ERROR)
         for nombre, marco in self._marcos.items():
             color = estilo.CAMPO_BORDE_ERROR if nombre in culpables else estilo.CAMPO_BORDE
@@ -197,6 +243,7 @@ class CambiarTarifas(Pantalla):
     def _al_teclear(self, evento: tk.Event) -> None:
         """Al volver a escribir, el aviso anterior sobra."""
         if evento.keysym != "Return":
+            self._aviso_actual = None
             self.mensaje.configure(text="")
             for marco in self._marcos.values():
                 marco.configure(highlightbackground=estilo.CAMPO_BORDE)

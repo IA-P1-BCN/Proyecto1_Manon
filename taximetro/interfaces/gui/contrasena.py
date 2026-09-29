@@ -7,7 +7,7 @@ servicio, el mismo que usa el CLI; aquí solo se teclea y se avisa.
 from __future__ import annotations
 
 import tkinter as tk
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from taximetro.interfaces.gui import estilo, iconos
 from taximetro.interfaces.gui.pantalla import Pantalla
@@ -34,27 +34,28 @@ class Contrasena(Pantalla):
         self._montar_campo(interior)
         self._montar_mensaje_y_entrar(interior)
         self.cancelar = self.tecla_lateral(lateral, "Cancelar", self.volver_a_inicio)
-        self.cancelar.pack(side=tk.BOTTOM, fill=tk.X)
+        self.colocar_lateral(self.cancelar, side=tk.BOTTOM, fill=tk.X)
         self.campo.focus_set()
 
     def _montar_cabecera(self, interior: tk.Frame) -> None:
         """El candado y el título."""
         cabecera = tk.Frame(interior, bg=estilo.PANEL)
         cabecera.pack(fill=tk.X)
-        lienzo = tk.Canvas(cabecera, width=56, height=56, bg=estilo.PANEL, highlightthickness=0)
-        iconos.dibujar(lienzo, "candado", 56, "#ffffff")
+        tamano = estilo.px(56)
+        lienzo = tk.Canvas(cabecera, width=tamano, height=tamano, bg=estilo.PANEL, highlightthickness=0)
+        iconos.dibujar(lienzo, "candado", tamano, "#ffffff")
         lienzo.pack(side=tk.LEFT)
         tk.Label(
             cabecera, text="Administrador", font=estilo.FUENTE_TITULO,
             bg=estilo.PANEL, fg=estilo.TEXTO,
-        ).pack(side=tk.LEFT, padx=(20, 0))
+        ).pack(side=tk.LEFT, padx=(estilo.px(20), 0))
 
     def _montar_campo(self, interior: tk.Frame) -> None:
         """La etiqueta y el campo enmascarado, con su marco."""
         tk.Label(
             interior, text="Contraseña", font=estilo.FUENTE_TEXTO,
             bg=estilo.PANEL, fg=estilo.TEXTO_SECUNDARIO, anchor=tk.W,
-        ).pack(fill=tk.X, pady=(28, 12))
+        ).pack(fill=tk.X, pady=(estilo.px(28), estilo.px(12)))
         self._marco_campo = tk.Frame(
             interior, height=estilo.CAMPO, bg=estilo.VISOR_FONDO,
             highlightthickness=3, highlightbackground=estilo.CAMPO_BORDE,
@@ -65,7 +66,7 @@ class Contrasena(Pantalla):
             self._marco_campo, show="•", font=estilo.FUENTE_CONTRASENA,
             bg=estilo.VISOR_FONDO, fg="#ffffff", insertbackground="#ffffff", relief=tk.FLAT,
         )
-        self.campo.pack(fill=tk.BOTH, expand=True, padx=24)
+        self.campo.pack(fill=tk.BOTH, expand=True, padx=estilo.px(24))
         self.campo.bind("<Return>", lambda _evento: self.entrar())
         self.campo.bind("<Key>", self._al_teclear)
 
@@ -74,9 +75,10 @@ class Contrasena(Pantalla):
         # Con ajuste de línea: el mensaje más largo no cabe en una con todas las fuentes.
         self.mensaje = tk.Label(
             interior, font=estilo.FUENTE_MENSAJE, bg=estilo.PANEL,
-            fg=estilo.MENSAJE_ERROR, anchor=tk.W, justify=tk.LEFT, wraplength=820,
+            fg=estilo.MENSAJE_ERROR, anchor=tk.W, justify=tk.LEFT,
         )
-        self.mensaje.pack(fill=tk.X, pady=(12, 0))
+        self.ajustar_al_ancho(self.mensaje)
+        self.mensaje.pack(fill=tk.X, pady=(estilo.px(12), 0))
 
         self.entrar_tecla = Tecla(
             interior, "ENTRAR", self.entrar, variante=estilo.VERDE, alto=estilo.TECLA_ENTRAR
@@ -102,6 +104,16 @@ class Contrasena(Pantalla):
             return
         self.campo.delete(0, tk.END)
         self._error(INCORRECTA)
+
+    def guardar_ui(self) -> dict[str, Any]:
+        """Lo tecleado y el aviso que se ve, para que sobrevivan a un cambio de tamaño."""
+        return {"texto": self.campo.get(), "aviso": self.mensaje.cget("text")}
+
+    def restaurar_ui(self, estado: dict[str, Any]) -> None:
+        """Vuelve a poner lo tecleado y el aviso."""
+        self.campo.insert(0, estado["texto"])
+        if estado["aviso"]:
+            self._error(estado["aviso"])
 
     def volver_a_inicio(self) -> None:
         """Cancelar: a Inicio."""
