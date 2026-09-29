@@ -87,7 +87,7 @@ pytest                                 # los tests
 
 Se ejecuta desde la raíz del repositorio, porque las tarifas, el histórico y los logs se guardan en `config/`, `data/` y `logs/`. Para entrar como Administrador, la contraseña de la demo es **`taxi`**.
 
-Para una visita guiada con lo que hay que pulsar y lo que debería verse, están los guiones de demo: [fase 1](docs/demo-fase1.md), [fase 2](docs/demo-fase2.md) y [fase 3](docs/demo-fase3.md). Los tests de la interfaz gráfica abren ventanas de verdad (en el CI las pone `xvfb-run`) y comprueban que ninguna pantalla corta un texto ni se sale de su sitio.
+Los tests de la interfaz gráfica abren ventanas de verdad (en el CI las pone `xvfb-run`) y comprueban que ninguna pantalla corta un texto ni se sale de su sitio.
 
 <a id="como-esta-construido"></a>
 ## 🏗️ Cómo está construido
