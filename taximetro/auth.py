@@ -58,20 +58,7 @@ class Auth:
         siquiera si es incorrecta: suele ser una errata de la buena.
         """
         try:
-            datos = json.loads(self._ruta.read_text(encoding="utf-8"))
-            if datos["algoritmo"] != "scrypt":
-                raise ValueError(f"algoritmo desconocido: {datos['algoritmo']!r}")
-            esperado = bytes.fromhex(datos["hash"])
-            if not esperado:
-                raise ValueError("hash vacío")
-            calculado = _scrypt(
-                contrasena,
-                sal=bytes.fromhex(datos["sal"]),
-                n=datos["n"],
-                r=datos["r"],
-                p=datos["p"],
-                largo=len(esperado),
-            )
+            esperado, calculado = self._hash_esperado_y_calculado(contrasena)
         except (OSError, ValueError, KeyError, TypeError, OverflowError) as error:
             # ValueError cubre el JSON mal formado, el hexadecimal roto y los
             # parámetros que scrypt rechaza (incluido pasarse de memoria);
@@ -86,6 +73,24 @@ class Auth:
         # Tarda lo mismo falle en el primer byte o en el último: el tiempo de
         # respuesta no da pistas sobre el hash.
         return hmac.compare_digest(calculado, esperado)
+
+    def _hash_esperado_y_calculado(self, contrasena: str) -> tuple[bytes, bytes]:
+        """El hash guardado en el fichero y el de `contrasena` con sus parámetros."""
+        datos = json.loads(self._ruta.read_text(encoding="utf-8"))
+        if datos["algoritmo"] != "scrypt":
+            raise ValueError(f"algoritmo desconocido: {datos['algoritmo']!r}")
+        esperado = bytes.fromhex(datos["hash"])
+        if not esperado:
+            raise ValueError("hash vacío")
+        calculado = _scrypt(
+            contrasena,
+            sal=bytes.fromhex(datos["sal"]),
+            n=datos["n"],
+            r=datos["r"],
+            p=datos["p"],
+            largo=len(esperado),
+        )
+        return esperado, calculado
 
     @staticmethod
     def generar_credenciales(

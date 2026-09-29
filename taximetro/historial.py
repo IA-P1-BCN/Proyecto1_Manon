@@ -74,22 +74,8 @@ class Historial:
         if carrera.hora_fin is None:
             raise ValueError(f"La carrera nº {carrera.id} no está finalizada.")
 
-        nuevo = not self._ruta.exists()
         try:
-            self._ruta.parent.mkdir(parents=True, exist_ok=True)
-            with self._ruta.open("a", encoding="utf-8", newline="") as fichero:
-                escritor = csv.writer(fichero)
-                if nuevo:
-                    escritor.writerow(COLUMNAS)
-                escritor.writerow(
-                    (
-                        carrera.id,
-                        carrera.hora_inicio.isoformat(timespec="seconds"),
-                        carrera.hora_fin.isoformat(timespec="seconds"),
-                        f"{carrera.importe:.2f}",
-                        f"{carrera.distancia:.2f}",
-                    )
-                )
+            self._anadir_fila(carrera)
         except OSError:
             logger.error(
                 "carrera_no_guardada %s",
@@ -101,6 +87,16 @@ class Historial:
             "carrera_guardada %s",
             campos(carrera=carrera.id, importe=carrera.importe, ruta=self._ruta),
         )
+
+    def _anadir_fila(self, carrera: Carrera) -> None:
+        """Escribe la fila de la carrera; si el fichero es nuevo, antes la cabecera."""
+        nuevo = not self._ruta.exists()
+        self._ruta.parent.mkdir(parents=True, exist_ok=True)
+        with self._ruta.open("a", encoding="utf-8", newline="") as fichero:
+            escritor = csv.writer(fichero)
+            if nuevo:
+                escritor.writerow(COLUMNAS)
+            escritor.writerow(_fila_csv(carrera))
 
     def registros(self) -> list[RegistroCarrera]:
         """Todas las carreras guardadas, en el orden en que se cerraron.
@@ -117,15 +113,7 @@ class Historial:
             lector = csv.DictReader(fichero)
             for fila in lector:
                 try:
-                    registros.append(
-                        RegistroCarrera(
-                            carrera=int(fila["carrera"]),
-                            hora_inicio=datetime.fromisoformat(fila["hora_inicio"]),
-                            hora_fin=datetime.fromisoformat(fila["hora_fin"]),
-                            importe=float(fila["importe"]),
-                            distancia=float(fila["distancia"]),
-                        )
-                    )
+                    registros.append(_leer_registro(fila))
                 except (KeyError, TypeError, ValueError):
                     logger.warning(
                         "fila_ilegible %s", campos(ruta=self._ruta, linea=lector.line_num)
@@ -145,3 +133,25 @@ class Historial:
     def ultimo_numero(self) -> int:
         """El número de la última carrera guardada, o 0 si no hay ninguna."""
         return max((registro.carrera for registro in self.registros()), default=0)
+
+
+def _fila_csv(carrera: Carrera) -> tuple[object, ...]:
+    """La carrera como fila del CSV, en el orden de `COLUMNAS`."""
+    return (
+        carrera.id,
+        carrera.hora_inicio.isoformat(timespec="seconds"),
+        carrera.hora_fin.isoformat(timespec="seconds"),
+        f"{carrera.importe:.2f}",
+        f"{carrera.distancia:.2f}",
+    )
+
+
+def _leer_registro(fila: dict[str, str]) -> RegistroCarrera:
+    """Una fila del CSV como registro; lanza si la fila está rota."""
+    return RegistroCarrera(
+        carrera=int(fila["carrera"]),
+        hora_inicio=datetime.fromisoformat(fila["hora_inicio"]),
+        hora_fin=datetime.fromisoformat(fila["hora_fin"]),
+        importe=float(fila["importe"]),
+        distancia=float(fila["distancia"]),
+    )
