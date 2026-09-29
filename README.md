@@ -44,6 +44,7 @@ It is a course project, built in phases with a demo at the end of each. It is me
 - **Not lose a ride by accident:** finishing (or closing the window) asks for confirmation, and the amount freezes at the moment you press.
 - **Manage it as an administrator** (password protected): change the fares and see today's rides with the cash total.
 - **Use it two ways:** a touch **GUI** or a **CLI**, both on the same logic.
+- **Responsive GUI:** it adapts to the window, from a 960 × 640 landscape window up to a big monitor, and to a portrait layout for a tall window. Resizing never touches the ride in progress.
 - **Keep a record:** every finished ride is saved to a CSV history, and everything that happens is written to a rotating log file.
 
 <a id="status"></a>
@@ -87,7 +88,7 @@ pytest                                 # the tests
 
 Run it from the repository root: fares, history and logs are stored in `config/`, `data/` and `logs/` relative to it. To enter as Administrator, the demo password is **`taxi`**.
 
-The GUI tests open real windows (CI provides a display with `xvfb-run`) and check that no screen cuts off a text or pushes anything out of place.
+The GUI tests open real windows (CI provides a display with `xvfb-run`) and check that no screen cuts off a text or pushes anything out of place, at nine window sizes in landscape and portrait.
 
 <a id="how-its-built"></a>
 ## 🏗️ How it's built
