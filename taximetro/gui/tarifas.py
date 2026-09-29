@@ -38,23 +38,13 @@ class CambiarTarifas(Pantalla):
         """Monta el formulario con las tarifas vigentes ya escritas."""
         super().__init__(app)
         principal, lateral = self.columnas()
-        interior = self._montar_panel(principal)
+        interior = self.panel(principal, padx=56, pady=40)
         self._montar_titulo(interior)
         self._montar_campos(interior)
         self._montar_mensaje_y_guardar(interior)
         self._montar_ayuda(lateral)
         self._pintar_vigentes()
         self.campos["parado"].focus_set()
-
-    def _montar_panel(self, principal: tk.Frame) -> tk.Frame:
-        """El panel con borde donde vive el formulario; devuelve su interior."""
-        panel = tk.Frame(
-            principal, bg=estilo.PANEL, highlightthickness=3, highlightbackground=estilo.VISOR_BORDE
-        )
-        panel.pack(fill=tk.BOTH, expand=True)
-        interior = tk.Frame(panel, bg=estilo.PANEL)
-        interior.pack(fill=tk.BOTH, expand=True, padx=56, pady=40)
-        return interior
 
     def _montar_titulo(self, interior: tk.Frame) -> None:
         """El título y la línea con las tarifas vigentes."""

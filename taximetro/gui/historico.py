@@ -34,13 +34,14 @@ class Historico(Pantalla):
         """Lee el histórico del día y lo enseña desde la primera carrera."""
         super().__init__(app)
         principal, lateral = self.columnas()
-        panel = tk.Frame(
-            principal, bg=estilo.PANEL, highlightthickness=3, highlightbackground=estilo.VISOR_BORDE
-        )
-        panel.pack(fill=tk.BOTH, expand=True)
-        interior = tk.Frame(panel, bg=estilo.PANEL)
-        interior.pack(fill=tk.BOTH, expand=True, padx=40, pady=32)
+        self._montar_tabla(self.panel(principal, padx=40, pady=32))
+        self._montar_lateral(lateral)
+        self._carreras: tuple[RegistroCarrera, ...] = ()
+        self.desde = 0  # primera fila a la vista
+        self._cargar()
 
+    def _montar_tabla(self, interior: tk.Frame) -> None:
+        """El título, el hueco de las filas, el aviso y la caja del total."""
         self.titulo = tk.Label(
             interior, font=estilo.FUENTE_TITULO_HISTORICO, bg=estilo.PANEL,
             fg=estilo.TEXTO, anchor=tk.W,
@@ -62,16 +63,14 @@ class Historico(Pantalla):
         self.total = tk.Label(self._caja, font=estilo.FUENTE_TOTAL, bg=estilo.VISOR_FONDO, fg=estilo.LED_ROJO)
         self.total.pack(side=tk.RIGHT, padx=28)
 
+    def _montar_lateral(self, lateral: tk.Frame) -> None:
+        """Las teclas ▲ ▼ y Volver."""
         self.subir = self.tecla_lateral(lateral, "▲", self.subir_filas)
         self.subir.pack(fill=tk.X, pady=(0, estilo.SEPARACION))
         self.bajar = self.tecla_lateral(lateral, "▼", self.bajar_filas)
         self.bajar.pack(fill=tk.X)
         self.volver = self.tecla_lateral(lateral, "Volver", self.volver_a_administrador)
         self.volver.pack(side=tk.BOTTOM, fill=tk.X)
-
-        self._carreras: tuple[RegistroCarrera, ...] = ()
-        self.desde = 0  # primera fila a la vista
-        self._cargar()
 
     def subir_filas(self) -> None:
         """▲: una página hacia arriba."""

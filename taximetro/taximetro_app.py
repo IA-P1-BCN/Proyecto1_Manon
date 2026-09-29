@@ -392,18 +392,27 @@ class TaximetroApp:
         sube hasta `ejecutar` y cierra el programa, también sin cambiar nada.
         """
         self._salida(f"Tarifas vigentes: {self._resumen(self._servicio.tarifas())}")
+        nuevas = self._pedir_tarifas()
+        if nuevas is not None:
+            self._guardar_tarifas(*nuevas)
+
+    def _pedir_tarifas(self) -> tuple[float, float] | None:
+        """Las dos tarifas tecleadas, o None si algo falla o se cancela con Ctrl+C."""
         try:
             parado = self._leer_tarifa("Nueva tarifa parado (€/s): ")
             if parado is None:
-                return
+                return None
             en_movimiento = self._leer_tarifa("Nueva tarifa en movimiento (€/s): ")
             if en_movimiento is None:
-                return
+                return None
         except KeyboardInterrupt:
             logger.info("cambio_tarifas_cancelado")
             self._salida(f"Cambio cancelado. {NADA_GUARDADO}")
-            return
+            return None
+        return parado, en_movimiento
 
+    def _guardar_tarifas(self, parado: float, en_movimiento: float) -> None:
+        """Pasa las tarifas al servicio y cuenta el resultado o el error."""
         try:
             tarifa = self._servicio.cambiar_tarifas(parado, en_movimiento)
         except TarifaInvalidaError as error:
