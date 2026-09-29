@@ -1,4 +1,4 @@
-"""Tests de `taximetro.config_tarifas.ConfigTarifas` (US-07 / T7.1, T7.2, T7.4).
+"""Tests de `taximetro.infrastructure.config_tarifas.ConfigTarifas` (US-07 / T7.1, T7.2, T7.4).
 
 Cada test trabaja en su propia carpeta temporal (`tmp_path`): ninguno toca el
 `config/tarifas.json` del repo.
@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from taximetro.config_tarifas import RUTA_POR_DEFECTO, ConfigTarifas
-from taximetro.tarifa import Tarifa
+from taximetro.infrastructure.config_tarifas import RUTA_POR_DEFECTO, ConfigTarifas
+from taximetro.domain.tarifa import Tarifa
 
 
 @pytest.fixture

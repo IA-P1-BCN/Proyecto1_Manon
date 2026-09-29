@@ -1,4 +1,4 @@
-"""Tests de `taximetro.gui.taximetro.PantallaTaximetro` (T9.13).
+"""Tests de `taximetro.interfaces.gui.taximetro.PantallaTaximetro` (T9.13).
 
 Pantallas 3 y 4 de `docs/diseno-interfaz-fase3.md`: el taxímetro en LIBRE y
 en OCUPADO. El reloj y el calendario son falsos y se adelantan juntos; el
@@ -11,13 +11,13 @@ from pathlib import Path
 
 import pytest
 
-from taximetro.gui import estilo
-from taximetro.gui.app import App
-from taximetro.gui.inicio import Inicio
-from taximetro.gui.taximetro import NO_GUARDADA, REFRESCO_MS, PantallaTaximetro, tiempo
-from taximetro.historial import Historial
-from taximetro.servicio_taximetro import Estado, ServicioTaximetro
-from taximetro.taximetro import Taximetro
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.app import App
+from taximetro.interfaces.gui.inicio import Inicio
+from taximetro.interfaces.gui.taximetro import NO_GUARDADA, REFRESCO_MS, PantallaTaximetro, tiempo
+from taximetro.infrastructure.historial import Historial
+from taximetro.application.servicio_taximetro import Estado, ServicioTaximetro
+from taximetro.application.taximetro import Taximetro
 
 
 @pytest.fixture

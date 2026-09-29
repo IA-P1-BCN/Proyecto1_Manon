@@ -1,4 +1,4 @@
-"""Tests de `taximetro.gui.historico.Historico`: la pantalla 8 (T9.7)."""
+"""Tests de `taximetro.interfaces.gui.historico.Historico`: la pantalla 8 (T9.7)."""
 
 from __future__ import annotations
 
@@ -7,13 +7,13 @@ from pathlib import Path
 
 import pytest
 
-from taximetro.gui import estilo
-from taximetro.gui.administrador import Administrador
-from taximetro.gui.app import App
-from taximetro.gui.historico import ILEGIBLE, SIN_CARRERAS, Historico
-from taximetro.historial import Historial
-from taximetro.servicio_taximetro import ServicioTaximetro
-from taximetro.taximetro import Taximetro
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.administrador import Administrador
+from taximetro.interfaces.gui.app import App
+from taximetro.interfaces.gui.historico import ILEGIBLE, SIN_CARRERAS, Historico
+from taximetro.infrastructure.historial import Historial
+from taximetro.application.servicio_taximetro import ServicioTaximetro
+from taximetro.application.taximetro import Taximetro
 
 
 @pytest.fixture

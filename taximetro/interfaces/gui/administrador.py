@@ -10,13 +10,13 @@ from __future__ import annotations
 import tkinter as tk
 from typing import TYPE_CHECKING
 
-from taximetro.gui import estilo
-from taximetro.gui.franja import Franja
-from taximetro.gui.pantalla import Pantalla
-from taximetro.gui.tecla import Tecla
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.franja import Franja
+from taximetro.interfaces.gui.pantalla import Pantalla
+from taximetro.interfaces.gui.tecla import Tecla
 
 if TYPE_CHECKING:
-    from taximetro.gui.app import App
+    from taximetro.interfaces.gui.app import App
 
 
 class Administrador(Pantalla):
@@ -52,18 +52,18 @@ class Administrador(Pantalla):
 
     def abrir_tarifas(self) -> None:
         """CAMBIAR TARIFAS: al formulario de tarifas."""
-        from taximetro.gui.tarifas import CambiarTarifas
+        from taximetro.interfaces.gui.tarifas import CambiarTarifas
 
         self.app.mostrar(CambiarTarifas)
 
     def abrir_historico(self) -> None:
         """VER HISTÓRICO: a la tabla de las carreras de hoy."""
-        from taximetro.gui.historico import Historico
+        from taximetro.interfaces.gui.historico import Historico
 
         self.app.mostrar(Historico)
 
     def volver_a_inicio(self) -> None:
         """Volver: a Inicio. Para volver aquí hay que teclear otra vez la contraseña."""
-        from taximetro.gui.inicio import Inicio
+        from taximetro.interfaces.gui.inicio import Inicio
 
         self.app.mostrar(Inicio)

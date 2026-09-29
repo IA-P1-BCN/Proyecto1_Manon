@@ -11,16 +11,16 @@ import logging
 import tkinter as tk
 from typing import TYPE_CHECKING
 
-from taximetro.gui import estilo
-from taximetro.gui.pantalla import Pantalla
-from taximetro.gui.tecla import Tecla
-from taximetro.logs import campos
-from taximetro.servicio_taximetro import AlmacenamientoError, TarifaInvalidaError
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.pantalla import Pantalla
+from taximetro.interfaces.gui.tecla import Tecla
+from taximetro.infrastructure.logs import campos
+from taximetro.application.servicio_taximetro import AlmacenamientoError, TarifaInvalidaError
 
 if TYPE_CHECKING:
-    from taximetro.gui.app import App
+    from taximetro.interfaces.gui.app import App
 
-logger = logging.getLogger("taximetro.gui")
+logger = logging.getLogger("taximetro.interfaces.gui")
 
 NADA_GUARDADO = "No se ha guardado nada."
 NO_ESCRITO = f"No se pudo escribir el fichero de tarifas. {NADA_GUARDADO}"
@@ -180,7 +180,7 @@ class CambiarTarifas(Pantalla):
 
     def volver_a_administrador(self) -> None:
         """Volver: al menú de Administrador, sin guardar."""
-        from taximetro.gui.administrador import Administrador
+        from taximetro.interfaces.gui.administrador import Administrador
 
         self.app.mostrar(Administrador)
 

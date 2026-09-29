@@ -1,4 +1,4 @@
-"""Tests de `taximetro.carrera.Carrera`.
+"""Tests de `taximetro.domain.carrera.Carrera`.
 
 Cubre el estado inicial de una carrera (US-01 / T1.1), la acumulación por tramos
 al cambiar de estado (US-02 / T2.1, T2.3) y la lectura del importe bajo demanda
@@ -12,8 +12,8 @@ from datetime import datetime
 
 import pytest
 
-from taximetro.carrera import Carrera, CarreraFinalizadaError, Estado
-from taximetro.tarifa import Tarifa
+from taximetro.domain.carrera import Carrera, CarreraFinalizadaError, Estado
+from taximetro.domain.tarifa import Tarifa
 
 
 @pytest.fixture

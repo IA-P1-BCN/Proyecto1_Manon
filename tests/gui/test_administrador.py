@@ -1,14 +1,14 @@
-"""Tests de `taximetro.gui.administrador.Administrador`: el menú (T9.7)."""
+"""Tests de `taximetro.interfaces.gui.administrador.Administrador`: el menú (T9.7)."""
 
 from __future__ import annotations
 
 import pytest
 
-from taximetro.gui.administrador import Administrador
-from taximetro.gui.app import App
-from taximetro.gui.historico import Historico
-from taximetro.gui.inicio import Inicio
-from taximetro.gui.tarifas import CambiarTarifas
+from taximetro.interfaces.gui.administrador import Administrador
+from taximetro.interfaces.gui.app import App
+from taximetro.interfaces.gui.historico import Historico
+from taximetro.interfaces.gui.inicio import Inicio
+from taximetro.interfaces.gui.tarifas import CambiarTarifas
 
 
 @pytest.fixture

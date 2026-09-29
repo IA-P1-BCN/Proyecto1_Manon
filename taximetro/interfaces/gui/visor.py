@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import tkinter as tk
 
-from taximetro.gui import estilo
+from taximetro.interfaces.gui import estilo
 from taximetro.utils import formato_euros
 
 # Qué segmentos se encienden en cada cifra. Nombres clásicos:

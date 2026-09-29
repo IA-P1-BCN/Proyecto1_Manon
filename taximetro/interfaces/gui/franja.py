@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import tkinter as tk
 
-from taximetro.gui import estilo, iconos
+from taximetro.interfaces.gui import estilo, iconos
 
 MARGEN_LATERAL = 32  # a los lados de la franja y entre el título y lo que lo rodea
 TAMANO_ICONO = 44

@@ -81,7 +81,7 @@ source .venv/bin/activate              # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt    # solo hace falta para los tests
 
 python -m taximetro                    # interfaz gráfica
-python -m taximetro.taximetro_app      # CLI
+python -m taximetro.interfaces.taximetro_app      # CLI
 pytest                                 # los tests
 ```
 
@@ -112,26 +112,30 @@ Los tests de la interfaz gráfica abren ventanas de verdad (en el CI las pone `x
 
 ```
 Proyecto1_Manon/
-├── taximetro/                    # la aplicación
-│   ├── carrera.py                # una carrera, su estado y su importe
-│   ├── tarifa.py                 # € por segundo según el estado, validadas
-│   ├── taximetro.py              # carrera activa, tarifa y relojes inyectados
-│   ├── config_tarifas.py         # tarifas en config/tarifas.json
-│   ├── historial.py              # carreras terminadas en data/historial.csv
-│   ├── auth.py                   # contraseña comprobada contra un hash scrypt
-│   ├── logs.py                   # logs/taximetro.log con rotación
-│   ├── servicio_taximetro.py     # lo único que usan las dos interfaces
-│   ├── taximetro_app.py          # interfaz CLI
-│   ├── utils.py                  # formato de euros
-│   ├── __main__.py               # python -m taximetro → la interfaz gráfica
-│   └── gui/                      # interfaz gráfica (tkinter), una pantalla por módulo
-├── tests/                        # un fichero por módulo (tests/gui/ para la interfaz)
-├── config/                       # formato del fichero de tarifas, sal y hash de la contraseña
-├── docs/                         # briefing, flujos, diseño, decisiones, guiones de demo
-├── .github/workflows/tests.yml   # CI: pytest + cobertura
-├── Backlog.md                    # tareas, enlazadas a las issues de GitHub
-├── pyproject.toml                # configuración de pytest y cobertura
-└── requirements-dev.txt          # dependencias de los tests
+├── taximetro/                        # la aplicación, en cuatro capas
+│   ├── domain/                       # reglas de negocio puras
+│   │   ├── carrera.py                # una carrera, su estado y su importe
+│   │   └── tarifa.py                 # € por segundo según el estado, validadas
+│   ├── application/                  # casos de uso
+│   │   ├── taximetro.py              # carrera activa, tarifa y relojes inyectados
+│   │   └── servicio_taximetro.py     # lo único que usan las dos interfaces
+│   ├── infrastructure/               # disco y logs
+│   │   ├── config_tarifas.py         # tarifas en config/tarifas.json
+│   │   ├── historial.py              # carreras terminadas en data/historial.csv
+│   │   ├── auth.py                   # contraseña comprobada contra un hash scrypt
+│   │   └── logs.py                   # logs/taximetro.log con rotación
+│   ├── interfaces/                   # las dos formas de usarlo
+│   │   ├── taximetro_app.py          # interfaz CLI
+│   │   └── gui/                      # interfaz gráfica (tkinter), una pantalla por módulo
+│   ├── utils.py                      # formato de euros
+│   └── __main__.py                   # python -m taximetro → la interfaz gráfica
+├── tests/                            # un fichero por módulo (tests/gui/ para la interfaz)
+├── config/                           # formato del fichero de tarifas, sal y hash de la contraseña
+├── docs/                             # briefing, flujos y diseño
+├── .github/workflows/tests.yml       # CI: pytest + cobertura
+├── Backlog.md                        # tareas, enlazadas a las issues de GitHub
+├── pyproject.toml                    # configuración de pytest y cobertura
+└── requirements-dev.txt              # dependencias de los tests
 ```
 
 <a id="decisiones-de-diseno"></a>

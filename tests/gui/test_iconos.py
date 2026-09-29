@@ -1,4 +1,4 @@
-"""Tests de `taximetro.gui.iconos` y de la franja superior (T9.7)."""
+"""Tests de `taximetro.interfaces.gui.iconos` y de la franja superior (T9.7)."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ import tkinter as tk
 
 import pytest
 
-from taximetro.gui import estilo, iconos
-from taximetro.gui.franja import Franja
-from taximetro.gui.tecla import Tecla
+from taximetro.interfaces.gui import estilo, iconos
+from taximetro.interfaces.gui.franja import Franja
+from taximetro.interfaces.gui.tecla import Tecla
 
 
 @pytest.mark.parametrize("nombre", iconos.NOMBRES)

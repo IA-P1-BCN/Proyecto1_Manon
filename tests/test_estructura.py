@@ -19,12 +19,12 @@ from pathlib import Path
 
 import pytest
 
-from taximetro.auth import Auth
-from taximetro.carrera import Carrera, CarreraFinalizadaError, Estado
-from taximetro.servicio_taximetro import ServicioTaximetro
-from taximetro.tarifa import Tarifa
-from taximetro.taximetro import CarreraActivaError, Taximetro
-from taximetro.taximetro_app import TaximetroApp
+from taximetro.infrastructure.auth import Auth
+from taximetro.domain.carrera import Carrera, CarreraFinalizadaError, Estado
+from taximetro.application.servicio_taximetro import ServicioTaximetro
+from taximetro.domain.tarifa import Tarifa
+from taximetro.application.taximetro import CarreraActivaError, Taximetro
+from taximetro.interfaces.taximetro_app import TaximetroApp
 from taximetro.utils import formato_euros
 
 
@@ -180,19 +180,19 @@ PAQUETE = RAIZ / "taximetro"
 # dominio: dan formato a los eventos y a los euros. Todo lo demás llega a través
 # del servicio, que en la Fase 4 se sustituye por un cliente HTTP.
 PERMITIDOS_A_LAS_INTERFACES = (
-    "taximetro.servicio_taximetro",
-    "taximetro.logs",
+    "taximetro.application.servicio_taximetro",
+    "taximetro.infrastructure.logs",
     "taximetro.utils",
 )
 
 
 def modulos_de_interfaz() -> list[Path]:
-    """El CLI y todo lo que haya bajo `taximetro/gui/`, exista ya o no."""
-    return [PAQUETE / "taximetro_app.py", *sorted((PAQUETE / "gui").rglob("*.py"))]
+    """Todo lo que haya bajo `taximetro/interfaces/`: el CLI y la interfaz gráfica."""
+    return sorted((PAQUETE / "interfaces").rglob("*.py"))
 
 
 def nombre_de_modulo(ruta: Path) -> str:
-    """`taximetro/gui/inicio.py` → `taximetro.gui.inicio`."""
+    """`taximetro/interfaces/gui/inicio.py` → `taximetro.interfaces.gui.inicio`."""
     partes = ruta.relative_to(RAIZ).with_suffix("").parts
     return ".".join(partes[:-1] if partes[-1] == "__init__" else partes)
 
@@ -204,7 +204,7 @@ def importaciones_prohibidas(fuente: str, modulo: str, es_paquete: bool = False)
     también los imports dentro de funciones o bajo `TYPE_CHECKING`. Los
     relativos se resuelven, así que `from ..carrera import Carrera` no se cuela.
     Cada interfaz puede importar además de su propio paquete (p. ej. las
-    pantallas de `taximetro.gui` entre sí).
+    pantallas de `taximetro.interfaces.gui` entre sí).
     """
     paquete = modulo if es_paquete else modulo.rpartition(".")[0]
     propio = paquete if paquete != "taximetro" else modulo
@@ -249,42 +249,42 @@ class TestFronteraDeLasInterfaces:
         prohibidas = importaciones_prohibidas(fuente, modulo, ruta.name == "__init__.py")
         assert prohibidas == [], (
             f"{modulo} importa del dominio {prohibidas}; "
-            "debe pasar por taximetro.servicio_taximetro"
+            "debe pasar por taximetro.application.servicio_taximetro"
         )
 
     @pytest.mark.parametrize(
         "fuente",
         [
-            "from taximetro.carrera import Carrera",
-            "import taximetro.taximetro",
-            "from taximetro import tarifa",
-            "from ..historial import Historial",
-            "def f():\n    from taximetro.tarifa import Tarifa",
+            "from taximetro.domain.carrera import Carrera",
+            "import taximetro.application.taximetro",
+            "from taximetro.domain import tarifa",
+            "from ...infrastructure.historial import Historial",
+            "def f():\n    from taximetro.domain.tarifa import Tarifa",
             "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n"
-            "    from taximetro.carrera import Carrera",
+            "    from taximetro.domain.carrera import Carrera",
         ],
     )
     def test_el_comprobador_detecta_cada_forma_de_colarse(self, fuente: str) -> None:
         # Sin esto, un comprobador roto daría el test de arriba por bueno.
-        assert importaciones_prohibidas(fuente, "taximetro.gui.pantalla") != []
+        assert importaciones_prohibidas(fuente, "taximetro.interfaces.gui.pantalla") != []
 
     @pytest.mark.parametrize(
         "fuente",
         [
-            "from taximetro.servicio_taximetro import Estado, ServicioTaximetro",
+            "from taximetro.application.servicio_taximetro import Estado, ServicioTaximetro",
             "from taximetro.utils import formato_euros",
-            "from taximetro.logs import campos",
-            "from taximetro.gui.estilo import COLORES",
+            "from taximetro.infrastructure.logs import campos",
+            "from taximetro.interfaces.gui.estilo import COLORES",
             "from .estilo import COLORES",
             "import tkinter as tk",
         ],
     )
     def test_el_comprobador_deja_pasar_lo_permitido(self, fuente: str) -> None:
-        assert importaciones_prohibidas(fuente, "taximetro.gui.pantalla") == []
+        assert importaciones_prohibidas(fuente, "taximetro.interfaces.gui.pantalla") == []
 
     def test_el_cli_no_puede_importar_de_otras_interfaces_como_propias(self) -> None:
-        # El CLI vive en la raíz del paquete: «su propio paquete» es él mismo,
-        # no todo `taximetro`, o cualquier import del dominio pasaría.
+        # «Su propio paquete» es `interfaces`, no todo `taximetro`, o
+        # cualquier import del dominio pasaría.
         assert importaciones_prohibidas(
-            "from taximetro.carrera import Carrera", "taximetro.taximetro_app"
-        ) == ["taximetro.carrera.Carrera"]
+            "from taximetro.domain.carrera import Carrera", "taximetro.interfaces.taximetro_app"
+        ) == ["taximetro.domain.carrera.Carrera"]

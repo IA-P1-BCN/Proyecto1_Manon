@@ -6,13 +6,13 @@ import json
 import logging
 from pathlib import Path
 
-from taximetro.logs import campos
-from taximetro.tarifa import Tarifa, TarifaInvalidaError
+from taximetro.infrastructure.logs import campos
+from taximetro.domain.tarifa import Tarifa, TarifaInvalidaError
 
 logger = logging.getLogger(__name__)
 
 # Relativa al directorio desde el que se lanza el programa, que es la raíz del
-# repo (`python -m taximetro.taximetro_app`). Si en la Fase 4 se empaqueta, se
+# repo (`python -m taximetro.interfaces.taximetro_app`). Si en la Fase 4 se empaqueta, se
 # revisa.
 RUTA_POR_DEFECTO = Path("config") / "tarifas.json"
 

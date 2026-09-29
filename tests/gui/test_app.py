@@ -1,13 +1,13 @@
-"""Tests de `taximetro.gui.app.App`: la ventana y el cambio de pantalla (T9.3)."""
+"""Tests de `taximetro.interfaces.gui.app.App`: la ventana y el cambio de pantalla (T9.3)."""
 
 from __future__ import annotations
 
 import pytest
 
-from taximetro.gui import estilo
-from taximetro.gui.app import App
-from taximetro.gui.inicio import Inicio
-from taximetro.gui.pantalla import Pantalla
+from taximetro.interfaces.gui import estilo
+from taximetro.interfaces.gui.app import App
+from taximetro.interfaces.gui.inicio import Inicio
+from taximetro.interfaces.gui.pantalla import Pantalla
 
 
 class PantallaA(Pantalla):
@@ -95,8 +95,8 @@ class TestSinRaizInyectada:
         # en Windows (ver tests/gui/conftest.py).
         import tkinter as tk
 
-        from taximetro.servicio_taximetro import ServicioTaximetro
-        from taximetro.taximetro import Taximetro
+        from taximetro.application.servicio_taximetro import ServicioTaximetro
+        from taximetro.application.taximetro import Taximetro
 
         creadas: list[tk.Toplevel] = []
 

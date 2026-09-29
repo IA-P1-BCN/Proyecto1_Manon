@@ -8,14 +8,14 @@ from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Callable
 
-from taximetro.logs import campos
+from taximetro.infrastructure.logs import campos
 
 if TYPE_CHECKING:
     # Solo para anotaciones: `tarifa.py` importa `Estado` de este módulo, así que
     # importar `Tarifa` aquí en tiempo de ejecución crearía un import circular.
     # Con `from __future__ import annotations` las anotaciones no se evalúan,
     # por lo que basta con importarla bajo TYPE_CHECKING.
-    from taximetro.tarifa import Tarifa
+    from taximetro.domain.tarifa import Tarifa
 
 logger = logging.getLogger(__name__)
 
