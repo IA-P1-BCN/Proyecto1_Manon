@@ -17,6 +17,7 @@ class TarifaInvalidaError(ValueError):
     """
 
     def __init__(self, mensaje: str, campos: tuple[str, ...] = ()) -> None:
+        """El `mensaje` para quien lo lea y los `campos` culpables, si se conocen."""
         super().__init__(mensaje)
         self.campos = campos
 
@@ -49,7 +50,7 @@ class Tarifa:
     ) -> None:
         """Crea la tarifa con los €/s de cada estado. Falla si no son válidos."""
         self._validar(parado, en_movimiento)
-        self._tarifas = {Estado.PARADO: parado, Estado.EN_MOVIMIENTO: en_movimiento}
+        self._por_estado = {Estado.PARADO: parado, Estado.EN_MOVIMIENTO: en_movimiento}
 
     @staticmethod
     def _validar(parado: float, en_movimiento: float) -> None:
@@ -78,13 +79,13 @@ class Tarifa:
     @property
     def parado(self) -> float:
         """€/s con el taxi parado o a menos de 20 km/h."""
-        return self._tarifas[Estado.PARADO]
+        return self._por_estado[Estado.PARADO]
 
     @property
     def en_movimiento(self) -> float:
         """€/s con el taxi en movimiento."""
-        return self._tarifas[Estado.EN_MOVIMIENTO]
+        return self._por_estado[Estado.EN_MOVIMIENTO]
 
     def calcular_importe(self, estado: Estado, segundos: float) -> float:
         """Devuelve el importe correspondiente a `segundos` transcurridos en `estado`."""
-        return self._tarifas[estado] * segundos
+        return self._por_estado[estado] * segundos

@@ -20,7 +20,7 @@ RUTA_POR_DEFECTO = Path("config") / "credenciales.json"
 
 # Coste de scrypt: unos 16 MB de memoria y ~50 ms por comprobación. Se guarda
 # junto al hash, así que subirlo más adelante no invalida la contraseña actual.
-N, R, P = 2**14, 8, 1
+SCRYPT_N, SCRYPT_R, SCRYPT_P = 2**14, 8, 1
 BYTES_SAL = 16
 BYTES_HASH = 32
 MEMORIA_MAXIMA = 64 * 1024 * 1024  # holgada para N, R, P; frena un fichero absurdo
@@ -94,7 +94,7 @@ class Auth:
 
     @staticmethod
     def generar_credenciales(
-        contrasena: str, n: int = N, r: int = R, p: int = P
+        contrasena: str, n: int = SCRYPT_N, r: int = SCRYPT_R, p: int = SCRYPT_P
     ) -> dict[str, object]:
         """El contenido del fichero de credenciales para `contrasena`.
 

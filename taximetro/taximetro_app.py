@@ -134,10 +134,6 @@ class TaximetroApp:
         self._salida = salida
         self._entrada_oculta = entrada_oculta or leer_contrasena
 
-    # ------------------------------------------------------------------
-    # Bucle principal
-    # ------------------------------------------------------------------
-
     def ejecutar(self) -> None:
         """Muestra las instrucciones de uso y arranca en el menú de inicio.
 
@@ -162,7 +158,7 @@ class TaximetroApp:
 
         try:
             while True:
-                opcion = self._leer("Menú de inicio", OPCIONES_INICIO)
+                opcion = self._elegir_opcion("Menú de inicio", OPCIONES_INICIO)
                 if opcion == "salir":
                     return "salir"
                 logger.info("perfil_elegido %s", campos(perfil=opcion))
@@ -181,7 +177,7 @@ class TaximetroApp:
         except EOFError:
             return "eof"
 
-    def _leer(
+    def _elegir_opcion(
         self,
         cabecera: str,
         opciones: tuple[str, ...],
@@ -190,18 +186,13 @@ class TaximetroApp:
         """Muestra un menú y repite hasta que se teclea uno de sus números."""
         while True:
             self._salida(self._menu(cabecera, opciones, carrera))
-            opcion = self._opcion(self._entrada("> ").strip(), opciones)
+            opcion = self._resolver_opcion(self._entrada("> ").strip(), opciones)
             if opcion is not None:
                 return opcion
             self._salida(OPCION_NO_VALIDA)
 
-    # ------------------------------------------------------------------
-    # Conductor
-    # ------------------------------------------------------------------
-
     def _conductor(self) -> str | None:
-        """El bucle de carreras. None al volver al menú de inicio; si el
-        programa debe cerrarse, el motivo.
+        """El bucle de carreras: None al volver al menú de inicio, o el motivo si debe cerrarse.
 
         `Volver` solo existe sin carrera: con una carrera abierta no se puede
         llegar al Administrador, y por tanto las tarifas no cambian a mitad de
@@ -210,7 +201,7 @@ class TaximetroApp:
         while True:
             carrera = self._servicio.estado_actual()
             try:
-                opcion = self._leer(
+                opcion = self._elegir_opcion(
                     self._cabecera(carrera), self._opciones(carrera), carrera
                 )
             except KeyboardInterrupt:
@@ -233,9 +224,9 @@ class TaximetroApp:
             self._aplicar(opcion, carrera)
 
     def _confirmar_salida(self, carrera: InstantaneaCarrera) -> bool:
-        """Ctrl+C con carrera activa: pregunta antes de cerrar el programa (T7.7).
+        """Ctrl+C con carrera activa: pregunta antes de cerrar el programa.
 
-        El importe se congela al preguntar (Fase 3, T9.8): «Sí» cobra lo que
+        El importe se congela al preguntar (Fase 3): «Sí» cobra lo que
         había al pulsar Ctrl+C, no lo que se tarda en contestar. «No» sigue con
         la carrera como si nada, y ese tiempo sí se cobra, porque el taxi
         seguía ocupado. Es la misma regla que el FINALIZAR de la interfaz
@@ -250,7 +241,7 @@ class TaximetroApp:
         )
         logger.info("salida_solicitada %s", campos(carrera=carrera.id))
         try:
-            confirmada = self._leer(cabecera, OPCIONES_CONFIRMAR_SALIDA) == "confirmar"
+            confirmada = self._elegir_opcion(cabecera, OPCIONES_CONFIRMAR_SALIDA) == "confirmar"
         except KeyboardInterrupt:
             confirmada = False
         except EOFError:
@@ -264,7 +255,7 @@ class TaximetroApp:
             self._servicio.seguir_carrera()
         return confirmada
 
-    def _opcion(self, eleccion: str, opciones: tuple[str, ...]) -> str | None:
+    def _resolver_opcion(self, eleccion: str, opciones: tuple[str, ...]) -> str | None:
         """Traduce lo tecleado a una opción del menú, o None si no lo es."""
         try:
             numero = int(eleccion)
@@ -326,10 +317,6 @@ class TaximetroApp:
         if not cerrada.guardada:
             self._salida(HISTORICO_NO_GUARDADO)
 
-    # ------------------------------------------------------------------
-    # Administrador
-    # ------------------------------------------------------------------
-
     def _acceso_administrador(self) -> bool:
         """Pide la contraseña hasta acertarla (True) o hasta que se vuelve (False).
 
@@ -361,7 +348,7 @@ class TaximetroApp:
         Solo se llega tras `_acceso_administrador` (US-08).
         """
         while True:
-            opcion = self._leer("Administrador", OPCIONES_ADMINISTRADOR)
+            opcion = self._elegir_opcion("Administrador", OPCIONES_ADMINISTRADOR)
             if opcion == "volver":
                 return
             if opcion == "historico":
@@ -370,7 +357,7 @@ class TaximetroApp:
                 self._cambiar_tarifas()
 
     def _ver_historico(self) -> None:
-        """Las carreras terminadas hoy y el total de caja (US-05 / T5.3)."""
+        """Las carreras terminadas hoy y el total de caja (US-05)."""
         try:
             resumen = self._servicio.resumen_del_dia()
         except AlmacenamientoError:
@@ -384,7 +371,7 @@ class TaximetroApp:
         self._salida(self._tabla_historico(resumen))
 
     def _cambiar_tarifas(self) -> None:
-        """Pide las dos tarifas nuevas y se las pasa al servicio (T7.6).
+        """Pide las dos tarifas nuevas y se las pasa al servicio.
 
         Las reglas de qué es una tarifa válida son del dominio; aquí solo se
         traduce lo tecleado a número. Cualquier fallo vuelve al menú de
@@ -446,10 +433,6 @@ class TaximetroApp:
                 f"{NADA_GUARDADO}"
             )
             return None
-
-    # ------------------------------------------------------------------
-    # Presentación
-    # ------------------------------------------------------------------
 
     def _opciones(self, carrera: InstantaneaCarrera | None) -> tuple[str, ...]:
         """El menú vigente: el número tecleado se resuelve contra esta tupla."""

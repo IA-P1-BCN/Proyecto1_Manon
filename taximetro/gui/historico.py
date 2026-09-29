@@ -1,4 +1,4 @@
-"""Historico: las carreras terminadas hoy y el total de caja (T9.7).
+"""Historico: las carreras terminadas hoy y el total de caja.
 
 Pantalla 8 de `docs/diseno-interfaz-fase3.md`: las columnas del CLI (Nº,
 Inicio, Fin, Importe) en filas grandes, con ▲ ▼ en el lateral cuando no caben

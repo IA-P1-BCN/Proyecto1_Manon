@@ -1,7 +1,7 @@
-"""Contrasena: la contraseña antes del Administrador (US-08, T9.7).
+"""Contrasena: la contraseña antes del Administrador (US-08).
 
 Pantalla 2 de `docs/diseno-interfaz-fase3.md`. La comprobación es del
-servicio, el mismo que usa el CLI (T8.3); aquí solo se teclea y se avisa.
+servicio, el mismo que usa el CLI; aquí solo se teclea y se avisa.
 """
 
 from __future__ import annotations

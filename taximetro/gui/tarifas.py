@@ -1,4 +1,4 @@
-"""CambiarTarifas: los €/s de cada estado, desde la próxima carrera (T9.7).
+"""CambiarTarifas: los €/s de cada estado, desde la próxima carrera.
 
 Pantalla 7 de `docs/diseno-interfaz-fase3.md`. Las reglas de qué es una
 tarifa válida son del dominio (`Tarifa`), no de la pantalla; aquí solo se

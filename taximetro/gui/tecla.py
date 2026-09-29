@@ -1,4 +1,4 @@
-"""Tecla: la tecla táctil de la interfaz gráfica (T9.5)."""
+"""Tecla: la tecla táctil de la interfaz gráfica."""
 
 from __future__ import annotations
 
@@ -129,7 +129,7 @@ class Tecla(tk.Frame):
             return  # aún sin colocar: se ajusta en cuanto tenga tamaño (<Configure>)
         for etiqueta, clave in ((self._titulo, "titulo"), (self._subtitulo, "subtitulo")):
             familia, tamano, peso = self._fuentes[clave]
-            etiqueta.configure(font=cabe(etiqueta, etiqueta.cget("text"), familia, -tamano, peso, ancho))
+            etiqueta.configure(font=fuente_que_cabe(etiqueta, etiqueta.cget("text"), familia, -tamano, peso, ancho))
 
     def _pintar(self) -> None:
         """Aplica los colores de la variante, más claros mientras se pulsa."""
@@ -168,7 +168,7 @@ class Tecla(tk.Frame):
         )
 
 
-def cabe(widget: tk.Misc, texto: str, familia: str, px: int, peso: str, ancho: int) -> estilo.Fuente:
+def fuente_que_cabe(widget: tk.Misc, texto: str, familia: str, px: int, peso: str, ancho: int) -> estilo.Fuente:
     """La fuente más grande, desde `px` hasta `estilo.TEXTO_MIN`, en la que `texto` cabe en `ancho`.
 
     Mide cada línea con la fuente real del sistema. Si ni al mínimo cabe, se
