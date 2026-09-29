@@ -55,7 +55,12 @@ class Tecla(tk.Frame):
         self.pack_propagate(False)  # el alto lo decide la tecla, no su texto
         self.comando = comando
         self._pulsada = False
+        self._montar_contenido(fuente, icono, tamano_icono)
+        self._enlazar_pulsacion()
+        self.configurar(titulo=titulo, subtitulo=subtitulo, variante=variante)
 
+    def _montar_contenido(self, fuente: estilo.Fuente, icono: str | None, tamano_icono: int) -> None:
+        """Icono (si lo hay), título y subtítulo, centrados en vertical."""
         # Un marco interior centra título y subtítulo en vertical.
         self._centro = tk.Frame(self)
         self._centro.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
@@ -74,14 +79,14 @@ class Tecla(tk.Frame):
         )
         self.bind("<Configure>", lambda _evento: self._ajustar(), add="+")
 
+    def _enlazar_pulsacion(self) -> None:
+        """Pulsar en cualquier parte de la tecla (o de lo que hay dentro) es pulsarla."""
         widgets = [self, self._centro, self._titulo, self._subtitulo]
         if self._icono is not None:
             widgets.append(self._icono)
         for widget in widgets:
             widget.bind("<ButtonPress-1>", self._al_pulsar)
             widget.bind("<ButtonRelease-1>", self._al_soltar)
-
-        self.configurar(titulo=titulo, subtitulo=subtitulo, variante=variante)
 
     @property
     def titulo(self) -> str:
