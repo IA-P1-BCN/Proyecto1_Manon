@@ -28,7 +28,7 @@ Before changing behaviour, check whether it was already decided:
 - **`docs/diseno-interfaz-fase3.md`** — authority on the GUI: device, touch rules, colours per state, every screen and its texts.
 - **`docs/flujo-fase3.md`** — how the GUI screens connect, and how each Fase 2 CLI rule maps onto them.
 
-Structural/process decisions, per-phase rationale and postponed ideas are kept as personal working notes, not in this repo — ask the user if you need that context and don't have it. **Demo scripts, retros and any other doc that isn't meant to be published go in `Docs/`, at the root of the project folder — the sibling of `App/`, outside this repo.** Never add them under `App/docs/`. A file-by-file code walkthrough also lives locally, gitignored, at `docs-local/arquitectura-del-codigo.md` (present if this checkout has it; not guaranteed on a fresh clone).
+Structural/process decisions, per-phase rationale and postponed ideas are kept as personal working notes, not in this repo — ask the user if you need that context and don't have it. **Demo scripts, retros and any other doc that isn't meant to be published go in `Docs/`, at the root of the project folder — the sibling of `App/`, outside this repo.** Never add them under `App/docs/`. The file-by-file code walkthrough (architecture and role per folder) is `Docs/arquitectura-del-codigo.md`, outside this repo; keep it in step with the code when names or mechanisms change.
 
 ## Structure (Fase 1 + Fase 2, Fase 3 so far)
 
