@@ -44,6 +44,7 @@ Es un proyecto de curso, construido por fases con una demo al final de cada una.
 - **No perder una carrera por descuido:** finalizar (o cerrar la ventana) pide confirmación, y el importe se congela en el momento de pulsar.
 - **Gestionarlo como administrador** (con contraseña): cambiar las tarifas y ver las carreras de hoy con el total de caja.
 - **Usarlo de dos formas:** una **interfaz gráfica** táctil o un **CLI**, las dos sobre la misma lógica.
+- **Interfaz responsiva:** se adapta a la ventana, desde una ventana apaisada de 960 × 640 hasta un monitor grande, y tiene una disposición vertical para una ventana alta. Cambiar el tamaño nunca toca la carrera en curso.
 - **Dejar constancia:** cada carrera terminada se guarda en un histórico CSV, y todo lo que ocurre se escribe en un fichero de logs con rotación.
 
 <a id="estado"></a>
@@ -87,7 +88,7 @@ pytest                                 # los tests
 
 Se ejecuta desde la raíz del repositorio, porque las tarifas, el histórico y los logs se guardan en `config/`, `data/` y `logs/`. Para entrar como Administrador, la contraseña de la demo es **`taxi`**.
 
-Los tests de la interfaz gráfica abren ventanas de verdad (en el CI las pone `xvfb-run`) y comprueban que ninguna pantalla corta un texto ni se sale de su sitio.
+Los tests de la interfaz gráfica abren ventanas de verdad (en el CI las pone `xvfb-run`) y comprueban que ninguna pantalla corta un texto ni se sale de su sitio, con nueve tamaños de ventana, apaisados y verticales.
 
 <a id="como-esta-construido"></a>
 ## 🏗️ Cómo está construido

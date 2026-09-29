@@ -155,10 +155,12 @@ class TestFinalizar:
     """US-03: el total se queda en el visor hasta la siguiente carrera."""
 
     def test_carrera_finalizada_cabe_en_su_columna(self, pantalla: PantallaTaximetro) -> None:
-        # Pasa a dos líneas en vez de cortarse contra el visor.
+        # El texto salta de línea al ancho de su hueco, en vez de cortarse contra el visor.
         pantalla.tecla_iniciar.invoke()
         finalizar_confirmando(pantalla)
-        assert int(pantalla.estado.cget("wraplength")) == 300
+        pantalla.app.raiz.deiconify()  # `<Configure>`, que ajusta el texto, solo llega a widgets visibles
+        pantalla.update()
+        assert 0 < int(pantalla.estado.cget("wraplength")) <= 300
 
     def test_deja_el_total_a_cobrar(self, pantalla: PantallaTaximetro, pasar) -> None:
         pantalla.tecla_iniciar.invoke()

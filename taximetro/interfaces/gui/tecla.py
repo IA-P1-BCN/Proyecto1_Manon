@@ -28,7 +28,7 @@ class Tecla(tk.Frame):
     cortaría el texto sin avisar.
     """
 
-    MARGEN_TEXTO = 24  # a cada lado del texto, dentro de la tecla
+    MARGEN_TEXTO = 24  # a cada lado del texto, dentro de la tecla (a escala 1)
 
     def __init__(
         self,
@@ -36,17 +36,25 @@ class Tecla(tk.Frame):
         titulo: str,
         comando: Callable[[], None],
         variante: Variante = estilo.GRIS,
-        alto: int = estilo.TECLA_PRINCIPAL_MIN,
+        alto: int | None = None,
         subtitulo: str = "",
-        fuente: estilo.Fuente = estilo.FUENTE_TECLA,
+        fuente: estilo.Fuente | None = None,
         icono: str | None = None,
-        tamano_icono: int = 96,
+        tamano_icono: int | None = None,
     ) -> None:
         """Crea la tecla; `alto` en píxeles, nunca por debajo de la zona táctil mínima.
+
+        Sin `alto`, `fuente` o `tamano_icono`, usa los de una tecla principal
+        a la escala actual. Se leen aquí y no como valores por defecto de los
+        parámetros, que se fijarían al importar el módulo y no seguirían a la
+        ventana cuando cambia de tamaño.
 
         Con `icono` (un nombre de `iconos.NOMBRES`) es una teja: icono encima
         del título, como CONDUCTOR y ADMINISTRADOR en la pantalla de inicio.
         """
+        alto = estilo.TECLA_PRINCIPAL_MIN if alto is None else alto
+        fuente = estilo.FUENTE_TECLA if fuente is None else fuente
+        tamano_icono = estilo.px(96) if tamano_icono is None else tamano_icono
         if alto < estilo.ZONA_TACTIL_MIN:
             raise ValueError(
                 f"Tecla de {alto} px: la zona táctil mínima es {estilo.ZONA_TACTIL_MIN} px."
@@ -70,7 +78,7 @@ class Tecla(tk.Frame):
                 self._centro, width=tamano_icono, height=tamano_icono, highlightthickness=0
             )
             iconos.dibujar(self._icono, icono, tamano_icono, "#ffffff")
-            self._icono.pack(pady=(0, 16))
+            self._icono.pack(pady=(0, estilo.px(16)))
         self._fuentes = {"titulo": fuente, "subtitulo": estilo.FUENTE_TECLA_SUBTITULO}
         self._titulo = tk.Label(self._centro, font=fuente, justify=tk.CENTER)
         self._titulo.pack()
@@ -112,7 +120,7 @@ class Tecla(tk.Frame):
         if subtitulo is not None:
             self._subtitulo.configure(text=subtitulo)
             if subtitulo:
-                self._subtitulo.pack(pady=(8, 0))
+                self._subtitulo.pack(pady=(estilo.px(8), 0))
             else:
                 self._subtitulo.pack_forget()
         self._pintar()
@@ -124,7 +132,7 @@ class Tecla(tk.Frame):
 
     def _ajustar(self) -> None:
         """Baja el tamaño del título y del subtítulo hasta que quepan en la tecla."""
-        ancho = self.winfo_width() - 2 * int(self.cget("highlightthickness")) - 2 * self.MARGEN_TEXTO
+        ancho = self.winfo_width() - 2 * int(self.cget("highlightthickness")) - 2 * estilo.px(self.MARGEN_TEXTO)
         if ancho <= 0:
             return  # aún sin colocar: se ajusta en cuanto tenga tamaño (<Configure>)
         for etiqueta, clave in ((self._titulo, "titulo"), (self._subtitulo, "subtitulo")):

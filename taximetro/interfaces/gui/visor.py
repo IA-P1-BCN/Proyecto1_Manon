@@ -40,7 +40,8 @@ FORMAS = {
 }
 CELDA_ANCHO, CELDA_ALTO = 60, 110
 
-# Medidas en pantalla (px), las de la maqueta.
+# Medidas en pantalla (px), las de la maqueta: a escala 1. Cada `Visor` usa las suyas,
+# multiplicadas por la escala de la ventana en el momento de crearlo.
 DIGITO_ANCHO, DIGITO_ALTO = 80, 147
 HUECO = 10  # entre cifra y cifra
 COMA_ANCHO = 24
@@ -70,9 +71,13 @@ class Visor(tk.Canvas):
     """
 
     def __init__(self, padre: tk.Misc) -> None:
-        """Crea el visor mostrando 0,00 €."""
+        """Crea el visor mostrando 0,00 €, del tamaño que toca a la escala actual."""
+        self._ancho, self._alto = estilo.px(ANCHO), estilo.px(ALTO)
+        self._hueco, self._ancho_coma, self._ancho_euro = (
+            estilo.px(HUECO), estilo.px(COMA_ANCHO), estilo.px(EURO_ANCHO),
+        )
         super().__init__(
-            padre, width=ANCHO, height=ALTO, bg=estilo.VISOR_FONDO, highlightthickness=0
+            padre, width=self._ancho, height=self._alto, bg=estilo.VISOR_FONDO, highlightthickness=0
         )
         self._cifras: list[dict[str, int]] = []  # por posición: segmento → id del polígono
         self._texto = ""
@@ -114,18 +119,18 @@ class Visor(tk.Canvas):
         self._enteras = enteras
         total = enteras + DECIMALES
         # Lo que no son cifras ocupa siempre lo mismo; las cifras se reparten el resto.
-        fijo = (total + 1) * HUECO + COMA_ANCHO + EURO_ANCHO
-        ancho_cifra = (ANCHO - fijo) / total
+        fijo = (total + 1) * self._hueco + self._ancho_coma + self._ancho_euro
+        ancho_cifra = (self._ancho - fijo) / total
         x = 0.0
         for posicion in range(total):
             if posicion == enteras:
                 self._coma(x)
-                x += COMA_ANCHO + HUECO
+                x += self._ancho_coma + self._hueco
             self._cifras.append(self._cifra(x, ancho_cifra))
-            x += ancho_cifra + HUECO
+            x += ancho_cifra + self._hueco
         self.create_text(
-            ANCHO,
-            ALTO,
+            self._ancho,
+            self._alto,
             text="€",
             anchor=tk.SE,
             fill=estilo.LED_ROJO,
@@ -134,7 +139,7 @@ class Visor(tk.Canvas):
 
     def _cifra(self, x: float, ancho: float) -> dict[str, int]:
         """Los 7 polígonos de una cifra con su esquina en (x, 0), apagados."""
-        escala_x, escala_y = ancho / CELDA_ANCHO, DIGITO_ALTO / CELDA_ALTO
+        escala_x, escala_y = ancho / CELDA_ANCHO, self._alto / CELDA_ALTO
         return {
             nombre: self.create_polygon(
                 *[coordenada for px, py in puntos for coordenada in (x + px * escala_x, py * escala_y)],
@@ -146,7 +151,7 @@ class Visor(tk.Canvas):
 
     def _coma(self, x: float) -> None:
         """La coma decimal, siempre encendida, abajo como en la maqueta."""
-        escala = DIGITO_ALTO / CELDA_ALTO
+        escala = self._alto / CELDA_ALTO
         punto = ((4, 94), (14, 94), (14, 104), (4, 104))
         cola = ((9, 104), (14, 104), (10, 110), (6, 110))
         for forma in (punto, cola):

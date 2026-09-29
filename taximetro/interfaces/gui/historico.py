@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import tkinter as tk
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from taximetro.interfaces.gui import estilo
 from taximetro.interfaces.gui.pantalla import Pantalla
@@ -24,7 +24,7 @@ logger = logging.getLogger("taximetro.interfaces.gui")
 
 SIN_CARRERAS = "No hay carreras terminadas hoy."
 ILEGIBLE = "No se pudo leer el histórico."
-COLUMNAS = (("Nº", tk.E, 4), ("Inicio", tk.W, 9), ("Fin", tk.W, 9), ("Importe", tk.E, 10))
+COLUMNAS = (("Nº", tk.E, 4), ("Inicio", tk.W, 8), ("Fin", tk.W, 8), ("Importe", tk.E, 9))
 
 
 class Historico(Pantalla):
@@ -34,7 +34,8 @@ class Historico(Pantalla):
         """Lee el histórico del día y lo enseña desde la primera carrera."""
         super().__init__(app)
         principal, lateral = self.columnas()
-        self._montar_tabla(self.panel(principal, padx=40, pady=32))
+        margen = 16 if estilo.VERTICAL_ACTIVA else 40  # a escala 1: en vertical sobra menos ancho
+        self._montar_tabla(self.panel(principal, padx=margen, pady=32))
         self._montar_lateral(lateral)
         self._carreras: tuple[RegistroCarrera, ...] = ()
         self.desde = 0  # primera fila a la vista
@@ -44,9 +45,10 @@ class Historico(Pantalla):
         """El título, el hueco de las filas, el aviso y la caja del total."""
         self.titulo = tk.Label(
             interior, font=estilo.FUENTE_TITULO_HISTORICO, bg=estilo.PANEL,
-            fg=estilo.TEXTO, anchor=tk.W,
+            fg=estilo.TEXTO, anchor=tk.W, justify=tk.LEFT,
         )
-        self.titulo.pack(fill=tk.X, pady=(0, 20))
+        self.ajustar_al_ancho(self.titulo)
+        self.titulo.pack(fill=tk.X, pady=(0, estilo.px(20)))
         self._tabla = tk.Frame(interior, bg=estilo.PANEL)
         self._tabla.pack(fill=tk.X)
         self.mensaje = tk.Label(
@@ -59,18 +61,32 @@ class Historico(Pantalla):
         self.resumen = tk.Label(
             self._caja, font=estilo.FUENTE_TEXTO, bg=estilo.VISOR_FONDO, fg=estilo.TEXTO_SECUNDARIO
         )
-        self.resumen.pack(side=tk.LEFT, padx=28, pady=20)
         self.total = tk.Label(self._caja, font=estilo.FUENTE_TOTAL, bg=estilo.VISOR_FONDO, fg=estilo.LED_ROJO)
-        self.total.pack(side=tk.RIGHT, padx=28)
+        lado, hueco = estilo.px(28), estilo.px(20)
+        if estilo.VERTICAL_ACTIVA:  # sin sitio para los dos a la vez: uno encima del otro
+            self.resumen.pack(anchor=tk.W, padx=lado, pady=(hueco, 0))
+            self.total.pack(anchor=tk.E, padx=lado, pady=(0, hueco))
+        else:
+            self.resumen.pack(side=tk.LEFT, padx=lado, pady=hueco)
+            self.total.pack(side=tk.RIGHT, padx=lado)
 
     def _montar_lateral(self, lateral: tk.Frame) -> None:
         """Las teclas ▲ ▼ y Volver."""
         self.subir = self.tecla_lateral(lateral, "▲", self.subir_filas)
-        self.subir.pack(fill=tk.X, pady=(0, estilo.SEPARACION))
+        self.colocar_lateral(self.subir, fill=tk.X, pady=(0, estilo.SEPARACION))
         self.bajar = self.tecla_lateral(lateral, "▼", self.bajar_filas)
-        self.bajar.pack(fill=tk.X)
+        self.colocar_lateral(self.bajar, fill=tk.X)
         self.volver = self.tecla_lateral(lateral, "Volver", self.volver_a_administrador)
-        self.volver.pack(side=tk.BOTTOM, fill=tk.X)
+        self.colocar_lateral(self.volver, side=tk.BOTTOM, fill=tk.X)
+
+    def guardar_ui(self) -> dict[str, Any]:
+        """La primera fila a la vista, para no volver a la primera página al cambiar de tamaño."""
+        return {"desde": self.desde}
+
+    def restaurar_ui(self, estado: dict[str, Any]) -> None:
+        """Vuelve a la página en la que se estaba, sin pasar de la última fila."""
+        self.desde = min(estado["desde"], max(0, len(self._carreras) - estilo.FILAS_HISTORICO))
+        self._pintar_filas()
 
     def subir_filas(self) -> None:
         """▲: una página hacia arriba."""
@@ -120,7 +136,7 @@ class Historico(Pantalla):
             hijo.destroy()
         self._fila(
             [nombre for nombre, _, _ in COLUMNAS], estilo.PANEL, estilo.FUENTE_ETIQUETA,
-            estilo.TEXTO_ETIQUETA, alto=56,
+            estilo.TEXTO_ETIQUETA, alto=estilo.px(56),
         )
         pagina = self._carreras[self.desde : self.desde + estilo.FILAS_HISTORICO]
         for i, registro in enumerate(pagina):
@@ -142,7 +158,7 @@ class Historico(Pantalla):
         for (_, ancla, ancho), texto in zip(COLUMNAS, textos):
             tk.Label(
                 fila, text=texto, font=fuente, bg=fondo, fg=color, anchor=ancla, width=ancho
-            ).pack(side=tk.LEFT, fill=tk.Y, padx=24)
+            ).pack(side=tk.LEFT, fill=tk.Y, padx=estilo.px(4 if estilo.VERTICAL_ACTIVA else 24))
 
     @property
     def filas_visibles(self) -> list[list[str]]:

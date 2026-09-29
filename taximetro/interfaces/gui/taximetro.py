@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 import tkinter as tk
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from taximetro.interfaces.gui import estilo
 from taximetro.interfaces.gui.confirmacion import Confirmacion
@@ -47,9 +47,12 @@ class PantallaTaximetro(Pantalla):
         self._refrescando = False
         self._saliendo = False  # «SÍ, FINALIZAR Y SALIR»: solo queda la tecla CERRAR
         self._salida_pedida: int | None = None  # nº de carrera mientras se pregunta por el ✕
+        # Lo que enseña el panel SÍ / NO abierto (modo, pregunta, importe, texto de SÍ), o None.
+        self._confirmando: tuple[str, str, str, str] | None = None
 
         principal, lateral = self.columnas()
         self._montar_visor(principal)
+        self._montar_datos(principal, lateral)
         self._montar_teclas(principal)
         self._montar_lateral(lateral)
         self._montar_ayuda()
@@ -79,12 +82,9 @@ class PantallaTaximetro(Pantalla):
         tarda en contestar.
         """
         congelada = self.servicio.congelar_importe()
-        self.confirmacion.abrir(
-            pregunta=f"¿Finalizar la carrera nº {congelada.id}?",
-            importe=formato_euros(congelada.importe),
-            texto_si="SÍ, FINALIZAR",
-            al_si=self._confirmar_finalizar,
-            al_no=self.seguir,
+        self._abrir_confirmacion(
+            "finalizar", f"¿Finalizar la carrera nº {congelada.id}?",
+            formato_euros(congelada.importe), "SÍ, FINALIZAR",
         )
 
     def seguir(self) -> None:
@@ -93,7 +93,7 @@ class PantallaTaximetro(Pantalla):
             logger.info("salida_cancelada %s", campos(carrera=self._salida_pedida))
             self._salida_pedida = None
         self.servicio.seguir_carrera()
-        self.confirmacion.cerrar()
+        self._cerrar_confirmacion()
         self._pintar()
 
     def finalizar(self) -> None:
@@ -119,18 +119,37 @@ class PantallaTaximetro(Pantalla):
         # Los mismos eventos que el Ctrl+C del CLI: un grep sirve para los dos.
         logger.info("salida_solicitada %s", campos(carrera=congelada.id))
         self._salida_pedida = congelada.id
-        self.confirmacion.abrir(
-            pregunta=f"Vas a salir del programa con la carrera nº {congelada.id} en curso.",
-            importe=formato_euros(congelada.importe),
+        self._abrir_confirmacion(
+            "salir", f"Vas a salir del programa con la carrera nº {congelada.id} en curso.",
+            formato_euros(congelada.importe),
             # En dos líneas: en una, a 48 px, no cabe en media tecla (507 px de 457).
-            texto_si="SÍ, FINALIZAR\nY SALIR",
-            al_si=self._finalizar_y_salir,
-            al_no=self.seguir,
+            "SÍ, FINALIZAR\nY SALIR",
         )
         return True
 
-    def _confirmar_finalizar(self) -> None:
+    def _abrir_confirmacion(self, modo: str, pregunta: str, importe: str, texto_si: str) -> None:
+        """Abre el panel SÍ / NO; `modo` dice qué hace SÍ: `finalizar` o `salir`.
+
+        Se recuerda lo que muestra, para volver a abrirlo igual si la ventana
+        cambia de tamaño y se rehace la pantalla. El importe no se vuelve a
+        congelar: sigue congelado en el servicio.
+        """
+        self._confirmando = (modo, pregunta, importe, texto_si)
+        self.confirmacion.abrir(
+            pregunta=pregunta,
+            importe=importe,
+            texto_si=texto_si,
+            al_si=self._confirmar_finalizar if modo == "finalizar" else self._finalizar_y_salir,
+            al_no=self.seguir,
+        )
+
+    def _cerrar_confirmacion(self) -> None:
+        """Quita el panel SÍ / NO."""
+        self._confirmando = None
         self.confirmacion.cerrar()
+
+    def _confirmar_finalizar(self) -> None:
+        self._cerrar_confirmacion()
         self.finalizar()
 
     def _finalizar_y_salir(self) -> None:
@@ -141,9 +160,30 @@ class PantallaTaximetro(Pantalla):
         """
         logger.info("salida_confirmada %s", campos(carrera=self._salida_pedida))
         self._salida_pedida = None
-        self.confirmacion.cerrar()
+        self._cerrar_confirmacion()
         self._saliendo = True
         self.finalizar()
+
+    def guardar_ui(self) -> dict[str, Any]:
+        """Lo que hay que recordar si la ventana cambia de tamaño: total a cobrar, paneles y salida pedida."""
+        return {
+            "cerrada": self._cerrada,
+            "saliendo": self._saliendo,
+            "salida_pedida": self._salida_pedida,
+            "confirmando": self._confirmando,
+            "ayuda": self._ayuda.winfo_manager() == "place",
+        }
+
+    def restaurar_ui(self, estado: dict[str, Any]) -> None:
+        """Repone el total a cobrar, la salida pedida y los paneles abiertos."""
+        self._cerrada = estado["cerrada"]
+        self._saliendo = estado["saliendo"]
+        self._salida_pedida = estado["salida_pedida"]
+        self._pintar()
+        if estado["confirmando"] is not None:
+            self._abrir_confirmacion(*estado["confirmando"])
+        if estado["ayuda"]:
+            self.abrir_ayuda()
 
     def volver(self) -> None:
         """Volver a la pantalla de inicio (solo existe sin carrera)."""
@@ -182,9 +222,43 @@ class PantallaTaximetro(Pantalla):
         accion = "PARAR" if ahora.estado is Estado.EN_MOVIMIENTO else "ARRANCAR"
         self.tecla_cambiar.configurar(titulo=accion)
         self.tecla_iniciar.pack_forget()
+        self._colocar_teclas_de_carrera()
+        self._ocultar_volver()
+
+    def _colocar_teclas_de_carrera(self) -> None:
+        """PARAR / ARRANCAR y FINALIZAR: lado a lado en horizontal, una encima de otra en vertical."""
+        if estilo.VERTICAL_ACTIVA:
+            self.tecla_cambiar.pack(fill=tk.X, expand=True, pady=(0, estilo.SEPARACION))
+            self.tecla_finalizar.pack(fill=tk.X, expand=True)
+            return
         self.tecla_cambiar.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, estilo.SEPARACION // 2))
         self.tecla_finalizar.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(estilo.SEPARACION // 2, 0))
+
+    def _mostrar_volver(self) -> None:
+        """Volver, que solo existe sin carrera: encima de Ayuda, o a su izquierda en vertical."""
+        if estilo.VERTICAL_ACTIVA:
+            self._ordenar_fila_lateral(con_volver=True)
+            return
+        # Al apilar desde abajo, lo que se empaqueta después queda más arriba.
+        self.tecla_volver.pack(side=tk.BOTTOM, fill=tk.X, pady=(0, estilo.SEPARACION), after=self.tecla_ayuda)
+
+    def _ocultar_volver(self) -> None:
+        """Quita Volver (con una carrera en curso no se puede volver a Inicio)."""
+        if estilo.VERTICAL_ACTIVA:
+            self._ordenar_fila_lateral(con_volver=False)
+            return
         self.tecla_volver.pack_forget()
+
+    def _ordenar_fila_lateral(self, con_volver: bool) -> None:
+        """En vertical: Volver y Ayuda se reparten la fila; sin Volver, Ayuda la ocupa entera."""
+        fila = self.tecla_ayuda.master
+        if con_volver:
+            fila.columnconfigure((0, 1), weight=1, uniform="lateral")
+            self.tecla_volver.grid(row=0, column=0, sticky="nsew", padx=(0, estilo.SEPARACION))
+            self.tecla_ayuda.grid(row=0, column=1, columnspan=1, sticky="nsew")
+        else:
+            self.tecla_volver.grid_remove()
+            self.tecla_ayuda.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
     def _pintar_libre(self) -> None:
         self._lamparas(ocupado=False)
@@ -209,14 +283,13 @@ class PantallaTaximetro(Pantalla):
         self.tecla_finalizar.pack_forget()
         if self._saliendo:
             self.tecla_iniciar.pack_forget()
-            self.tecla_volver.pack_forget()
+            self._ocultar_volver()
             self.tecla_cerrar.pack(fill=tk.X, expand=True)
             return
         subtitulo = f"Empieza en movimiento · {self._tarifa_de(Estado.EN_MOVIMIENTO)}/s"
         self.tecla_iniciar.configurar(subtitulo=subtitulo)
         self.tecla_iniciar.pack(fill=tk.X, expand=True)
-        # Encima de Ayuda: al apilar desde abajo, lo que se empaqueta después queda más arriba.
-        self.tecla_volver.pack(side=tk.BOTTOM, fill=tk.X, pady=(0, estilo.SEPARACION), after=self.tecla_ayuda)
+        self._mostrar_volver()
 
     def _refrescar(self) -> None:
         """Cada REFRESCO_MS con carrera: importe y tiempo. Se para sola al quedar libre."""
@@ -253,43 +326,59 @@ class PantallaTaximetro(Pantalla):
         return formato_euros(tarifas.parado if estado is Estado.PARADO else tarifas.en_movimiento)
 
     def _montar_visor(self, padre: tk.Frame) -> None:
-        """El visor negro: lámparas, estado y tarifa a la izquierda; importe a la derecha."""
+        """El visor negro: lámparas, estado y tarifa, y el importe (a la derecha; en vertical, debajo)."""
         visor = tk.Frame(
             padre, bg=estilo.VISOR_FONDO, height=estilo.VISOR,
             highlightthickness=3, highlightbackground=estilo.VISOR_BORDE,
         )
         visor.pack(fill=tk.X)
         visor.pack_propagate(False)
+        margen = estilo.px(32)
 
-        izquierda = tk.Frame(visor, bg=estilo.VISOR_FONDO, width=300)
-        izquierda.pack(side=tk.LEFT, fill=tk.Y, padx=32, pady=32)
-        izquierda.pack_propagate(False)
-        self.lampara_ocupado = self._lampara(izquierda, "OCUPADO")
-        self.lampara_libre = self._lampara(izquierda, "LIBRE")
+        if estilo.VERTICAL_ACTIVA:
+            izquierda = tk.Frame(visor, bg=estilo.VISOR_FONDO)
+            izquierda.pack(fill=tk.X, padx=margen, pady=(estilo.px(24), 0))
+            lamparas = tk.Frame(izquierda, bg=estilo.VISOR_FONDO)
+            lamparas.pack(fill=tk.X)
+        else:
+            izquierda = tk.Frame(visor, bg=estilo.VISOR_FONDO, width=estilo.px(300))
+            izquierda.pack(side=tk.LEFT, fill=tk.Y, padx=margen, pady=margen)
+            izquierda.pack_propagate(False)
+            lamparas = izquierda
+        self.lampara_ocupado = self._lampara(lamparas, "OCUPADO")
+        self.lampara_libre = self._lampara(lamparas, "LIBRE")
         # Con ajuste de línea: «CARRERA FINALIZADA» no cabe en 300 px a 34 px.
         self.estado = tk.Label(
-            izquierda, font=estilo.FUENTE_ESTADO, bg=estilo.VISOR_FONDO,
-            anchor=tk.W, justify=tk.LEFT, wraplength=300,
+            izquierda, font=estilo.FUENTE_ESTADO, bg=estilo.VISOR_FONDO, anchor=tk.W, justify=tk.LEFT,
         )
-        self.estado.pack(fill=tk.X, pady=(12, 0))
+        self.ajustar_al_ancho(self.estado)
+        self.estado.pack(fill=tk.X, pady=(estilo.px(12), 0))
         self.tarifa = tk.Label(
-            izquierda, font=estilo.FUENTE_TARIFA, bg=estilo.VISOR_FONDO,
-            anchor=tk.W, justify=tk.LEFT, wraplength=300,
+            izquierda, font=estilo.FUENTE_TARIFA, bg=estilo.VISOR_FONDO, anchor=tk.W, justify=tk.LEFT,
         )
+        self.ajustar_al_ancho(self.tarifa)
         self.tarifa.pack(fill=tk.X)
 
         derecha = tk.Frame(visor, bg=estilo.VISOR_FONDO)
-        derecha.pack(side=tk.RIGHT, padx=32)
+        if estilo.VERTICAL_ACTIVA:
+            derecha.pack(expand=True)
+        else:
+            derecha.pack(side=tk.RIGHT, padx=margen)
         self.visor = Visor(derecha)
         self.visor.pack()
         self.rotulo = tk.Label(
             derecha, font=estilo.FUENTE_ETIQUETA, bg=estilo.VISOR_FONDO, fg=estilo.TEXTO_ROTULO
         )
-        self.rotulo.pack(anchor=tk.E, pady=(16, 0))
+        self.rotulo.pack(anchor=tk.E, pady=(estilo.px(16), 0))
 
     def _lampara(self, padre: tk.Frame, texto: str) -> tk.Label:
+        """Una lámpara: apilada en horizontal; en vertical, una junto a otra en su fila."""
         marco = tk.Frame(padre, height=estilo.LAMPARA)
-        marco.pack(fill=tk.X, pady=(0, 20))
+        if estilo.VERTICAL_ACTIVA:
+            hueco = estilo.SEPARACION if padre.pack_slaves() else 0
+            marco.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(hueco, 0))
+        else:
+            marco.pack(fill=tk.X, pady=(0, estilo.px(20)))
         marco.pack_propagate(False)
         lampara = tk.Label(marco, text=texto, font=estilo.FUENTE_LAMPARA)
         lampara.pack(fill=tk.BOTH, expand=True)
@@ -312,22 +401,39 @@ class PantallaTaximetro(Pantalla):
             subtitulo="Sale del programa",
         )
 
-    def _montar_lateral(self, padre: tk.Frame) -> None:
-        """Nº de carrera, tiempo e inicio arriba; Volver y Ayuda abajo."""
+    def _montar_datos(self, principal: tk.Frame, lateral: tk.Frame) -> None:
+        """Nº de carrera, tiempo e inicio: en el lateral; en vertical, en una fila bajo el visor."""
+        padre = lateral
+        if estilo.VERTICAL_ACTIVA:
+            padre = tk.Frame(principal, bg=estilo.FONDO, height=estilo.DATOS)
+            padre.pack(fill=tk.X, pady=(estilo.SEPARACION, 0))
+            padre.pack_propagate(False)
         self.dato_carrera = self._dato(padre, "Carrera")
         self.dato_tiempo = self._dato(padre, "Tiempo")
         self.dato_inicio = self._dato(padre, "Inicio")
-        self.tecla_ayuda = self.tecla_lateral(padre, "Ayuda", self.abrir_ayuda)
-        self.tecla_ayuda.pack(side=tk.BOTTOM, fill=tk.X)
-        self.tecla_volver = self.tecla_lateral(padre, "Volver", self.volver)
+
+    def _montar_lateral(self, lateral: tk.Frame) -> None:
+        """Ayuda y Volver, abajo. `_pintar` decide cuándo se ve Volver y dónde se pone."""
+        self.tecla_ayuda = self.tecla_lateral(lateral, "Ayuda", self.abrir_ayuda)
+        if not estilo.VERTICAL_ACTIVA:
+            self.tecla_ayuda.pack(side=tk.BOTTOM, fill=tk.X)
+        self.tecla_volver = self.tecla_lateral(lateral, "Volver", self.volver)
 
     def _dato(self, padre: tk.Frame, etiqueta: str) -> tk.Label:
+        """Una cajita con la etiqueta encima del dato; en vertical se reparten la fila."""
         caja = tk.Frame(padre, bg=estilo.PANEL, highlightthickness=2, highlightbackground=estilo.PANEL_BORDE)
-        caja.pack(fill=tk.X, pady=(0, estilo.SEPARACION))
+        vertical = estilo.VERTICAL_ACTIVA
+        if vertical:
+            hueco = estilo.SEPARACION if padre.pack_slaves() else 0
+            caja.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(hueco, 0))
+        else:
+            caja.pack(fill=tk.X, pady=(0, estilo.SEPARACION))
+        lado, arriba, abajo = (estilo.px(8), estilo.px(6), estilo.px(6)) if vertical else (
+            estilo.px(16), estilo.px(12), estilo.px(12))
         tk.Label(caja, text=etiqueta, font=estilo.FUENTE_ETIQUETA, bg=estilo.PANEL,
-                 fg=estilo.TEXTO_ETIQUETA, anchor=tk.W).pack(fill=tk.X, padx=16, pady=(12, 0))
+                 fg=estilo.TEXTO_ETIQUETA, anchor=tk.W).pack(fill=tk.X, padx=lado, pady=(arriba, 0))
         valor = tk.Label(caja, font=estilo.FUENTE_DATO, bg=estilo.PANEL, fg=estilo.TEXTO, anchor=tk.W)
-        valor.pack(fill=tk.X, padx=16, pady=(0, 12))
+        valor.pack(fill=tk.X, padx=lado, pady=(0, abajo))
         return valor
 
     def _montar_ayuda(self) -> None:
@@ -335,23 +441,32 @@ class PantallaTaximetro(Pantalla):
         self._ayuda = tk.Frame(self, bg=estilo.VISOR_FONDO)
         panel = tk.Frame(self._ayuda, bg=estilo.PANEL, highlightthickness=3,
                          highlightbackground=estilo.CAMPO_BORDE, width=estilo.AYUDA_ANCHO)
-        panel.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-        texto = {"bg": estilo.PANEL, "fg": estilo.TEXTO, "anchor": tk.W, "justify": tk.LEFT,
-                 "wraplength": estilo.AYUDA_ANCHO - 80}
-        tk.Label(panel, text="Ayuda", font=estilo.FUENTE_TITULO, **texto).pack(fill=tk.X, padx=40, pady=(40, 20))
+        panel.place(relx=0.5, rely=0.5, anchor=tk.CENTER, width=estilo.AYUDA_ANCHO)
+        texto = {"bg": estilo.PANEL, "fg": estilo.TEXTO, "anchor": tk.W, "justify": tk.LEFT}
+        margen = estilo.px(40)
+        self._etiqueta_de_ayuda(panel, "Ayuda", estilo.FUENTE_TITULO, texto).pack(
+            fill=tk.X, padx=margen, pady=(margen, estilo.px(20)))
         for linea in (
             "INICIAR CARRERA: empieza una carrera nueva, en movimiento.",
             "PARAR / ARRANCAR: cambia la tarifa cuando el taxi se detiene o vuelve a moverse.",
             "FINALIZAR: termina la carrera y muestra el total a cobrar.",
         ):
-            tk.Label(panel, text=linea, font=estilo.FUENTE_TEXTO, **texto).pack(fill=tk.X, padx=40, pady=(0, 12))
-        self._tarifas_ayuda = tk.Label(panel, font=estilo.FUENTE_TEXTO, **{**texto, "fg": estilo.TEXTO_SECUNDARIO})
-        self._tarifas_ayuda.pack(fill=tk.X, padx=40, pady=(0, 20))
+            self._etiqueta_de_ayuda(panel, linea, estilo.FUENTE_TEXTO, texto).pack(
+                fill=tk.X, padx=margen, pady=(0, estilo.px(12)))
+        self._tarifas_ayuda = self._etiqueta_de_ayuda(
+            panel, "", estilo.FUENTE_TEXTO, {**texto, "fg": estilo.TEXTO_SECUNDARIO})
+        self._tarifas_ayuda.pack(fill=tk.X, padx=margen, pady=(0, estilo.px(20)))
         self.tecla_cerrar_ayuda = Tecla(
             panel, "Cerrar", self.cerrar_ayuda, variante=estilo.GRIS, alto=estilo.TECLA_LATERAL,
             fuente=estilo.FUENTE_TECLA_LATERAL,
         )
-        self.tecla_cerrar_ayuda.pack(fill=tk.X, padx=40, pady=(0, 40))
+        self.tecla_cerrar_ayuda.pack(fill=tk.X, padx=margen, pady=(0, margen))
+
+    def _etiqueta_de_ayuda(self, panel: tk.Frame, texto: str, fuente, estilos: dict) -> tk.Label:
+        """Una línea del panel de ayuda, que se parte sola si no cabe."""
+        etiqueta = tk.Label(panel, text=texto, font=fuente, **estilos)
+        self.ajustar_al_ancho(etiqueta)
+        return etiqueta
 
 
 def tiempo(segundos: float) -> str:
